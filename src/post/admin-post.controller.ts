@@ -31,7 +31,7 @@ export class AdminPostController {
     }
 
     const post = await this.postService.createPost(user.userId, site.id, dto);
-    
+
     return new PostResponseDto({
       id: post.id,
       title: post.title,
@@ -60,7 +60,7 @@ export class AdminPostController {
     }
 
     const posts = await this.postService.findByUserId(user.userId, site.id);
-    
+
     return posts.map(
       (post) =>
         new PostListResponseDto({

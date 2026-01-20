@@ -3,7 +3,7 @@ import {
   IsString,
   MaxLength,
   IsOptional,
-  IsEnum,
+  IsIn,
   Matches,
   IsUrl,
 } from 'class-validator';
@@ -28,8 +28,9 @@ export class CreatePostDto {
   content: string;
 
   @IsOptional()
-  @IsEnum(PostStatus, { message: 'status는 DRAFT 또는 PUBLISHED만 가능합니다' })
-  status?: PostStatus;
+  @IsString()
+  @IsIn(Object.values(PostStatus), { message: 'status는 DRAFT 또는 PUBLISHED만 가능합니다' })
+  status?: string;
 
   @IsOptional()
   @IsString()

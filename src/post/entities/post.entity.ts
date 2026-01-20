@@ -11,10 +11,13 @@ import {
 import { User } from '../../auth/entities/user.entity';
 import { Site } from '../../site/entities/site.entity';
 
-export enum PostStatus {
-  DRAFT = 'DRAFT',
-  PUBLISHED = 'PUBLISHED',
-}
+// TypeScript 타입 (DB enum 사용 안 함)
+export const PostStatus = {
+  DRAFT: 'DRAFT',
+  PUBLISHED: 'PUBLISHED',
+} as const;
+
+export type PostStatus = (typeof PostStatus)[keyof typeof PostStatus];
 
 @Entity('posts')
 @Index(['site_id', 'slug'], { unique: true })
@@ -46,11 +49,11 @@ export class Post {
   content: string;
 
   @Column({
-    type: 'enum',
-    enum: PostStatus,
+    type: 'varchar',
+    length: 50,
     default: PostStatus.DRAFT,
   })
-  status: PostStatus;
+  status: string;
 
   @Column({ type: 'timestamptz', nullable: true })
   published_at: Date | null;

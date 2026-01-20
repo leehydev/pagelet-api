@@ -5,7 +5,7 @@ export class PostResponseDto {
   title: string;
   slug: string;
   content: string;
-  status: PostStatus;
+  status: string;
   published_at: Date | null;
   seo_title: string | null;
   seo_description: string | null;
@@ -37,7 +37,7 @@ export class PostListResponseDto {
   id: string;
   title: string;
   slug: string;
-  status: PostStatus;
+  status: string;
   published_at: Date | null;
   seo_description: string | null;
   og_image_url: string | null;
