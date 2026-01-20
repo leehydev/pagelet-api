@@ -9,12 +9,7 @@ export class BusinessException extends HttpException {
   public readonly errorCode: ErrorCode;
   public readonly details?: any;
 
-  constructor(
-    errorCode: ErrorCode,
-    message?: string,
-    details?: any,
-    httpStatus?: HttpStatus,
-  ) {
+  constructor(errorCode: ErrorCode, message?: string, details?: any, httpStatus?: HttpStatus) {
     const statusCode = httpStatus || errorCode.httpStatus;
     const errorMessage = message || errorCode.defaultMessage;
 
@@ -41,11 +36,7 @@ export class BusinessException extends HttpException {
   /**
    * 커스텀 메시지와 함께 예외 생성
    */
-  static withMessage(
-    errorCode: ErrorCode,
-    message: string,
-    details?: any,
-  ): BusinessException {
+  static withMessage(errorCode: ErrorCode, message: string, details?: any): BusinessException {
     return new BusinessException(errorCode, message, details);
   }
 }
