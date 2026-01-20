@@ -5,6 +5,7 @@ import {
   HttpException,
   HttpStatus,
   Logger,
+  NotFoundException,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { ApiErrorDto } from '../response/api-error.dto';
@@ -46,8 +47,24 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       status = exception.getStatus();
       const exceptionResponse = exception.getResponse();
 
+      // NotFoundException 처리 (404)
+      if (exception instanceof NotFoundException) {
+        errorCode = ErrorCode.COMMON_NOT_FOUND.code;
+        message =
+          typeof exceptionResponse === 'string'
+            ? exceptionResponse
+            : 'Not found';
+
+        // favicon.ico 같은 일반적인 요청은 로깅하지 않음
+        const url = request.url;
+        const shouldLog = !url.includes('favicon.ico') && !url.includes('robots.txt');
+        
+        if (shouldLog) {
+          this.logger.debug(`NotFoundException: ${url}`);
+        }
+      }
       // ValidationPipe에서 발생한 에러 처리
-      if (
+      else if (
         typeof exceptionResponse === 'object' &&
         exceptionResponse !== null &&
         'message' in exceptionResponse
