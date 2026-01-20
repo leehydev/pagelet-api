@@ -6,11 +6,18 @@ import {
   UpdateDateColumn,
   ManyToOne,
   JoinColumn,
+  Index,
 } from 'typeorm';
 import { User } from '../../auth/entities/user.entity';
 import { Site } from '../../site/entities/site.entity';
 
+export enum PostStatus {
+  DRAFT = 'DRAFT',
+  PUBLISHED = 'PUBLISHED',
+}
+
 @Entity('posts')
+@Index(['site_id', 'slug'], { unique: true })
 export class Post {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -32,8 +39,30 @@ export class Post {
   @Column({ type: 'varchar', length: 500 })
   title: string;
 
+  @Column({ type: 'varchar', length: 255, default: () => 'gen_random_uuid()' })
+  slug: string;
+
   @Column({ type: 'text' })
   content: string;
+
+  @Column({
+    type: 'enum',
+    enum: PostStatus,
+    default: PostStatus.DRAFT,
+  })
+  status: PostStatus;
+
+  @Column({ type: 'timestamptz', nullable: true })
+  published_at: Date | null;
+
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  seo_title: string | null;
+
+  @Column({ type: 'varchar', length: 500, nullable: true })
+  seo_description: string | null;
+
+  @Column({ type: 'varchar', length: 500, nullable: true })
+  og_image_url: string | null;
 
   @CreateDateColumn({ type: 'timestamptz' })
   created_at: Date;

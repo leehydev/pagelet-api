@@ -102,6 +102,23 @@ export const ErrorCode = {
     HttpStatus.NOT_FOUND,
     'Site not found',
   ),
+
+  // 게시글 관련 에러
+  POST_NOT_FOUND: new ErrorCodeDefinition(
+    'POST_001',
+    HttpStatus.NOT_FOUND,
+    'Post not found',
+  ),
+  POST_SLUG_ALREADY_EXISTS: new ErrorCodeDefinition(
+    'POST_002',
+    HttpStatus.CONFLICT,
+    'Post slug already exists in this site',
+  ),
+  POST_ACCESS_DENIED: new ErrorCodeDefinition(
+    'POST_003',
+    HttpStatus.FORBIDDEN,
+    'Access denied to this post',
+  ),
 } as const;
 
 /**

@@ -84,6 +84,13 @@ export class SiteService {
   }
 
   /**
+   * slug로 사이트 조회
+   */
+  async findBySlug(slug: string): Promise<Site | null> {
+    return this.siteRepository.findOne({ where: { slug: slug.toLowerCase() } });
+  }
+
+  /**
    * 예약어 목록 반환
    */
   getReservedSlugs(): string[] {
