@@ -1,5 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { Logger, ValidationPipe } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
 import { GlobalExceptionFilter } from './common/exception/http-exception.filter';
 import { initializeTransactionalContext, StorageDriver } from 'typeorm-transactional';
@@ -10,6 +12,19 @@ async function bootstrap() {
   initializeTransactionalContext({ storageDriver: StorageDriver.AUTO });
 
   const app = await NestFactory.create(AppModule);
+  const configService = app.get(ConfigService);
+
+  // Cookie Parser 설정
+  app.use(cookieParser());
+
+  // CORS 설정 (크로스 도메인 쿠키 지원)
+  const frontendUrl = configService.get<string>('FRONTEND_URL', 'http://localhost:3001');
+  app.enableCors({
+    origin: frontendUrl,
+    credentials: true, // 쿠키 전송 허용
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  });
 
   // 글로벌 예외 필터 등록
   app.useGlobalFilters(new GlobalExceptionFilter());

@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule as NestConfigModule } from '@nestjs/config';
 import * as Joi from 'joi';
 import databaseConfig from './database.config';
+import jwtConfig from './jwt.config';
 import { JoiMsString } from 'src/common/utils/validation/joi-ms-string';
 
 @Module({
@@ -9,7 +10,7 @@ import { JoiMsString } from 'src/common/utils/validation/joi-ms-string';
     NestConfigModule.forRoot({
       isGlobal: true,
       envFilePath: ['.env.local', '.env'],
-      load: [databaseConfig],
+      load: [databaseConfig, jwtConfig],
       validationSchema: Joi.object({
         // Server
         PORT: Joi.number().default(3000),
@@ -33,6 +34,19 @@ import { JoiMsString } from 'src/common/utils/validation/joi-ms-string';
         KAKAO_CLIENT_ID: Joi.string().required(),
         KAKAO_CLIENT_SECRET: Joi.string().required(),
         KAKAO_REDIRECT_URI: Joi.string().required(),
+
+        // Frontend
+        FRONTEND_URL: Joi.string().default('http://localhost:3001'),
+
+        // Cookie
+        COOKIE_DOMAIN: Joi.string().optional(),
+        COOKIE_SECURE: Joi.string().valid('true', 'false').default('false'),
+        COOKIE_SAME_SITE: Joi.string().valid('strict', 'lax', 'none').default('lax'),
+
+        // Redis
+        REDIS_HOST: Joi.string().default('localhost'),
+        REDIS_PORT: Joi.number().default(6379),
+        REDIS_PASSWORD: Joi.string().optional(),
       }),
     }),
   ],

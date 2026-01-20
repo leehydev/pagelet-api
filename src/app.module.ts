@@ -1,23 +1,28 @@
 import { Module } from '@nestjs/common';
-import { APP_INTERCEPTOR } from '@nestjs/core';
+import { APP_INTERCEPTOR, APP_GUARD } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from './config/config.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ResponseInterceptor } from './common/response/response.interceptor';
-import { User } from './entities/user.entity';
-import { SocialAccount } from './entities/social-account.entity';
 import { DatabaseModule } from './database/database.module';
+import { RedisModule } from './common/redis/redis.module';
 import { OAuthModule } from './auth/oauth/oauth.module';
+import { AuthModule } from './auth/auth.module';
+import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 
 @Module({
-  imports: [ConfigModule, DatabaseModule, OAuthModule],
+  imports: [ConfigModule, DatabaseModule, RedisModule, OAuthModule, AuthModule],
   controllers: [AppController],
   providers: [
     AppService,
     {
       provide: APP_INTERCEPTOR,
       useClass: ResponseInterceptor,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
     },
   ],
 })
