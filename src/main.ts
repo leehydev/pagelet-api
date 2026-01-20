@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { Logger, ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
 import { GlobalExceptionFilter } from './common/exception/http-exception.filter';
@@ -40,6 +41,19 @@ async function bootstrap() {
       },
     }),
   );
+
+  // Swagger 설정 (프로덕션 환경에서는 비활성화)
+  if (process.env.NODE_ENV !== 'production') {
+    const swaggerConfig = new DocumentBuilder()
+      .setTitle('Pagelet API')
+      .setDescription('Pagelet API 문서')
+      .setVersion('1.0')
+      .addBearerAuth()
+      .build();
+    const document = SwaggerModule.createDocument(app, swaggerConfig);
+    SwaggerModule.setup('api-docs', app, document);
+    logger.log(`Swagger 문서: http://localhost:${process.env.PORT ?? 3000}/api-docs`);
+  }
 
   await app.listen(process.env.PORT ?? 3000);
 }

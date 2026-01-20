@@ -1,6 +1,7 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import { Controller, Get, Query, Param } from '@nestjs/common';
 import { SiteService } from './site.service';
 import { Public } from '../auth/decorators/public.decorator';
+import { SiteSettingsResponseDto } from './dto';
 
 @Controller('sites')
 export class SiteController {
@@ -31,5 +32,17 @@ export class SiteController {
   @Get('reserved-slugs')
   getReservedSlugs(): { slugs: string[] } {
     return { slugs: this.siteService.getReservedSlugs() };
+  }
+
+  /**
+   * GET /sites/:slug/settings
+   * 사이트 설정 조회 (공개)
+   */
+  @Public()
+  @Get(':slug/settings')
+  async getSettingsBySlug(
+    @Param('slug') slug: string,
+  ): Promise<SiteSettingsResponseDto> {
+    return this.siteService.getSettingsBySlug(slug);
   }
 }
