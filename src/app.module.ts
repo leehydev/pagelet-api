@@ -8,9 +8,10 @@ import { ResponseInterceptor } from './common/response/response.interceptor';
 import { User } from './entities/user.entity';
 import { SocialAccount } from './entities/social-account.entity';
 import { DatabaseModule } from './database/database.module';
+import { OAuthModule } from './auth/oauth/oauth.module';
 
 @Module({
-  imports: [ConfigModule, DatabaseModule],
+  imports: [ConfigModule, DatabaseModule, OAuthModule],
   controllers: [AppController],
   providers: [
     AppService,

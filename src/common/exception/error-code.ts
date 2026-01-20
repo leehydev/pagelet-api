@@ -51,6 +51,33 @@ export const ErrorCode = {
     HttpStatus.UNAUTHORIZED,
     'Invalid credentials',
   ),
+
+  // OAuth 관련 에러
+  OAUTH_INVALID_CODE: new ErrorCodeDefinition(
+    'OAUTH_001',
+    HttpStatus.BAD_REQUEST,
+    'Invalid authorization code',
+  ),
+  OAUTH_TOKEN_EXPIRED: new ErrorCodeDefinition(
+    'OAUTH_002',
+    HttpStatus.UNAUTHORIZED,
+    'OAuth token expired',
+  ),
+  OAUTH_USER_INFO_FAILED: new ErrorCodeDefinition(
+    'OAUTH_003',
+    HttpStatus.INTERNAL_SERVER_ERROR,
+    'Failed to retrieve user information',
+  ),
+  OAUTH_PROVIDER_ERROR: new ErrorCodeDefinition(
+    'OAUTH_004',
+    HttpStatus.BAD_GATEWAY,
+    'OAuth provider error',
+  ),
+  OAUTH_INSUFFICIENT_SCOPE: new ErrorCodeDefinition(
+    'OAUTH_005',
+    HttpStatus.FORBIDDEN,
+    'Insufficient OAuth scope',
+  ),
 } as const;
 
 /**
