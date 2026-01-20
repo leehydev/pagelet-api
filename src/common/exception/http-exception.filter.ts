@@ -37,10 +37,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       message = exception.message;
       details = exception.details;
 
-      this.logger.warn(
-        `BusinessException: ${errorCode} - ${message}`,
-        exception.stack,
-      );
+      this.logger.warn(`BusinessException: ${errorCode} - ${message}`, exception.stack);
     }
     // NestJS HttpException 처리 (Validation 등)
     else if (exception instanceof HttpException) {
@@ -50,15 +47,12 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       // NotFoundException 처리 (404)
       if (exception instanceof NotFoundException) {
         errorCode = ErrorCode.COMMON_NOT_FOUND.code;
-        message =
-          typeof exceptionResponse === 'string'
-            ? exceptionResponse
-            : 'Not found';
+        message = typeof exceptionResponse === 'string' ? exceptionResponse : 'Not found';
 
         // favicon.ico 같은 일반적인 요청은 로깅하지 않음
         const url = request.url;
         const shouldLog = !url.includes('favicon.ico') && !url.includes('robots.txt');
-        
+
         if (shouldLog) {
           this.logger.debug(`NotFoundException: ${url}`);
         }
@@ -71,21 +65,13 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       ) {
         const messages = (exceptionResponse as any).message;
         errorCode = ErrorCode.COMMON_VALIDATION_ERROR.code;
-        message = Array.isArray(messages)
-          ? 'Validation failed'
-          : messages || 'Validation failed';
+        message = Array.isArray(messages) ? 'Validation failed' : messages || 'Validation failed';
         details = Array.isArray(messages) ? { fields: messages } : undefined;
 
-        this.logger.warn(
-          `ValidationError: ${JSON.stringify(messages)}`,
-          exception.stack,
-        );
+        this.logger.warn(`ValidationError: ${JSON.stringify(messages)}`, exception.stack);
       } else {
         errorCode = ErrorCode.COMMON_BAD_REQUEST.code;
-        message =
-          typeof exceptionResponse === 'string'
-            ? exceptionResponse
-            : 'Bad request';
+        message = typeof exceptionResponse === 'string' ? exceptionResponse : 'Bad request';
       }
     }
     // 예상하지 못한 예외 처리 (500)
