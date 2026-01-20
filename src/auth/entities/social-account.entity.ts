@@ -10,9 +10,12 @@ import {
 } from 'typeorm';
 import { User } from './user.entity';
 
-export enum OAuthProvider {
-  KAKAO = 'KAKAO',
-}
+// TypeScript 타입 (DB enum 사용 안 함)
+export const OAuthProvider = {
+  KAKAO: 'KAKAO',
+} as const;
+
+export type OAuthProvider = (typeof OAuthProvider)[keyof typeof OAuthProvider];
 
 @Entity('social_accounts')
 @Index(['provider', 'provider_user_id'], { unique: true })
@@ -28,10 +31,10 @@ export class SocialAccount {
   user: User;
 
   @Column({
-    type: 'enum',
-    enum: OAuthProvider,
+    type: 'varchar',
+    length: 50,
   })
-  provider: OAuthProvider;
+  provider: string;
 
   @Column({ type: 'varchar', length: 255 })
   provider_user_id: string;

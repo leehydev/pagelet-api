@@ -19,9 +19,7 @@ export class PublicPostController {
    * 공개 게시글 목록 조회 (PUBLISHED만)
    */
   @Get()
-  async getPublicPosts(
-    @Query('site_slug') siteSlug: string,
-  ): Promise<PublicPostResponseDto[]> {
+  async getPublicPosts(@Query('site_slug') siteSlug: string): Promise<PublicPostResponseDto[]> {
     if (!siteSlug) {
       throw BusinessException.fromErrorCode(
         ErrorCode.COMMON_BAD_REQUEST,

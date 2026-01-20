@@ -3,6 +3,7 @@ import { ConfigModule as NestConfigModule } from '@nestjs/config';
 import * as Joi from 'joi';
 import databaseConfig from './database.config';
 import jwtConfig from './jwt.config';
+import s3Config from './s3.config';
 import { JoiMsString } from 'src/common/utils/validation/joi-ms-string';
 
 @Module({
@@ -10,7 +11,7 @@ import { JoiMsString } from 'src/common/utils/validation/joi-ms-string';
     NestConfigModule.forRoot({
       isGlobal: true,
       envFilePath: ['.env.local', '.env'],
-      load: [databaseConfig, jwtConfig],
+      load: [databaseConfig, jwtConfig, s3Config],
       validationSchema: Joi.object({
         // Server
         PORT: Joi.number().default(3000),
@@ -47,6 +48,11 @@ import { JoiMsString } from 'src/common/utils/validation/joi-ms-string';
         REDIS_HOST: Joi.string().default('localhost'),
         REDIS_PORT: Joi.number().default(6379),
         REDIS_PASSWORD: Joi.string().optional(),
+
+        // AWS S3
+        AWS_S3_BUCKET: Joi.string().default('pagelet-uploads'),
+        AWS_S3_REGION: Joi.string().default('ap-northeast-2'),
+        ASSETS_CDN_URL: Joi.string().default('https://assets.pagelet-dev.kr'),
       }),
     }),
   ],

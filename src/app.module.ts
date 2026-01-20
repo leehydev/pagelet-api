@@ -14,9 +14,22 @@ import { SiteModule } from './site/site.module';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 
 import { PostModule } from './post/post.module';
+import { StorageModule } from './storage/storage.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
-  imports: [ConfigModule, DatabaseModule, RedisModule, OAuthModule, AuthModule, OnboardingModule, SiteModule, PostModule],
+  imports: [
+    ConfigModule,
+    DatabaseModule,
+    RedisModule,
+    OAuthModule,
+    AuthModule,
+    OnboardingModule,
+    SiteModule,
+    PostModule,
+    StorageModule,
+    ScheduleModule.forRoot(),
+  ],
   controllers: [AppController],
   providers: [
     AppService,

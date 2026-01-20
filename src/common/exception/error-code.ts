@@ -97,18 +97,10 @@ export const ErrorCode = {
     HttpStatus.CONFLICT,
     'Slug is not available',
   ),
-  SITE_NOT_FOUND: new ErrorCodeDefinition(
-    'SITE_002',
-    HttpStatus.NOT_FOUND,
-    'Site not found',
-  ),
+  SITE_NOT_FOUND: new ErrorCodeDefinition('SITE_002', HttpStatus.NOT_FOUND, 'Site not found'),
 
   // 게시글 관련 에러
-  POST_NOT_FOUND: new ErrorCodeDefinition(
-    'POST_001',
-    HttpStatus.NOT_FOUND,
-    'Post not found',
-  ),
+  POST_NOT_FOUND: new ErrorCodeDefinition('POST_001', HttpStatus.NOT_FOUND, 'Post not found'),
   POST_SLUG_ALREADY_EXISTS: new ErrorCodeDefinition(
     'POST_002',
     HttpStatus.CONFLICT,
@@ -118,6 +110,28 @@ export const ErrorCode = {
     'POST_003',
     HttpStatus.FORBIDDEN,
     'Access denied to this post',
+  ),
+
+  // Storage 관련 에러
+  STORAGE_EXCEEDED: new ErrorCodeDefinition(
+    'STORAGE_001',
+    HttpStatus.BAD_REQUEST,
+    'Storage quota exceeded',
+  ),
+  STORAGE_RESERVE_FAILED: new ErrorCodeDefinition(
+    'STORAGE_002',
+    HttpStatus.BAD_REQUEST,
+    'Failed to reserve storage',
+  ),
+  UPLOAD_INVALID: new ErrorCodeDefinition(
+    'STORAGE_003',
+    HttpStatus.BAD_REQUEST,
+    'Invalid upload request',
+  ),
+  UPLOAD_NOT_FOUND: new ErrorCodeDefinition(
+    'STORAGE_004',
+    HttpStatus.NOT_FOUND,
+    'Upload not found',
   ),
 } as const;
 
