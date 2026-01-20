@@ -20,6 +20,7 @@ import { addTransactionalDataSource } from 'typeorm-transactional';
           username: dbConfig.username,
           password: dbConfig.password,
           database: dbConfig.database,
+          schema: dbConfig.schema,
           ssl: dbConfig.ssl,
           autoLoadEntities: true,
           synchronize: false,

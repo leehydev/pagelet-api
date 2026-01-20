@@ -78,6 +78,30 @@ export const ErrorCode = {
     HttpStatus.FORBIDDEN,
     'Insufficient OAuth scope',
   ),
+
+  // 온보딩 관련 에러
+  ONBOARDING_NOT_ALLOWED: new ErrorCodeDefinition(
+    'ONBOARDING_001',
+    HttpStatus.FORBIDDEN,
+    'Onboarding not allowed for this user',
+  ),
+  ONBOARDING_INVALID_STEP: new ErrorCodeDefinition(
+    'ONBOARDING_002',
+    HttpStatus.BAD_REQUEST,
+    'Invalid onboarding step',
+  ),
+
+  // 사이트 관련 에러
+  SITE_SLUG_NOT_AVAILABLE: new ErrorCodeDefinition(
+    'SITE_001',
+    HttpStatus.CONFLICT,
+    'Slug is not available',
+  ),
+  SITE_NOT_FOUND: new ErrorCodeDefinition(
+    'SITE_002',
+    HttpStatus.NOT_FOUND,
+    'Site not found',
+  ),
 } as const;
 
 /**
