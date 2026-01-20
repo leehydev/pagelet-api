@@ -4,7 +4,7 @@ import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
 import type { JwtSignOptions } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import { User } from './entities/user.entity';
+import { User, AccountStatus } from './entities/user.entity';
 import { SocialAccount, OAuthProvider } from './entities/social-account.entity';
 import { KakaoOAuthService } from './oauth/services/kakao-oauth.service';
 import { OAuthUserInfo } from './oauth/clients/interfaces/oauth-provider-client.interface';
@@ -105,6 +105,8 @@ export class AuthService {
     const newUser = this.userRepository.create({
       email,
       name: oauthUserInfo.name,
+      account_status: AccountStatus.ONBOARDING,
+      onboarding_step: 1,
     });
 
     const savedUser = await this.userRepository.save(newUser);
@@ -190,6 +192,8 @@ export class AuthService {
       id: user.id,
       email: user.email,
       name: user.name,
+      accountStatus: user.account_status,
+      onboardingStep: user.onboarding_step,
       createdAt: user.created_at,
       updatedAt: user.updated_at,
     };

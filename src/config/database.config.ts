@@ -7,9 +7,8 @@ export interface DatabaseConfig {
   username: string;
   password: string;
   database: string;
-  ssl: boolean | {
-    ca: string;
-  };
+  schema: string;
+  ssl: boolean | { ca: string };
 }
 
 export default registerAs<DatabaseConfig>('database', () => {
@@ -20,8 +19,11 @@ export default registerAs<DatabaseConfig>('database', () => {
     username: process.env.DB_USERNAME!,
     password: process.env.DB_PASSWORD!,
     database: process.env.DB_DATABASE!,
-    ssl: process.env.DB_RDS_CA_BASE64 ? {
-      ca: Buffer.from(process.env.DB_RDS_CA_BASE64!, 'base64').toString('utf-8'),
-    } : false,
+    schema: process.env.DB_SCHEMA!,
+    ssl: process.env.DB_RDS_CA_BASE64
+      ? {
+          ca: Buffer.from(process.env.DB_RDS_CA_BASE64!, 'base64').toString('utf-8'),
+        }
+      : false,
   };
 });

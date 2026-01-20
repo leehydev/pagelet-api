@@ -9,10 +9,14 @@ import { DatabaseModule } from './database/database.module';
 import { RedisModule } from './common/redis/redis.module';
 import { OAuthModule } from './auth/oauth/oauth.module';
 import { AuthModule } from './auth/auth.module';
+import { OnboardingModule } from './onboarding/onboarding.module';
+import { SiteModule } from './site/site.module';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 
+import { PostModule } from './post/post.module';
+
 @Module({
-  imports: [ConfigModule, DatabaseModule, RedisModule, OAuthModule, AuthModule],
+  imports: [ConfigModule, DatabaseModule, RedisModule, OAuthModule, AuthModule, OnboardingModule, SiteModule, PostModule],
   controllers: [AppController],
   providers: [
     AppService,
