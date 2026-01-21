@@ -1,6 +1,7 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
+import Big from 'big.js';
 import { SiteStorageUsage } from './entities/storage-usage.entity';
 import { BusinessException } from '../common/exception/business.exception';
 import { ErrorCode } from '../common/exception/error-code';
@@ -42,7 +43,10 @@ export class StorageUsageService {
    */
   async getAvailableBytes(siteId: string): Promise<number> {
     const usage = await this.getOrCreate(siteId);
-    return usage.maxBytes - (usage.usedBytes + usage.reservedBytes);
+    const max = new Big(usage.maxBytes);
+    const used = new Big(usage.usedBytes);
+    const reserved = new Big(usage.reservedBytes);
+    return max.minus(used).minus(reserved).toNumber();
   }
 
   /**
@@ -77,17 +81,22 @@ export class StorageUsageService {
         }
       }
 
-      // 용량 체크
-      const totalUsed = Number(usage.usedBytes) + Number(usage.reservedBytes);
-      const available = usage.maxBytes - totalUsed;
+      // 용량 체크 (Big.js로 정확한 계산)
+      const used = new Big(usage.usedBytes);
+      const reserved = new Big(usage.reservedBytes);
+      const max = new Big(usage.maxBytes);
+      const requested = new Big(sizeBytes);
 
-      if (sizeBytes > available) {
+      const totalUsed = used.plus(reserved);
+      const available = max.minus(totalUsed);
+
+      if (requested.gt(available)) {
         const usedMB = Math.round((usage.usedBytes / 1024 / 1024) * 10) / 10;
         const reservedMB = Math.round((usage.reservedBytes / 1024 / 1024) * 10) / 10;
-        const totalUsedMB = Math.round((totalUsed / 1024 / 1024) * 10) / 10;
+        const totalUsedMB = Math.round((totalUsed.toNumber() / 1024 / 1024) * 10) / 10;
         const maxMB = Math.round((usage.maxBytes / 1024 / 1024) * 10) / 10;
         const requestedMB = Math.round((sizeBytes / 1024 / 1024) * 10) / 10;
-        const availableMB = Math.max(0, Math.round((available / 1024 / 1024) * 10) / 10);
+        const availableMB = Math.max(0, Math.round((available.toNumber() / 1024 / 1024) * 10) / 10);
 
         throw BusinessException.withMessage(
           ErrorCode.STORAGE_EXCEEDED,
@@ -95,16 +104,17 @@ export class StorageUsageService {
           {
             usedBytes: usage.usedBytes,
             reservedBytes: usage.reservedBytes,
-            totalUsedBytes: totalUsed,
+            totalUsedBytes: totalUsed.toNumber(),
             maxBytes: usage.maxBytes,
-            availableBytes: Math.max(0, available),
+            availableBytes: Math.max(0, available.toNumber()),
             requestedBytes: sizeBytes,
           },
         );
       }
 
-      // reservedBytes 증가
-      usage.reservedBytes += sizeBytes;
+      // reservedBytes 증가 (Big.js로 정확한 계산)
+      const newReserved = reserved.plus(requested);
+      usage.reservedBytes = newReserved.toNumber();
       await manager.save(SiteStorageUsage, usage);
 
       this.logger.log(
@@ -149,15 +159,24 @@ export class StorageUsageService {
         }
       }
 
-      // reservedBytes 감소, usedBytes 증가
-      usage.reservedBytes -= reservedSizeBytes;
-      usage.usedBytes += actualSizeBytes;
+      // reservedBytes 감소, usedBytes 증가 (Big.js로 정확한 계산)
+      const reserved = new Big(usage.reservedBytes);
+      const used = new Big(usage.usedBytes);
+      const reservedToRelease = new Big(reservedSizeBytes);
+      const actualSize = new Big(actualSizeBytes);
+
+      const newReserved = reserved.minus(reservedToRelease);
+      const newUsed = used.plus(actualSize);
 
       // 음수 방지
-      if (usage.reservedBytes < 0) {
+      if (newReserved.lt(0)) {
         this.logger.warn(`Reserved bytes became negative for site ${siteId}. Setting to 0.`);
         usage.reservedBytes = 0;
+      } else {
+        usage.reservedBytes = newReserved.toNumber();
       }
+
+      usage.usedBytes = newUsed.toNumber();
 
       await manager.save(SiteStorageUsage, usage);
 
@@ -183,13 +202,17 @@ export class StorageUsageService {
         return;
       }
 
-      // reservedBytes 감소
-      usage.reservedBytes -= sizeBytes;
+      // reservedBytes 감소 (Big.js로 정확한 계산)
+      const reserved = new Big(usage.reservedBytes);
+      const toRelease = new Big(sizeBytes);
+      const newReserved = reserved.minus(toRelease);
 
       // 음수 방지
-      if (usage.reservedBytes < 0) {
+      if (newReserved.lt(0)) {
         this.logger.warn(`Reserved bytes became negative for site ${siteId}. Setting to 0.`);
         usage.reservedBytes = 0;
+      } else {
+        usage.reservedBytes = newReserved.toNumber();
       }
 
       await manager.save(SiteStorageUsage, usage);
@@ -217,13 +240,17 @@ export class StorageUsageService {
         return;
       }
 
-      // usedBytes 감소
-      usage.usedBytes -= sizeBytes;
+      // usedBytes 감소 (Big.js로 정확한 계산)
+      const used = new Big(usage.usedBytes);
+      const toRelease = new Big(sizeBytes);
+      const newUsed = used.minus(toRelease);
 
       // 음수 방지
-      if (usage.usedBytes < 0) {
+      if (newUsed.lt(0)) {
         this.logger.warn(`Used bytes became negative for site ${siteId}. Setting to 0.`);
         usage.usedBytes = 0;
+      } else {
+        usage.usedBytes = newUsed.toNumber();
       }
 
       await manager.save(SiteStorageUsage, usage);

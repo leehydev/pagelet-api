@@ -16,7 +16,7 @@ export class StorageCleanupService {
 
   /**
    * 매 시간마다 실행되는 Cleanup Job
-   * post_id가 null이고 24시간 이상 된 레코드 정리
+   * post_id가 null이고 48시간 이상 된 레코드 정리
    * (게시글 저장을 하지 않은 경우를 고려하여 충분한 시간 제공)
    */
   @Cron(CronExpression.EVERY_HOUR)
@@ -24,8 +24,8 @@ export class StorageCleanupService {
     this.logger.log('Starting cleanup of orphaned reservations...');
 
     try {
-      // post_id가 null이고 24시간(1440분) 이상 된 레코드 찾기
-      const orphaned = await this.postImageService.findOrphaned(1440);
+      // post_id가 null이고 48시간(2880분) 이상 된 레코드 찾기
+      const orphaned = await this.postImageService.findOrphaned(2880);
 
       if (orphaned.length === 0) {
         this.logger.log('No orphaned reservations found');
