@@ -15,15 +15,15 @@ export class PublicCategoryController {
   ) {}
 
   /**
-   * GET /public/categories?site_slug=xxx
+   * GET /public/categories?siteSlug=xxx
    * 공개 카테고리 목록 조회
    */
   @Get()
-  async getPublicCategories(@Query('site_slug') siteSlug: string): Promise<PublicCategoryResponseDto[]> {
+  async getPublicCategories(@Query('siteSlug') siteSlug: string): Promise<PublicCategoryResponseDto[]> {
     if (!siteSlug) {
       throw BusinessException.fromErrorCode(
         ErrorCode.COMMON_BAD_REQUEST,
-        'site_slug query parameter is required',
+        'siteSlug query parameter is required',
       );
     }
 
@@ -42,7 +42,7 @@ export class PublicCategoryController {
           slug: category.slug,
           name: category.name,
           description: category.description,
-          post_count: postCounts.get(category.id) || 0,
+          postCount: postCounts.get(category.id) || 0,
         }),
     );
   }

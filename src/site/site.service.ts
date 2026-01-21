@@ -110,23 +110,23 @@ export class SiteService {
       id: site.id,
       name: site.name,
       slug: site.slug,
-      logo_image_url: site.logoImageUrl,
-      favicon_url: site.faviconUrl,
-      og_image_url: site.ogImageUrl,
-      seo_title: site.seoTitle,
-      seo_description: site.seoDescription,
-      seo_keywords: site.seoKeywords,
-      canonical_base_url: site.canonicalBaseUrl,
-      robots_index: site.robotsIndex,
-      contact_email: site.contactEmail,
-      contact_phone: site.contactPhone,
+      logoImageUrl: site.logoImageUrl,
+      faviconUrl: site.faviconUrl,
+      ogImageUrl: site.ogImageUrl,
+      seoTitle: site.seoTitle,
+      seoDescription: site.seoDescription,
+      seoKeywords: site.seoKeywords,
+      canonicalBaseUrl: site.canonicalBaseUrl,
+      robotsIndex: site.robotsIndex,
+      contactEmail: site.contactEmail,
+      contactPhone: site.contactPhone,
       address: site.address,
-      kakao_channel_url: site.kakaoChannelUrl,
-      naver_map_url: site.naverMapUrl,
-      instagram_url: site.instagramUrl,
-      business_number: site.businessNumber,
-      business_name: site.businessName,
-      representative_name: site.representativeName,
+      kakaoChannelUrl: site.kakaoChannelUrl,
+      naverMapUrl: site.naverMapUrl,
+      instagramUrl: site.instagramUrl,
+      businessNumber: site.businessNumber,
+      businessName: site.businessName,
+      representativeName: site.representativeName,
     };
   }
 
@@ -137,23 +137,23 @@ export class SiteService {
     return {
       name: site.name,
       slug: site.slug,
-      logo_image_url: site.logoImageUrl,
-      favicon_url: site.faviconUrl,
-      og_image_url: site.ogImageUrl,
-      seo_title: site.seoTitle,
-      seo_description: site.seoDescription,
-      seo_keywords: site.seoKeywords,
-      canonical_base_url: site.canonicalBaseUrl,
-      robots_index: site.robotsIndex,
-      contact_email: site.contactEmail,
-      contact_phone: site.contactPhone,
+      logoImageUrl: site.logoImageUrl,
+      faviconUrl: site.faviconUrl,
+      ogImageUrl: site.ogImageUrl,
+      seoTitle: site.seoTitle,
+      seoDescription: site.seoDescription,
+      seoKeywords: site.seoKeywords,
+      canonicalBaseUrl: site.canonicalBaseUrl,
+      robotsIndex: site.robotsIndex,
+      contactEmail: site.contactEmail,
+      contactPhone: site.contactPhone,
       address: site.address,
-      kakao_channel_url: site.kakaoChannelUrl,
-      naver_map_url: site.naverMapUrl,
-      instagram_url: site.instagramUrl,
-      business_number: site.businessNumber,
-      business_name: site.businessName,
-      representative_name: site.representativeName,
+      kakaoChannelUrl: site.kakaoChannelUrl,
+      naverMapUrl: site.naverMapUrl,
+      instagramUrl: site.instagramUrl,
+      businessNumber: site.businessNumber,
+      businessName: site.businessName,
+      representativeName: site.representativeName,
     };
   }
 
@@ -181,23 +181,23 @@ export class SiteService {
     }
 
     // 허용된 필드만 명시적으로 업데이트 (Defense in Depth)
-    if (dto.logo_image_url !== undefined) site.logoImageUrl = dto.logo_image_url;
-    if (dto.favicon_url !== undefined) site.faviconUrl = dto.favicon_url;
-    if (dto.og_image_url !== undefined) site.ogImageUrl = dto.og_image_url;
-    if (dto.seo_title !== undefined) site.seoTitle = dto.seo_title;
-    if (dto.seo_description !== undefined) site.seoDescription = dto.seo_description;
-    if (dto.seo_keywords !== undefined) site.seoKeywords = dto.seo_keywords;
-    if (dto.canonical_base_url !== undefined) site.canonicalBaseUrl = dto.canonical_base_url;
-    if (dto.robots_index !== undefined) site.robotsIndex = dto.robots_index;
-    if (dto.contact_email !== undefined) site.contactEmail = dto.contact_email;
-    if (dto.contact_phone !== undefined) site.contactPhone = dto.contact_phone;
+    if (dto.logoImageUrl !== undefined) site.logoImageUrl = dto.logoImageUrl;
+    if (dto.faviconUrl !== undefined) site.faviconUrl = dto.faviconUrl;
+    if (dto.ogImageUrl !== undefined) site.ogImageUrl = dto.ogImageUrl;
+    if (dto.seoTitle !== undefined) site.seoTitle = dto.seoTitle;
+    if (dto.seoDescription !== undefined) site.seoDescription = dto.seoDescription;
+    if (dto.seoKeywords !== undefined) site.seoKeywords = dto.seoKeywords;
+    if (dto.canonicalBaseUrl !== undefined) site.canonicalBaseUrl = dto.canonicalBaseUrl;
+    if (dto.robotsIndex !== undefined) site.robotsIndex = dto.robotsIndex;
+    if (dto.contactEmail !== undefined) site.contactEmail = dto.contactEmail;
+    if (dto.contactPhone !== undefined) site.contactPhone = dto.contactPhone;
     if (dto.address !== undefined) site.address = dto.address;
-    if (dto.kakao_channel_url !== undefined) site.kakaoChannelUrl = dto.kakao_channel_url;
-    if (dto.naver_map_url !== undefined) site.naverMapUrl = dto.naver_map_url;
-    if (dto.instagram_url !== undefined) site.instagramUrl = dto.instagram_url;
-    if (dto.business_number !== undefined) site.businessNumber = dto.business_number;
-    if (dto.business_name !== undefined) site.businessName = dto.business_name;
-    if (dto.representative_name !== undefined) site.representativeName = dto.representative_name;
+    if (dto.kakaoChannelUrl !== undefined) site.kakaoChannelUrl = dto.kakaoChannelUrl;
+    if (dto.naverMapUrl !== undefined) site.naverMapUrl = dto.naverMapUrl;
+    if (dto.instagramUrl !== undefined) site.instagramUrl = dto.instagramUrl;
+    if (dto.businessNumber !== undefined) site.businessNumber = dto.businessNumber;
+    if (dto.businessName !== undefined) site.businessName = dto.businessName;
+    if (dto.representativeName !== undefined) site.representativeName = dto.representativeName;
 
     const updated = await this.siteRepository.save(site);
     this.logger.log(`Updated site settings: ${updated.id}`);

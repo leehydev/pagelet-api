@@ -15,29 +15,29 @@ export class PublicPostController {
   ) {}
 
   /**
-   * GET /public/posts?site_slug=xxx&category_slug=xxx
+   * GET /public/posts?siteSlug=xxx&categorySlug=xxx
    * 공개 게시글 목록 조회 (PUBLISHED만)
-   * category_slug가 제공되면 해당 카테고리의 게시글만 조회
+   * categorySlug가 제공되면 해당 카테고리의 게시글만 조회
    */
   @Get()
   async getPublicPosts(
-    @Query('site_slug') siteSlug: string,
-    @Query('category_slug') categorySlug?: string,
+    @Query('siteSlug') siteSlug: string,
+    @Query('categorySlug') categorySlug?: string,
   ): Promise<PublicPostResponseDto[]> {
     if (!siteSlug) {
       throw BusinessException.fromErrorCode(
         ErrorCode.COMMON_BAD_REQUEST,
-        'site_slug query parameter is required',
+        'siteSlug query parameter is required',
       );
     }
 
-    // site_slug로 사이트 조회
+    // siteSlug로 사이트 조회
     const site = await this.siteService.findBySlug(siteSlug);
     if (!site) {
       throw BusinessException.fromErrorCode(ErrorCode.SITE_NOT_FOUND);
     }
 
-    // category_slug가 제공되면 카테고리별 게시글 조회
+    // categorySlug가 제공되면 카테고리별 게시글 조회
     const posts = categorySlug
       ? await this.postService.findPublishedBySiteIdAndCategorySlug(site.id, categorySlug)
       : await this.postService.findPublishedBySiteId(site.id);
@@ -47,33 +47,34 @@ export class PublicPostController {
         new PublicPostResponseDto({
           id: post.id,
           title: post.title,
+          subtitle: post.subtitle,
           slug: post.slug,
           content: post.content,
-          published_at: post.publishedAt!,
-          seo_title: post.seoTitle,
-          seo_description: post.seoDescription,
-          og_image_url: post.ogImageUrl,
+          publishedAt: post.publishedAt!,
+          seoTitle: post.seoTitle,
+          seoDescription: post.seoDescription,
+          ogImageUrl: post.ogImageUrl,
         }),
     );
   }
 
   /**
-   * GET /public/posts/:slug?site_slug=xxx
+   * GET /public/posts/:slug?siteSlug=xxx
    * 공개 게시글 상세 조회
    */
   @Get(':slug')
   async getPublicPostBySlug(
     @Param('slug') postSlug: string,
-    @Query('site_slug') siteSlug: string,
+    @Query('siteSlug') siteSlug: string,
   ): Promise<PublicPostResponseDto> {
     if (!siteSlug) {
       throw BusinessException.fromErrorCode(
         ErrorCode.COMMON_BAD_REQUEST,
-        'site_slug query parameter is required',
+        'siteSlug query parameter is required',
       );
     }
 
-    // site_slug로 사이트 조회
+    // siteSlug로 사이트 조회
     const site = await this.siteService.findBySlug(siteSlug);
     if (!site) {
       throw BusinessException.fromErrorCode(ErrorCode.SITE_NOT_FOUND);
@@ -87,12 +88,13 @@ export class PublicPostController {
     return new PublicPostResponseDto({
       id: post.id,
       title: post.title,
+      subtitle: post.subtitle,
       slug: post.slug,
       content: post.content,
-      published_at: post.publishedAt!,
-      seo_title: post.seoTitle,
-      seo_description: post.seoDescription,
-      og_image_url: post.ogImageUrl,
+      publishedAt: post.publishedAt!,
+      seoTitle: post.seoTitle,
+      seoDescription: post.seoDescription,
+      ogImageUrl: post.ogImageUrl,
     });
   }
 }
