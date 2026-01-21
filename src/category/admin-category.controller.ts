@@ -1,30 +1,21 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards } from '@nestjs/common';
 import { CategoryService } from './category.service';
 import { CreateCategoryDto, UpdateCategoryDto, CategoryResponseDto } from './dto';
-import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import type { UserPrincipal } from '../auth/types/jwt-payload.interface';
-import { SiteService } from '../site/site.service';
-import { BusinessException } from '../common/exception/business.exception';
-import { ErrorCode } from '../common/exception/error-code';
+import { CurrentSite } from '../auth/decorators/current-site.decorator';
+import { AdminSiteGuard } from '../auth/guards/admin-site.guard';
+import { Site } from '../site/entities/site.entity';
 
-@Controller('admin/categories')
+@Controller('admin/sites/:siteId/categories')
+@UseGuards(AdminSiteGuard)
 export class AdminCategoryController {
-  constructor(
-    private readonly categoryService: CategoryService,
-    private readonly siteService: SiteService,
-  ) {}
+  constructor(private readonly categoryService: CategoryService) {}
 
   /**
-   * GET /admin/categories
+   * GET /admin/sites/:siteId/categories
    * 카테고리 목록 조회
    */
   @Get()
-  async getCategories(@CurrentUser() user: UserPrincipal): Promise<CategoryResponseDto[]> {
-    const site = await this.siteService.findByUserId(user.userId);
-    if (!site) {
-      throw BusinessException.fromErrorCode(ErrorCode.SITE_NOT_FOUND);
-    }
-
+  async getCategories(@CurrentSite() site: Site): Promise<CategoryResponseDto[]> {
     const categories = await this.categoryService.findBySiteId(site.id);
     const categoryIds = categories.map((c) => c.id);
     const postCounts = await this.categoryService.getPostCountsByCategories(categoryIds);
@@ -46,19 +37,14 @@ export class AdminCategoryController {
   }
 
   /**
-   * POST /admin/categories
+   * POST /admin/sites/:siteId/categories
    * 카테고리 생성
    */
   @Post()
   async createCategory(
-    @CurrentUser() user: UserPrincipal,
+    @CurrentSite() site: Site,
     @Body() dto: CreateCategoryDto,
   ): Promise<CategoryResponseDto> {
-    const site = await this.siteService.findByUserId(user.userId);
-    if (!site) {
-      throw BusinessException.fromErrorCode(ErrorCode.SITE_NOT_FOUND);
-    }
-
     const category = await this.categoryService.createCategory(site.id, dto);
     const postCount = await this.categoryService.getPostCountByCategory(category.id);
 
@@ -76,20 +62,15 @@ export class AdminCategoryController {
   }
 
   /**
-   * PUT /admin/categories/:id
+   * PUT /admin/sites/:siteId/categories/:id
    * 카테고리 수정
    */
   @Put(':id')
   async updateCategory(
-    @CurrentUser() user: UserPrincipal,
+    @CurrentSite() site: Site,
     @Param('id') categoryId: string,
     @Body() dto: UpdateCategoryDto,
   ): Promise<CategoryResponseDto> {
-    const site = await this.siteService.findByUserId(user.userId);
-    if (!site) {
-      throw BusinessException.fromErrorCode(ErrorCode.SITE_NOT_FOUND);
-    }
-
     const category = await this.categoryService.updateCategory(categoryId, site.id, dto);
     const postCount = await this.categoryService.getPostCountByCategory(category.id);
 
@@ -107,19 +88,14 @@ export class AdminCategoryController {
   }
 
   /**
-   * DELETE /admin/categories/:id
+   * DELETE /admin/sites/:siteId/categories/:id
    * 카테고리 삭제
    */
   @Delete(':id')
   async deleteCategory(
-    @CurrentUser() user: UserPrincipal,
+    @CurrentSite() site: Site,
     @Param('id') categoryId: string,
   ): Promise<void> {
-    const site = await this.siteService.findByUserId(user.userId);
-    if (!site) {
-      throw BusinessException.fromErrorCode(ErrorCode.SITE_NOT_FOUND);
-    }
-
     await this.categoryService.deleteCategory(categoryId, site.id);
   }
 }

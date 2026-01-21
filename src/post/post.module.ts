@@ -1,6 +1,6 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { PostController } from './post.controller';
+import { OnboardingPostController } from './onboarding-post.controller';
 import { AdminPostController } from './admin-post.controller';
 import { PublicPostController } from './public-post.controller';
 import { PostService } from './post.service';
@@ -16,7 +16,7 @@ import { CategoryModule } from '../category/category.module';
     StorageModule,
     forwardRef(() => CategoryModule),
   ],
-  controllers: [PostController, AdminPostController, PublicPostController],
+  controllers: [OnboardingPostController, AdminPostController, PublicPostController],
   providers: [PostService],
   exports: [PostService],
 })

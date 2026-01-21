@@ -6,15 +6,15 @@ import { S3Service } from './s3.service';
 import { StorageUsageService } from './storage-usage.service';
 import { PostImageService } from './post-image.service';
 import { UploadService } from './upload.service';
-import { UploadController } from './upload.controller';
+import { AdminUploadController } from './admin-upload.controller';
 import { StorageCleanupService } from './storage-cleanup.service';
 import { BrandingAssetService } from './branding-asset.service';
-import { BrandingAssetController } from './branding-asset.controller';
+import { AdminBrandingAssetController } from './admin-branding-asset.controller';
 import { SiteModule } from '../site/site.module';
 
 @Module({
   imports: [TypeOrmModule.forFeature([PostImage, SiteStorageUsage]), SiteModule],
-  controllers: [UploadController, BrandingAssetController],
+  controllers: [AdminUploadController, AdminBrandingAssetController],
   providers: [
     S3Service,
     StorageUsageService,

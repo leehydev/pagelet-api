@@ -9,7 +9,7 @@ import { ErrorCode } from '../common/exception/error-code';
 import { PostResponseDto } from './dto/post-response.dto';
 
 @Controller('posts')
-export class PostController {
+export class OnboardingPostController {
   constructor(
     private readonly postService: PostService,
     private readonly siteService: SiteService,

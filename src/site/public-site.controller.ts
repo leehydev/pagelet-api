@@ -4,7 +4,7 @@ import { Public } from '../auth/decorators/public.decorator';
 import { SiteSettingsResponseDto } from './dto';
 
 @Controller('sites')
-export class SiteController {
+export class PublicSiteController {
   constructor(private readonly siteService: SiteService) {}
 
   /**
