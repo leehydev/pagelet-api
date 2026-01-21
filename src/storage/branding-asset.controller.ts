@@ -3,14 +3,14 @@ import { BrandingAssetService } from './branding-asset.service';
 import { BrandingPresignDto } from './dto/branding-presign.dto';
 import { BrandingCommitDto } from './dto/branding-commit.dto';
 import { BrandingPresignResponseDto, BrandingCommitResponseDto } from './dto/branding-response.dto';
-import { CurrentTenant } from '../auth/decorators/current-tenant.decorator';
-import { TenantGuard } from '../auth/guards/tenant.guard';
+import { CurrentSite } from '../auth/decorators/current-site.decorator';
+import { SiteGuard } from '../auth/guards/site.guard';
 import { Site } from '../site/entities/site.entity';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 
 @ApiTags('Branding Assets')
 @Controller('admin/assets/branding')
-@UseGuards(TenantGuard)
+@UseGuards(SiteGuard)
 export class BrandingAssetController {
   constructor(private readonly brandingAssetService: BrandingAssetService) {}
 
@@ -27,14 +27,14 @@ export class BrandingAssetController {
   })
   @ApiResponse({ status: 400, description: '잘못된 요청 (파일 형식/크기)' })
   async presign(
-    @CurrentTenant() tenant: Site | null,
+    @CurrentSite() site: Site | null,
     @Body() dto: BrandingPresignDto,
   ): Promise<BrandingPresignResponseDto> {
-    if (!tenant) {
+    if (!site) {
       throw new NotFoundException('사이트가 존재하지 않습니다. 먼저 사이트를 생성해주세요.');
     }
 
-    return this.brandingAssetService.presign(tenant.id, dto);
+    return this.brandingAssetService.presign(site.id, dto);
   }
 
   /**
@@ -46,13 +46,13 @@ export class BrandingAssetController {
   @ApiResponse({ status: 200, description: '업로드 확정 성공', type: BrandingCommitResponseDto })
   @ApiResponse({ status: 404, description: '임시 파일을 찾을 수 없음' })
   async commit(
-    @CurrentTenant() tenant: Site | null,
+    @CurrentSite() site: Site | null,
     @Body() dto: BrandingCommitDto,
   ): Promise<BrandingCommitResponseDto> {
-    if (!tenant) {
+    if (!site) {
       throw new NotFoundException('사이트가 존재하지 않습니다. 먼저 사이트를 생성해주세요.');
     }
 
-    return this.brandingAssetService.commit(tenant.id, dto);
+    return this.brandingAssetService.commit(site.id, dto);
   }
 }
