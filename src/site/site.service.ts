@@ -82,10 +82,27 @@ export class SiteService {
   }
 
   /**
-   * 사용자의 사이트 조회
+   * ID로 사이트 조회
+   */
+  async findById(siteId: string): Promise<Site | null> {
+    return this.siteRepository.findOne({ where: { id: siteId } });
+  }
+
+  /**
+   * 사용자의 사이트 조회 (단일)
    */
   async findByUserId(userId: string): Promise<Site | null> {
     return this.siteRepository.findOne({ where: { userId: userId } });
+  }
+
+  /**
+   * 사용자의 모든 사이트 목록 조회
+   */
+  async findAllByUserId(userId: string): Promise<Site[]> {
+    return this.siteRepository.find({
+      where: { userId: userId },
+      order: { createdAt: 'ASC' },
+    });
   }
 
   /**
