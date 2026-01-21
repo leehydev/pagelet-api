@@ -48,8 +48,17 @@ export class Post {
   @Column({ type: 'varchar', length: 255, default: () => 'gen_random_uuid()' })
   slug: string;
 
-  @Column({ type: 'text' })
-  content: string;
+  @Column({ type: 'text', nullable: true })
+  content: string; // Deprecated: 하위 호환성을 위해 유지
+
+  @Column({ type: 'jsonb', nullable: true })
+  contentJson: Record<string, any> | null;
+
+  @Column({ type: 'text', nullable: true })
+  contentHtml: string | null;
+
+  @Column({ type: 'text', nullable: true })
+  contentText: string | null;
 
   @Column({
     type: 'varchar',

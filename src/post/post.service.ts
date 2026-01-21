@@ -57,7 +57,7 @@ export class PostService {
    */
   async generateUniqueSlug(siteId: string, title: string, excludePostId?: string): Promise<string> {
     const baseSlug = this.generateSlug(title);
-    
+
     if (!baseSlug) {
       // 한글 등으로만 구성된 경우 timestamp 기반 slug 생성
       const timestamp = Date.now().toString(36);
@@ -119,12 +119,15 @@ export class PostService {
       title: dto.title,
       subtitle: dto.subtitle,
       slug,
-      content: dto.content,
+      content: dto.content || undefined, // Deprecated: 하위 호환성
+      contentJson: dto.contentJson,
+      contentHtml: dto.contentHtml || undefined,
+      contentText: dto.contentText || undefined,
       status,
       publishedAt: publishedAt,
-      seoTitle: dto.seoTitle || null,
-      seoDescription: dto.seoDescription || null,
-      ogImageUrl: dto.ogImageUrl || null,
+      seoTitle: dto.seoTitle || undefined,
+      seoDescription: dto.seoDescription || undefined,
+      ogImageUrl: dto.ogImageUrl || undefined,
       categoryId: categoryId,
     });
 
@@ -193,11 +196,7 @@ export class PostService {
   /**
    * 사용자의 게시글 목록 조회 (Admin용)
    */
-  async findByUserId(
-    userId: string,
-    siteId: string,
-    categoryId?: string,
-  ): Promise<Post[]> {
+  async findByUserId(userId: string, siteId: string, categoryId?: string): Promise<Post[]> {
     const where: any = { userId: userId, siteId: siteId };
     if (categoryId) {
       where.categoryId = categoryId;
@@ -225,8 +224,8 @@ export class PostService {
    */
   async findPublishedBySiteId(siteId: string): Promise<Post[]> {
     return this.postRepository.find({
-      where: { 
-        siteId: siteId, 
+      where: {
+        siteId: siteId,
         status: PostStatus.PUBLISHED,
       },
       relations: ['category'],

@@ -6,6 +6,7 @@ import {
   IsIn,
   Matches,
   IsUrl,
+  IsObject,
 } from 'class-validator';
 import { PostStatus } from '../entities/post.entity';
 
@@ -28,9 +29,21 @@ export class CreatePostDto {
   })
   slug?: string;
 
-  @IsNotEmpty({ message: '내용은 필수입니다' })
+  @IsOptional()
   @IsString()
-  content: string;
+  content?: string; // Deprecated: 하위 호환성을 위해 유지
+
+  @IsNotEmpty({ message: '내용(JSON)은 필수입니다' })
+  @IsObject({ message: '내용(JSON)은 객체여야 합니다' })
+  contentJson: Record<string, any>;
+
+  @IsOptional()
+  @IsString()
+  contentHtml?: string;
+
+  @IsOptional()
+  @IsString()
+  contentText?: string;
 
   @IsOptional()
   @IsString()

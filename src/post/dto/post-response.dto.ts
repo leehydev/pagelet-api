@@ -5,7 +5,10 @@ export class PostResponseDto {
   title: string;
   subtitle: string;
   slug: string;
-  content: string;
+  content: string | null; // Deprecated: 하위 호환성
+  contentJson: Record<string, any> | null;
+  contentHtml: string | null;
+  contentText: string | null;
   status: string;
   publishedAt: Date | null;
   seoTitle: string | null;
@@ -24,7 +27,10 @@ export class PublicPostResponseDto {
   title: string;
   subtitle: string;
   slug: string;
-  content: string;
+  content: string | null; // Deprecated: 하위 호환성
+  contentJson: Record<string, any> | null;
+  contentHtml: string | null;
+  contentText: string | null;
   publishedAt: Date;
   seoTitle: string | null;
   seoDescription: string | null;
