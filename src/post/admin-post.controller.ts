@@ -1,6 +1,7 @@
-import { Controller, Post, Get, Body, Query, Param } from '@nestjs/common';
+import { Controller, Post, Get, Patch, Body, Query, Param } from '@nestjs/common';
 import { PostService } from './post.service';
 import { CreatePostDto } from './dto/create-post.dto';
+import { UpdatePostDto } from './dto/update-post.dto';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import type { UserPrincipal } from '../auth/types/jwt-payload.interface';
 import { SiteService } from '../site/site.service';
@@ -134,6 +135,43 @@ export class AdminPostController {
     if (!post || post.siteId !== site.id) {
       throw BusinessException.fromErrorCode(ErrorCode.POST_NOT_FOUND);
     }
+
+    return new PostResponseDto({
+      id: post.id,
+      title: post.title,
+      subtitle: post.subtitle,
+      slug: post.slug,
+      content: post.content,
+      contentJson: post.contentJson,
+      contentHtml: post.contentHtml,
+      contentText: post.contentText,
+      status: post.status,
+      publishedAt: post.publishedAt,
+      seoTitle: post.seoTitle,
+      seoDescription: post.seoDescription,
+      ogImageUrl: post.ogImageUrl,
+      createdAt: post.createdAt,
+      updatedAt: post.updatedAt,
+    });
+  }
+
+  /**
+   * PATCH /admin/posts/:id
+   * 게시글 수정 (자동저장/수동저장 모두 지원)
+   */
+  @Patch(':id')
+  async updatePost(
+    @CurrentUser() user: UserPrincipal,
+    @Param('id') postId: string,
+    @Body() dto: UpdatePostDto,
+  ): Promise<PostResponseDto> {
+    // 사용자의 사이트 조회
+    const site = await this.siteService.findByUserId(user.userId);
+    if (!site) {
+      throw BusinessException.fromErrorCode(ErrorCode.SITE_NOT_FOUND);
+    }
+
+    const post = await this.postService.updatePost(postId, site.id, dto);
 
     return new PostResponseDto({
       id: post.id,
