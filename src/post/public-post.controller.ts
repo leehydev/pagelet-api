@@ -15,11 +15,15 @@ export class PublicPostController {
   ) {}
 
   /**
-   * GET /public/posts?site_slug=xxx
+   * GET /public/posts?site_slug=xxx&category_slug=xxx
    * 공개 게시글 목록 조회 (PUBLISHED만)
+   * category_slug가 제공되면 해당 카테고리의 게시글만 조회
    */
   @Get()
-  async getPublicPosts(@Query('site_slug') siteSlug: string): Promise<PublicPostResponseDto[]> {
+  async getPublicPosts(
+    @Query('site_slug') siteSlug: string,
+    @Query('category_slug') categorySlug?: string,
+  ): Promise<PublicPostResponseDto[]> {
     if (!siteSlug) {
       throw BusinessException.fromErrorCode(
         ErrorCode.COMMON_BAD_REQUEST,
@@ -33,7 +37,10 @@ export class PublicPostController {
       throw BusinessException.fromErrorCode(ErrorCode.SITE_NOT_FOUND);
     }
 
-    const posts = await this.postService.findPublishedBySiteId(site.id);
+    // category_slug가 제공되면 카테고리별 게시글 조회
+    const posts = categorySlug
+      ? await this.postService.findPublishedBySiteIdAndCategorySlug(site.id, categorySlug)
+      : await this.postService.findPublishedBySiteId(site.id);
 
     return posts.map(
       (post) =>

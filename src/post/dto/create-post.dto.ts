@@ -46,4 +46,8 @@ export class CreatePostDto {
   @IsUrl({}, { message: '유효한 URL 형식이어야 합니다' })
   @MaxLength(500, { message: 'OG 이미지 URL은 최대 500자까지 가능합니다' })
   og_image_url?: string;
+
+  @IsOptional()
+  @IsString()
+  category_id?: string;
 }

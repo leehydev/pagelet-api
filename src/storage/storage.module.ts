@@ -11,10 +11,7 @@ import { StorageCleanupService } from './storage-cleanup.service';
 import { SiteModule } from '../site/site.module';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([PostImage, SiteStorageUsage]),
-    SiteModule,
-  ],
+  imports: [TypeOrmModule.forFeature([PostImage, SiteStorageUsage]), SiteModule],
   controllers: [UploadController],
   providers: [
     S3Service,

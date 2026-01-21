@@ -133,6 +133,28 @@ export const ErrorCode = {
     HttpStatus.NOT_FOUND,
     'Upload not found',
   ),
+
+  // 카테고리 관련 에러
+  CATEGORY_NOT_FOUND: new ErrorCodeDefinition(
+    'CATEGORY_001',
+    HttpStatus.NOT_FOUND,
+    'Category not found',
+  ),
+  CATEGORY_SLUG_ALREADY_EXISTS: new ErrorCodeDefinition(
+    'CATEGORY_002',
+    HttpStatus.CONFLICT,
+    'Category slug already exists in this site',
+  ),
+  CATEGORY_SLUG_RESERVED: new ErrorCodeDefinition(
+    'CATEGORY_003',
+    HttpStatus.BAD_REQUEST,
+    'Category slug is reserved',
+  ),
+  CATEGORY_HAS_POSTS: new ErrorCodeDefinition(
+    'CATEGORY_004',
+    HttpStatus.BAD_REQUEST,
+    'Cannot delete category with existing posts',
+  ),
 } as const;
 
 /**

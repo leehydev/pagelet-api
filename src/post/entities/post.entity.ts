@@ -67,6 +67,13 @@ export class Post {
   @Column({ type: 'varchar', length: 500, nullable: true })
   ogImageUrl: string | null;
 
+  @Column({ type: 'uuid', nullable: true })
+  categoryId: string | null;
+
+  @ManyToOne('Category', { onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'category_id' })
+  category: any;
+
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;
 

@@ -48,18 +48,22 @@ export class AdminPostController {
   }
 
   /**
-   * GET /admin/posts
+   * GET /admin/posts?category_id=xxx
    * 내 게시글 목록 조회
+   * category_id가 제공되면 해당 카테고리의 게시글만 조회
    */
   @Get()
-  async getMyPosts(@CurrentUser() user: UserPrincipal): Promise<PostListResponseDto[]> {
+  async getMyPosts(
+    @CurrentUser() user: UserPrincipal,
+    @Query('category_id') categoryId?: string,
+  ): Promise<PostListResponseDto[]> {
     // 사용자의 사이트 조회
     const site = await this.siteService.findByUserId(user.userId);
     if (!site) {
       throw BusinessException.fromErrorCode(ErrorCode.SITE_NOT_FOUND);
     }
 
-    const posts = await this.postService.findByUserId(user.userId, site.id);
+    const posts = await this.postService.findByUserId(user.userId, site.id, categoryId);
 
     return posts.map(
       (post) =>

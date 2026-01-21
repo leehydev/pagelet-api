@@ -22,10 +22,7 @@ export class UploadController {
   @ApiOperation({ summary: 'Presigned URL 생성' })
   @ApiResponse({ status: 200, description: 'Presigned URL 생성 성공' })
   @ApiResponse({ status: 400, description: '용량 초과 또는 잘못된 요청' })
-  async presign(
-    @CurrentTenant() tenant: Site | null,
-    @Body() dto: PresignUploadDto,
-  ) {
+  async presign(@CurrentTenant() tenant: Site | null, @Body() dto: PresignUploadDto) {
     if (!tenant) {
       throw new NotFoundException('사이트가 존재하지 않습니다. 먼저 사이트를 생성해주세요.');
     }
@@ -41,10 +38,7 @@ export class UploadController {
   @ApiOperation({ summary: '업로드 완료 확정' })
   @ApiResponse({ status: 200, description: '업로드 완료 확정 성공' })
   @ApiResponse({ status: 404, description: '업로드 정보를 찾을 수 없음' })
-  async complete(
-    @CurrentTenant() tenant: Site | null,
-    @Body() dto: CompleteUploadDto,
-  ) {
+  async complete(@CurrentTenant() tenant: Site | null, @Body() dto: CompleteUploadDto) {
     if (!tenant) {
       throw new NotFoundException('사이트가 존재하지 않습니다. 먼저 사이트를 생성해주세요.');
     }
