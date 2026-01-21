@@ -83,6 +83,14 @@ export class PostImageService {
   }
 
   /**
+   * S3 Key 업데이트 (presign 후 실제 키 설정)
+   */
+  async updateS3Key(postImageId: string, s3Key: string): Promise<void> {
+    await this.postImageRepository.update(postImageId, { s3Key });
+    this.logger.log(`Updated PostImage ${postImageId} s3Key: ${s3Key}`);
+  }
+
+  /**
    * PostImage 삭제
    */
   async deleteByS3Key(s3Key: string): Promise<void> {

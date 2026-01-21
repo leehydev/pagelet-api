@@ -3,6 +3,7 @@ export class SiteSettingsResponseDto {
   id: string;
   name: string;
   slug: string;
+  updatedAt: Date;
 
   // 브랜딩
   logoImageUrl: string | null;
