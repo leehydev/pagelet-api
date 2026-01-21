@@ -233,9 +233,7 @@ export class PostService {
         }
       }
 
-      this.logger.log(
-        `Synced images for post ${postId}: ${currentS3Keys.size} images in use`,
-      );
+      this.logger.log(`Synced images for post ${postId}: ${currentS3Keys.size} images in use`);
     } catch (error) {
       // 이미지 동기화 실패해도 게시글 저장은 성공 처리
       this.logger.warn(`Failed to sync images for post ${postId}: ${error.message}`);
