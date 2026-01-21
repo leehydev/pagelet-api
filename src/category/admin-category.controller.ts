@@ -33,14 +33,14 @@ export class AdminCategoryController {
       (category) =>
         new CategoryResponseDto({
           id: category.id,
-          site_id: category.siteId,
+          siteId: category.siteId,
           slug: category.slug,
           name: category.name,
           description: category.description,
-          sort_order: category.sortOrder,
-          created_at: category.createdAt,
-          updated_at: category.updatedAt,
-          post_count: postCounts.get(category.id) || 0,
+          sortOrder: category.sortOrder,
+          createdAt: category.createdAt,
+          updatedAt: category.updatedAt,
+          postCount: postCounts.get(category.id) || 0,
         }),
     );
   }
@@ -64,14 +64,14 @@ export class AdminCategoryController {
 
     return new CategoryResponseDto({
       id: category.id,
-      site_id: category.siteId,
+      siteId: category.siteId,
       slug: category.slug,
       name: category.name,
       description: category.description,
-      sort_order: category.sortOrder,
-      created_at: category.createdAt,
-      updated_at: category.updatedAt,
-      post_count: postCount,
+      sortOrder: category.sortOrder,
+      createdAt: category.createdAt,
+      updatedAt: category.updatedAt,
+      postCount: postCount,
     });
   }
 
@@ -95,14 +95,14 @@ export class AdminCategoryController {
 
     return new CategoryResponseDto({
       id: category.id,
-      site_id: category.siteId,
+      siteId: category.siteId,
       slug: category.slug,
       name: category.name,
       description: category.description,
-      sort_order: category.sortOrder,
-      created_at: category.createdAt,
-      updated_at: category.updatedAt,
-      post_count: postCount,
+      sortOrder: category.sortOrder,
+      createdAt: category.createdAt,
+      updatedAt: category.updatedAt,
+      postCount: postCount,
     });
   }
 

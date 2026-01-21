@@ -35,27 +35,28 @@ export class AdminPostController {
     return new PostResponseDto({
       id: post.id,
       title: post.title,
+      subtitle: post.subtitle,
       slug: post.slug,
       content: post.content,
       status: post.status,
-      published_at: post.publishedAt,
-      seo_title: post.seoTitle,
-      seo_description: post.seoDescription,
-      og_image_url: post.ogImageUrl,
-      created_at: post.createdAt,
-      updated_at: post.updatedAt,
+      publishedAt: post.publishedAt,
+      seoTitle: post.seoTitle,
+      seoDescription: post.seoDescription,
+      ogImageUrl: post.ogImageUrl,
+      createdAt: post.createdAt,
+      updatedAt: post.updatedAt,
     });
   }
 
   /**
-   * GET /admin/posts?category_id=xxx
+   * GET /admin/posts?categoryId=xxx
    * 내 게시글 목록 조회
-   * category_id가 제공되면 해당 카테고리의 게시글만 조회
+   * categoryId가 제공되면 해당 카테고리의 게시글만 조회
    */
   @Get()
   async getMyPosts(
     @CurrentUser() user: UserPrincipal,
-    @Query('category_id') categoryId?: string,
+    @Query('categoryId') categoryId?: string,
   ): Promise<PostListResponseDto[]> {
     // 사용자의 사이트 조회
     const site = await this.siteService.findByUserId(user.userId);
@@ -70,14 +71,15 @@ export class AdminPostController {
         new PostListResponseDto({
           id: post.id,
           title: post.title,
+          subtitle: post.subtitle,
           slug: post.slug,
           status: post.status,
-          published_at: post.publishedAt,
-          seo_description: post.seoDescription,
-          og_image_url: post.ogImageUrl,
-          created_at: post.createdAt,
-          category_id: post.categoryId,
-          category_name: post.category?.name || null,
+          publishedAt: post.publishedAt,
+          seoDescription: post.seoDescription,
+          ogImageUrl: post.ogImageUrl,
+          createdAt: post.createdAt,
+          categoryId: post.categoryId,
+          categoryName: post.category?.name || null,
         }),
     );
   }

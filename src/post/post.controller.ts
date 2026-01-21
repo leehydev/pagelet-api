@@ -35,15 +35,16 @@ export class PostController {
     return new PostResponseDto({
       id: post.id,
       title: post.title,
+      subtitle: post.subtitle,
       slug: post.slug,
       content: post.content,
       status: post.status,
-      published_at: post.publishedAt,
-      seo_title: post.seoTitle,
-      seo_description: post.seoDescription,
-      og_image_url: post.ogImageUrl,
-      created_at: post.createdAt,
-      updated_at: post.updatedAt,
+      publishedAt: post.publishedAt,
+      seoTitle: post.seoTitle,
+      seoDescription: post.seoDescription,
+      ogImageUrl: post.ogImageUrl,
+      createdAt: post.createdAt,
+      updatedAt: post.updatedAt,
     });
   }
 }

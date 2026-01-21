@@ -15,6 +15,11 @@ export class CreatePostDto {
   @MaxLength(500, { message: '제목은 최대 500자까지 가능합니다' })
   title: string;
 
+  @IsNotEmpty({ message: '부제목은 필수입니다' })
+  @IsString()
+  @MaxLength(500, { message: '부제목은 최대 500자까지 가능합니다' })
+  subtitle: string;
+
   @IsOptional()
   @IsString()
   @MaxLength(255, { message: 'Slug는 최대 255자까지 가능합니다' })
@@ -35,19 +40,19 @@ export class CreatePostDto {
   @IsOptional()
   @IsString()
   @MaxLength(255, { message: 'SEO 제목은 최대 255자까지 가능합니다' })
-  seo_title?: string;
+  seoTitle?: string;
 
   @IsOptional()
   @IsString()
   @MaxLength(500, { message: 'SEO 설명은 최대 500자까지 가능합니다' })
-  seo_description?: string;
+  seoDescription?: string;
 
   @IsOptional()
   @IsUrl({}, { message: '유효한 URL 형식이어야 합니다' })
   @MaxLength(500, { message: 'OG 이미지 URL은 최대 500자까지 가능합니다' })
-  og_image_url?: string;
+  ogImageUrl?: string;
 
   @IsOptional()
   @IsString()
-  category_id?: string;
+  categoryId?: string;
 }

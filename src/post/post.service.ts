@@ -101,7 +101,7 @@ export class PostService {
     const publishedAt = status === PostStatus.PUBLISHED ? new Date() : null;
 
     // category 처리: 제공되지 않으면 기본 카테고리 할당
-    let categoryId = dto.category_id || null;
+    let categoryId = dto.categoryId || null;
     if (!categoryId) {
       const defaultCategory = await this.categoryService.ensureDefaultCategory(siteId);
       categoryId = defaultCategory.id;
@@ -117,13 +117,14 @@ export class PostService {
       userId: userId,
       siteId: siteId,
       title: dto.title,
+      subtitle: dto.subtitle,
       slug,
       content: dto.content,
       status,
       publishedAt: publishedAt,
-      seoTitle: dto.seo_title || null,
-      seoDescription: dto.seo_description || null,
-      ogImageUrl: dto.og_image_url || null,
+      seoTitle: dto.seoTitle || null,
+      seoDescription: dto.seoDescription || null,
+      ogImageUrl: dto.ogImageUrl || null,
       categoryId: categoryId,
     });
 

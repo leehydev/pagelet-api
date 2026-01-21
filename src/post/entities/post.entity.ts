@@ -42,6 +42,9 @@ export class Post {
   @Column({ type: 'varchar', length: 500 })
   title: string;
 
+  @Column({ type: 'varchar', length: 500 })
+  subtitle: string;
+
   @Column({ type: 'varchar', length: 255, default: () => 'gen_random_uuid()' })
   slug: string;
 

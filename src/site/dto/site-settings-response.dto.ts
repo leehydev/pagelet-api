@@ -5,29 +5,29 @@ export class SiteSettingsResponseDto {
   slug: string;
 
   // 브랜딩
-  logo_image_url: string | null;
-  favicon_url: string | null;
+  logoImageUrl: string | null;
+  faviconUrl: string | null;
 
   // SEO
-  og_image_url: string | null;
-  seo_title: string | null;
-  seo_description: string | null;
-  seo_keywords: string | null;
-  canonical_base_url: string | null;
-  robots_index: boolean;
+  ogImageUrl: string | null;
+  seoTitle: string | null;
+  seoDescription: string | null;
+  seoKeywords: string | null;
+  canonicalBaseUrl: string | null;
+  robotsIndex: boolean;
 
   // 연락처
-  contact_email: string | null;
-  contact_phone: string | null;
+  contactEmail: string | null;
+  contactPhone: string | null;
   address: string | null;
 
   // 소셜 링크
-  kakao_channel_url: string | null;
-  naver_map_url: string | null;
-  instagram_url: string | null;
+  kakaoChannelUrl: string | null;
+  naverMapUrl: string | null;
+  instagramUrl: string | null;
 
   // 사업자 정보
-  business_number: string | null;
-  business_name: string | null;
-  representative_name: string | null;
+  businessNumber: string | null;
+  businessName: string | null;
+  representativeName: string | null;
 }
