@@ -14,6 +14,7 @@ export class PostResponseDto {
   seoTitle: string | null;
   seoDescription: string | null;
   ogImageUrl: string | null;
+  categoryId: string | null;
   createdAt: Date;
   updatedAt: Date;
 

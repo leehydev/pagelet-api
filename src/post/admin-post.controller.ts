@@ -47,6 +47,7 @@ export class AdminPostController {
       seoTitle: post.seoTitle,
       seoDescription: post.seoDescription,
       ogImageUrl: post.ogImageUrl,
+      categoryId: post.categoryId,
       createdAt: post.createdAt,
       updatedAt: post.updatedAt,
     });
@@ -150,6 +151,7 @@ export class AdminPostController {
       seoTitle: post.seoTitle,
       seoDescription: post.seoDescription,
       ogImageUrl: post.ogImageUrl,
+      categoryId: post.categoryId,
       createdAt: post.createdAt,
       updatedAt: post.updatedAt,
     });
@@ -187,6 +189,7 @@ export class AdminPostController {
       seoTitle: post.seoTitle,
       seoDescription: post.seoDescription,
       ogImageUrl: post.ogImageUrl,
+      categoryId: post.categoryId,
       createdAt: post.createdAt,
       updatedAt: post.updatedAt,
     });
