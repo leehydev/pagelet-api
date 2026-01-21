@@ -76,6 +76,8 @@ export class AdminPostController {
           seo_description: post.seoDescription,
           og_image_url: post.ogImageUrl,
           created_at: post.createdAt,
+          category_id: post.categoryId,
+          category_name: post.category?.name || null,
         }),
     );
   }

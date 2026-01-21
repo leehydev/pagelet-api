@@ -204,6 +204,7 @@ export class PostService {
 
     return this.postRepository.find({
       where,
+      relations: ['category'],
       order: { createdAt: 'DESC' },
     });
   }
