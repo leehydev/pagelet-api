@@ -105,4 +105,45 @@ export class PostImageService {
       .andWhere('postImage.createdAt < :olderThan', { olderThan })
       .getMany();
   }
+
+  /**
+   * postId로 연결된 모든 이미지 조회
+   */
+  async findByPostId(postId: string): Promise<PostImage[]> {
+    return this.postImageRepository.find({
+      where: { postId: postId },
+    });
+  }
+
+  /**
+   * postId 연결 해제 (cleanup 대상으로 전환)
+   */
+  async unlinkFromPost(postImageId: string): Promise<void> {
+    const result = await this.postImageRepository.update(postImageId, {
+      postId: null,
+    });
+    if (result.affected && result.affected > 0) {
+      this.logger.log(`Unlinked PostImage ${postImageId} from post`);
+    }
+  }
+
+  /**
+   * s3Key로 찾아서 postId 연결
+   */
+  async linkToPost(siteId: string, s3Key: string, postId: string): Promise<boolean> {
+    const postImage = await this.findBySiteIdAndS3Key(siteId, s3Key);
+    if (!postImage) {
+      return false;
+    }
+
+    // 이미 같은 postId에 연결되어 있으면 스킵
+    if (postImage.postId === postId) {
+      return true;
+    }
+
+    postImage.postId = postId;
+    await this.postImageRepository.save(postImage);
+    this.logger.log(`Linked PostImage ${postImage.id} (s3Key: ${s3Key}) to post ${postId}`);
+    return true;
+  }
 }
