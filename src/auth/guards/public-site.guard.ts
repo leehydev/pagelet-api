@@ -2,14 +2,14 @@ import { Injectable, CanActivate, ExecutionContext, NotFoundException } from '@n
 import { SiteService } from '../../site/site.service';
 
 /**
- * PublicTenantGuard
- * Host 헤더 기반으로 tenant(Site)를 resolve하여 request.tenant에 저장
+ * PublicSiteGuard
+ * Host 헤더 기반으로 Site를 resolve하여 request.site에 저장
  *
  * Host 형식: {slug}.pagelet-dev.kr 또는 {slug}.localhost:3000
  * 또는 X-Site-Slug 헤더로 직접 전달
  */
 @Injectable()
-export class PublicTenantGuard implements CanActivate {
+export class PublicSiteGuard implements CanActivate {
   constructor(private readonly siteService: SiteService) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -33,7 +33,7 @@ export class PublicTenantGuard implements CanActivate {
       throw new NotFoundException(`사이트를 찾을 수 없습니다: ${slug}`);
     }
 
-    request.tenant = site;
+    request.site = site;
     return true;
   }
 

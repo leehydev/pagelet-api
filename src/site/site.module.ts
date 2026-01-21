@@ -5,13 +5,13 @@ import { SiteSettingsController } from './site-settings.controller';
 import { PublicSiteSettingsController } from './public-site-settings.controller';
 import { SiteService } from './site.service';
 import { Site } from './entities/site.entity';
-import { TenantGuard } from '../auth/guards/tenant.guard';
-import { PublicTenantGuard } from '../auth/guards/public-tenant.guard';
+import { SiteGuard } from '../auth/guards/site.guard';
+import { PublicSiteGuard } from '../auth/guards/public-site.guard';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Site])],
   controllers: [SiteController, SiteSettingsController, PublicSiteSettingsController],
-  providers: [SiteService, TenantGuard, PublicTenantGuard],
-  exports: [SiteService, TenantGuard, PublicTenantGuard],
+  providers: [SiteService, SiteGuard, PublicSiteGuard],
+  exports: [SiteService, SiteGuard, PublicSiteGuard],
 })
 export class SiteModule {}
