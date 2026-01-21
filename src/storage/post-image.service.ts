@@ -50,10 +50,7 @@ export class PostImageService {
   /**
    * postId와 imageType으로 조회
    */
-  async findByPostIdAndType(
-    postId: string,
-    imageType: string,
-  ): Promise<PostImage[]> {
+  async findByPostIdAndType(postId: string, imageType: string): Promise<PostImage[]> {
     return this.postImageRepository.find({
       where: { postId: postId, imageType: imageType },
     });

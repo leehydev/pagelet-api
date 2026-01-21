@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Inject, forwardRef } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Post, PostStatus } from './entities/post.entity';
@@ -7,6 +7,7 @@ import { BusinessException } from '../common/exception/business.exception';
 import { ErrorCode } from '../common/exception/error-code';
 import { PostImageService } from '../storage/post-image.service';
 import { S3Service } from '../storage/s3.service';
+import { CategoryService } from '../category/category.service';
 
 @Injectable()
 export class PostService {
@@ -17,6 +18,8 @@ export class PostService {
     private readonly postRepository: Repository<Post>,
     private readonly postImageService: PostImageService,
     private readonly s3Service: S3Service,
+    @Inject(forwardRef(() => CategoryService))
+    private readonly categoryService: CategoryService,
   ) {}
 
   /**
@@ -97,6 +100,19 @@ export class PostService {
     const status = dto.status || PostStatus.DRAFT;
     const publishedAt = status === PostStatus.PUBLISHED ? new Date() : null;
 
+    // category 처리: 제공되지 않으면 기본 카테고리 할당
+    let categoryId = dto.category_id || null;
+    if (!categoryId) {
+      const defaultCategory = await this.categoryService.ensureDefaultCategory(siteId);
+      categoryId = defaultCategory.id;
+    } else {
+      // category가 해당 site에 속하는지 확인
+      const category = await this.categoryService.findById(categoryId);
+      if (!category || category.siteId !== siteId) {
+        throw BusinessException.fromErrorCode(ErrorCode.CATEGORY_NOT_FOUND);
+      }
+    }
+
     const post = this.postRepository.create({
       userId: userId,
       siteId: siteId,
@@ -108,6 +124,7 @@ export class PostService {
       seoTitle: dto.seo_title || null,
       seoDescription: dto.seo_description || null,
       ogImageUrl: dto.og_image_url || null,
+      categoryId: categoryId,
     });
 
     const saved = await this.postRepository.save(post);
@@ -175,9 +192,19 @@ export class PostService {
   /**
    * 사용자의 게시글 목록 조회 (Admin용)
    */
-  async findByUserId(userId: string, siteId: string): Promise<Post[]> {
+  async findByUserId(
+    userId: string,
+    siteId: string,
+    categoryId?: string,
+  ): Promise<Post[]> {
+    const where: any = { userId: userId, siteId: siteId };
+    if (categoryId) {
+      where.categoryId = categoryId;
+    }
+
     return this.postRepository.find({
-      where: { userId: userId, siteId: siteId },
+      where,
+      relations: ['category'],
       order: { createdAt: 'DESC' },
     });
   }
@@ -215,6 +242,28 @@ export class PostService {
         slug,
         status: PostStatus.PUBLISHED,
       },
+    });
+  }
+
+  /**
+   * 카테고리 slug로 발행된 게시글 목록 조회 (Public용)
+   */
+  async findPublishedBySiteIdAndCategorySlug(
+    siteId: string,
+    categorySlug: string,
+  ): Promise<Post[]> {
+    const category = await this.categoryService.findBySlug(siteId, categorySlug);
+    if (!category) {
+      return [];
+    }
+
+    return this.postRepository.find({
+      where: {
+        siteId: siteId,
+        categoryId: category.id,
+        status: PostStatus.PUBLISHED,
+      },
+      order: { publishedAt: 'DESC' },
     });
   }
 }

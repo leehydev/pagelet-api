@@ -15,6 +15,7 @@ import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 
 import { PostModule } from './post/post.module';
 import { StorageModule } from './storage/storage.module';
+import { CategoryModule } from './category/category.module';
 import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
@@ -27,6 +28,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     OnboardingModule,
     SiteModule,
     PostModule,
+    CategoryModule,
     StorageModule,
     ScheduleModule.forRoot(),
   ],

@@ -42,6 +42,8 @@ export class PostListResponseDto {
   seo_description: string | null;
   og_image_url: string | null;
   created_at: Date;
+  category_id: string | null;
+  category_name: string | null;
 
   constructor(partial: Partial<PostListResponseDto>) {
     Object.assign(this, partial);
