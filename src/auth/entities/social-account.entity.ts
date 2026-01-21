@@ -18,15 +18,15 @@ export const OAuthProvider = {
 export type OAuthProvider = (typeof OAuthProvider)[keyof typeof OAuthProvider];
 
 @Entity('social_accounts')
-@Index(['provider', 'provider_user_id'], { unique: true })
+@Index(['provider', 'providerUserId'], { unique: true })
 export class SocialAccount {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
   @Column({ type: 'uuid' })
-  user_id: string;
+  userId: string;
 
-  @ManyToOne(() => User, (user) => user.social_accounts, { onDelete: 'CASCADE' })
+  @ManyToOne(() => User, (user) => user.socialAccounts, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'user_id' })
   user: User;
 
@@ -37,17 +37,17 @@ export class SocialAccount {
   provider: string;
 
   @Column({ type: 'varchar', length: 255 })
-  provider_user_id: string;
+  providerUserId: string;
 
   @Column({ type: 'boolean', default: true })
-  is_active: boolean;
+  isActive: boolean;
 
   @Column({ type: 'timestamptz', nullable: true })
-  connected_at: Date | null;
+  connectedAt: Date | null;
 
   @CreateDateColumn({ type: 'timestamptz' })
-  created_at: Date;
+  createdAt: Date;
 
   @UpdateDateColumn({ type: 'timestamptz' })
-  updated_at: Date;
+  updatedAt: Date;
 }

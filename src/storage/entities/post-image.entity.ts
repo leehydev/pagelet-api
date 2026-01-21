@@ -15,27 +15,27 @@ export class PostImage {
   id: string;
 
   @Column({ type: 'uuid' })
-  site_id: string; // 필수: 어떤 사이트의 이미지인지
+  siteId: string; // 필수: 어떤 사이트의 이미지인지
 
   @Column({ type: 'uuid', nullable: true })
-  post_id: string | null; // 업로드 완료 전에는 null 가능
+  postId: string | null; // 업로드 완료 전에는 null 가능
 
   @Column({ type: 'varchar', length: 500 })
-  s3_key: string;
+  s3Key: string;
 
   @Column({ type: 'bigint' })
-  size_bytes: number;
+  sizeBytes: number;
 
   @Column({ type: 'varchar', length: 100 })
-  mime_type: string;
+  mimeType: string;
 
   @Column({
     type: 'varchar',
     length: 50,
     default: PostImageType.THUMBNAIL,
   })
-  image_type: string;
+  imageType: string;
 
   @CreateDateColumn({ type: 'timestamptz' })
-  created_at: Date;
+  createdAt: Date;
 }

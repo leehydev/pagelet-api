@@ -29,18 +29,18 @@ export class OnboardingService {
     }
 
     // 온보딩 상태가 아니면 에러
-    if (user.account_status !== AccountStatus.ONBOARDING) {
+    if (user.accountStatus !== AccountStatus.ONBOARDING) {
       throw BusinessException.fromErrorCode(ErrorCode.ONBOARDING_NOT_ALLOWED);
     }
 
     // 현재 단계가 1이 아니면 에러
-    if (user.onboarding_step !== OnboardingStep.PROFILE) {
+    if (user.onboardingStep !== OnboardingStep.PROFILE) {
       throw BusinessException.fromErrorCode(ErrorCode.ONBOARDING_INVALID_STEP);
     }
 
     user.name = dto.name;
     user.email = dto.email;
-    user.onboarding_step = OnboardingStep.SITE;
+    user.onboardingStep = OnboardingStep.SITE;
 
     await this.userRepository.save(user);
     this.logger.log(`User ${userId} completed profile step`);
@@ -57,12 +57,12 @@ export class OnboardingService {
     }
 
     // 온보딩 상태가 아니면 에러
-    if (user.account_status !== AccountStatus.ONBOARDING) {
+    if (user.accountStatus !== AccountStatus.ONBOARDING) {
       throw BusinessException.fromErrorCode(ErrorCode.ONBOARDING_NOT_ALLOWED);
     }
 
     // 현재 단계가 2가 아니면 에러
-    if (user.onboarding_step !== OnboardingStep.SITE) {
+    if (user.onboardingStep !== OnboardingStep.SITE) {
       throw BusinessException.fromErrorCode(ErrorCode.ONBOARDING_INVALID_STEP);
     }
 
@@ -76,7 +76,7 @@ export class OnboardingService {
     await this.siteService.createSite(userId, dto.name, dto.slug);
 
     // 다음 단계로 이동
-    user.onboarding_step = OnboardingStep.FIRST_POST;
+    user.onboardingStep = OnboardingStep.FIRST_POST;
     await this.userRepository.save(user);
     this.logger.log(`User ${userId} completed site step`);
   }
@@ -92,18 +92,18 @@ export class OnboardingService {
     }
 
     // 온보딩 상태가 아니면 에러
-    if (user.account_status !== AccountStatus.ONBOARDING) {
+    if (user.accountStatus !== AccountStatus.ONBOARDING) {
       throw BusinessException.fromErrorCode(ErrorCode.ONBOARDING_NOT_ALLOWED);
     }
 
     // 현재 단계가 3이 아니면 에러
-    if (user.onboarding_step !== OnboardingStep.FIRST_POST) {
+    if (user.onboardingStep !== OnboardingStep.FIRST_POST) {
       throw BusinessException.fromErrorCode(ErrorCode.ONBOARDING_INVALID_STEP);
     }
 
     // 온보딩 완료
-    user.account_status = AccountStatus.ACTIVE;
-    user.onboarding_step = null;
+    user.accountStatus = AccountStatus.ACTIVE;
+    user.onboardingStep = null;
     await this.userRepository.save(user);
     this.logger.log(`User ${userId} completed onboarding`);
   }

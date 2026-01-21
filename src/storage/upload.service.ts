@@ -49,12 +49,12 @@ export class UploadService {
     // PostImage 엔티티 생성 (임시 기록)
     const imageType = dto.imageType || PostImageType.THUMBNAIL;
     const postImage = await this.postImageService.create({
-      site_id: siteId,
-      post_id: dto.postId || null,
-      s3_key: s3Key,
-      size_bytes: dto.size,
-      mime_type: dto.mimeType,
-      image_type: imageType,
+      siteId: siteId,
+      postId: dto.postId || null,
+      s3Key: s3Key,
+      sizeBytes: dto.size,
+      mimeType: dto.mimeType,
+      imageType: imageType,
     });
 
     // Presigned URL 생성
@@ -87,7 +87,7 @@ export class UploadService {
     }
 
     // 사이트 ID 검증
-    if (postImage.site_id !== siteId) {
+    if (postImage.siteId !== siteId) {
       throw BusinessException.withMessage(
         ErrorCode.COMMON_FORBIDDEN,
         '다른 사이트의 업로드에 접근할 수 없습니다',
@@ -105,8 +105,8 @@ export class UploadService {
     } catch (error) {
       this.logger.warn(`Failed to head object ${dto.s3Key}: ${error.message}`);
       // HEAD 실패 시 presign 시점의 값 사용
-      actualSize = postImage.size_bytes;
-      mimeType = postImage.mime_type;
+      actualSize = postImage.sizeBytes;
+      mimeType = postImage.mimeType;
     }
 
     // PostImage 업데이트
@@ -117,7 +117,7 @@ export class UploadService {
     // 예약 → 사용으로 이동
     await this.storageUsageService.commitBytes(
       siteId,
-      postImage.size_bytes, // presign 시 예약한 크기
+      postImage.sizeBytes, // presign 시 예약한 크기
       actualSize, // 실제 업로드된 크기
     );
 
@@ -145,7 +145,7 @@ export class UploadService {
     }
 
     // 사이트 ID 검증
-    if (postImage.site_id !== siteId) {
+    if (postImage.siteId !== siteId) {
       throw BusinessException.withMessage(
         ErrorCode.COMMON_FORBIDDEN,
         '다른 사이트의 업로드에 접근할 수 없습니다',
@@ -153,7 +153,7 @@ export class UploadService {
     }
 
     // 예약 취소
-    await this.storageUsageService.releaseBytes(siteId, postImage.size_bytes);
+    await this.storageUsageService.releaseBytes(siteId, postImage.sizeBytes);
 
     // PostImage 삭제
     await this.postImageService.deleteByS3Key(s3Key);

@@ -6,9 +6,10 @@ import { PublicPostController } from './public-post.controller';
 import { PostService } from './post.service';
 import { Post } from './entities/post.entity';
 import { SiteModule } from '../site/site.module';
+import { StorageModule } from '../storage/storage.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Post]), SiteModule],
+  imports: [TypeOrmModule.forFeature([Post]), SiteModule, StorageModule],
   controllers: [PostController, AdminPostController, PublicPostController],
   providers: [PostService],
   exports: [PostService],

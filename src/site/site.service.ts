@@ -71,7 +71,7 @@ export class SiteService {
    */
   async createSite(userId: string, name: string, slug: string): Promise<Site> {
     const site = this.siteRepository.create({
-      user_id: userId,
+      userId: userId,
       name,
       slug: slug.toLowerCase(),
     });
@@ -85,7 +85,7 @@ export class SiteService {
    * 사용자의 사이트 조회
    */
   async findByUserId(userId: string): Promise<Site | null> {
-    return this.siteRepository.findOne({ where: { user_id: userId } });
+    return this.siteRepository.findOne({ where: { userId: userId } });
   }
 
   /**
@@ -110,23 +110,23 @@ export class SiteService {
       id: site.id,
       name: site.name,
       slug: site.slug,
-      logo_image_url: site.logo_image_url,
-      favicon_url: site.favicon_url,
-      og_image_url: site.og_image_url,
-      seo_title: site.seo_title,
-      seo_description: site.seo_description,
-      seo_keywords: site.seo_keywords,
-      canonical_base_url: site.canonical_base_url,
-      robots_index: site.robots_index,
-      contact_email: site.contact_email,
-      contact_phone: site.contact_phone,
+      logo_image_url: site.logoImageUrl,
+      favicon_url: site.faviconUrl,
+      og_image_url: site.ogImageUrl,
+      seo_title: site.seoTitle,
+      seo_description: site.seoDescription,
+      seo_keywords: site.seoKeywords,
+      canonical_base_url: site.canonicalBaseUrl,
+      robots_index: site.robotsIndex,
+      contact_email: site.contactEmail,
+      contact_phone: site.contactPhone,
       address: site.address,
-      kakao_channel_url: site.kakao_channel_url,
-      naver_map_url: site.naver_map_url,
-      instagram_url: site.instagram_url,
-      business_number: site.business_number,
-      business_name: site.business_name,
-      representative_name: site.representative_name,
+      kakao_channel_url: site.kakaoChannelUrl,
+      naver_map_url: site.naverMapUrl,
+      instagram_url: site.instagramUrl,
+      business_number: site.businessNumber,
+      business_name: site.businessName,
+      representative_name: site.representativeName,
     };
   }
 
@@ -137,23 +137,23 @@ export class SiteService {
     return {
       name: site.name,
       slug: site.slug,
-      logo_image_url: site.logo_image_url,
-      favicon_url: site.favicon_url,
-      og_image_url: site.og_image_url,
-      seo_title: site.seo_title,
-      seo_description: site.seo_description,
-      seo_keywords: site.seo_keywords,
-      canonical_base_url: site.canonical_base_url,
-      robots_index: site.robots_index,
-      contact_email: site.contact_email,
-      contact_phone: site.contact_phone,
+      logo_image_url: site.logoImageUrl,
+      favicon_url: site.faviconUrl,
+      og_image_url: site.ogImageUrl,
+      seo_title: site.seoTitle,
+      seo_description: site.seoDescription,
+      seo_keywords: site.seoKeywords,
+      canonical_base_url: site.canonicalBaseUrl,
+      robots_index: site.robotsIndex,
+      contact_email: site.contactEmail,
+      contact_phone: site.contactPhone,
       address: site.address,
-      kakao_channel_url: site.kakao_channel_url,
-      naver_map_url: site.naver_map_url,
-      instagram_url: site.instagram_url,
-      business_number: site.business_number,
-      business_name: site.business_name,
-      representative_name: site.representative_name,
+      kakao_channel_url: site.kakaoChannelUrl,
+      naver_map_url: site.naverMapUrl,
+      instagram_url: site.instagramUrl,
+      business_number: site.businessNumber,
+      business_name: site.businessName,
+      representative_name: site.representativeName,
     };
   }
 
@@ -181,23 +181,23 @@ export class SiteService {
     }
 
     // 허용된 필드만 명시적으로 업데이트 (Defense in Depth)
-    if (dto.logo_image_url !== undefined) site.logo_image_url = dto.logo_image_url;
-    if (dto.favicon_url !== undefined) site.favicon_url = dto.favicon_url;
-    if (dto.og_image_url !== undefined) site.og_image_url = dto.og_image_url;
-    if (dto.seo_title !== undefined) site.seo_title = dto.seo_title;
-    if (dto.seo_description !== undefined) site.seo_description = dto.seo_description;
-    if (dto.seo_keywords !== undefined) site.seo_keywords = dto.seo_keywords;
-    if (dto.canonical_base_url !== undefined) site.canonical_base_url = dto.canonical_base_url;
-    if (dto.robots_index !== undefined) site.robots_index = dto.robots_index;
-    if (dto.contact_email !== undefined) site.contact_email = dto.contact_email;
-    if (dto.contact_phone !== undefined) site.contact_phone = dto.contact_phone;
+    if (dto.logo_image_url !== undefined) site.logoImageUrl = dto.logo_image_url;
+    if (dto.favicon_url !== undefined) site.faviconUrl = dto.favicon_url;
+    if (dto.og_image_url !== undefined) site.ogImageUrl = dto.og_image_url;
+    if (dto.seo_title !== undefined) site.seoTitle = dto.seo_title;
+    if (dto.seo_description !== undefined) site.seoDescription = dto.seo_description;
+    if (dto.seo_keywords !== undefined) site.seoKeywords = dto.seo_keywords;
+    if (dto.canonical_base_url !== undefined) site.canonicalBaseUrl = dto.canonical_base_url;
+    if (dto.robots_index !== undefined) site.robotsIndex = dto.robots_index;
+    if (dto.contact_email !== undefined) site.contactEmail = dto.contact_email;
+    if (dto.contact_phone !== undefined) site.contactPhone = dto.contact_phone;
     if (dto.address !== undefined) site.address = dto.address;
-    if (dto.kakao_channel_url !== undefined) site.kakao_channel_url = dto.kakao_channel_url;
-    if (dto.naver_map_url !== undefined) site.naver_map_url = dto.naver_map_url;
-    if (dto.instagram_url !== undefined) site.instagram_url = dto.instagram_url;
-    if (dto.business_number !== undefined) site.business_number = dto.business_number;
-    if (dto.business_name !== undefined) site.business_name = dto.business_name;
-    if (dto.representative_name !== undefined) site.representative_name = dto.representative_name;
+    if (dto.kakao_channel_url !== undefined) site.kakaoChannelUrl = dto.kakao_channel_url;
+    if (dto.naver_map_url !== undefined) site.naverMapUrl = dto.naver_map_url;
+    if (dto.instagram_url !== undefined) site.instagramUrl = dto.instagram_url;
+    if (dto.business_number !== undefined) site.businessNumber = dto.business_number;
+    if (dto.business_name !== undefined) site.businessName = dto.business_name;
+    if (dto.representative_name !== undefined) site.representativeName = dto.representative_name;
 
     const updated = await this.siteRepository.save(site);
     this.logger.log(`Updated site settings: ${updated.id}`);

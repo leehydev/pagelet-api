@@ -5,6 +5,8 @@ import { Post, PostStatus } from './entities/post.entity';
 import { CreatePostDto } from './dto/create-post.dto';
 import { BusinessException } from '../common/exception/business.exception';
 import { ErrorCode } from '../common/exception/error-code';
+import { PostImageService } from '../storage/post-image.service';
+import { S3Service } from '../storage/s3.service';
 
 @Injectable()
 export class PostService {
@@ -13,6 +15,8 @@ export class PostService {
   constructor(
     @InjectRepository(Post)
     private readonly postRepository: Repository<Post>,
+    private readonly postImageService: PostImageService,
+    private readonly s3Service: S3Service,
   ) {}
 
   /**
@@ -34,7 +38,7 @@ export class PostService {
   async isSlugAvailable(siteId: string, slug: string, excludePostId?: string): Promise<boolean> {
     const query = this.postRepository
       .createQueryBuilder('post')
-      .where('post.site_id = :siteId', { siteId })
+      .where('post.siteId = :siteId', { siteId })
       .andWhere('post.slug = :slug', { slug });
 
     if (excludePostId) {
@@ -94,21 +98,71 @@ export class PostService {
     const publishedAt = status === PostStatus.PUBLISHED ? new Date() : null;
 
     const post = this.postRepository.create({
-      user_id: userId,
-      site_id: siteId,
+      userId: userId,
+      siteId: siteId,
       title: dto.title,
       slug,
       content: dto.content,
       status,
-      published_at: publishedAt,
-      seo_title: dto.seo_title || null,
-      seo_description: dto.seo_description || null,
-      og_image_url: dto.og_image_url || null,
+      publishedAt: publishedAt,
+      seoTitle: dto.seo_title || null,
+      seoDescription: dto.seo_description || null,
+      ogImageUrl: dto.og_image_url || null,
     });
 
     const saved = await this.postRepository.save(post);
     this.logger.log(`Created post: ${saved.id} for user: ${userId}, status: ${status}`);
+
+    // ogImageUrl이 S3 URL인 경우 PostImage의 postId 연결
+    if (saved.ogImageUrl) {
+      await this.linkPostImageFromUrl(siteId, saved.id, saved.ogImageUrl);
+    }
+
     return saved;
+  }
+
+  /**
+   * Public URL에서 s3Key 추출하여 PostImage의 post_id 연결
+   */
+  private async linkPostImageFromUrl(
+    siteId: string,
+    postId: string,
+    imageUrl: string,
+  ): Promise<void> {
+    try {
+      // S3 Public URL에서 s3Key 추출
+      // 예: https://assets.pagelet-dev.kr/uploads/siteId/timestamp-random.ext
+      const baseUrl = this.s3Service.getAssetsCdnBaseUrl();
+
+      if (!imageUrl.startsWith(baseUrl)) {
+        // S3 URL이 아니면 무시 (외부 URL)
+        return;
+      }
+
+      // s3Key 추출: baseUrl 이후 부분
+      // baseUrl이 "https://assets.pagelet-dev.kr"이고
+      // imageUrl이 "https://assets.pagelet-dev.kr/uploads/..."인 경우
+      const s3Key = imageUrl.substring(baseUrl.length + 1); // +1은 슬래시 제거
+
+      // PostImage 조회 (postId가 null인 것)
+      const postImage = await this.postImageService.findBySiteIdAndS3Key(siteId, s3Key);
+
+      if (postImage && !postImage.postId) {
+        // postId가 null이면 연결
+        await this.postImageService.updatePostId(
+          postImage.id,
+          postId,
+          postImage.sizeBytes,
+          postImage.mimeType,
+        );
+        this.logger.log(`Linked PostImage ${postImage.id} to post ${postId}`);
+      }
+    } catch (error) {
+      // 에러가 발생해도 게시글 생성은 성공한 것으로 처리
+      this.logger.warn(
+        `Failed to link PostImage for post ${postId}, url: ${imageUrl}: ${error.message}`,
+      );
+    }
   }
 
   /**
@@ -123,8 +177,8 @@ export class PostService {
    */
   async findByUserId(userId: string, siteId: string): Promise<Post[]> {
     return this.postRepository.find({
-      where: { user_id: userId, site_id: siteId },
-      order: { created_at: 'DESC' },
+      where: { userId: userId, siteId: siteId },
+      order: { createdAt: 'DESC' },
     });
   }
 
@@ -133,8 +187,8 @@ export class PostService {
    */
   async findBySiteId(siteId: string): Promise<Post[]> {
     return this.postRepository.find({
-      where: { site_id: siteId },
-      order: { created_at: 'DESC' },
+      where: { siteId: siteId },
+      order: { createdAt: 'DESC' },
     });
   }
 
@@ -144,10 +198,10 @@ export class PostService {
   async findPublishedBySiteId(siteId: string): Promise<Post[]> {
     return this.postRepository.find({
       where: { 
-        site_id: siteId, 
+        siteId: siteId, 
         status: PostStatus.PUBLISHED,
       },
-      order: { published_at: 'DESC' },
+      order: { publishedAt: 'DESC' },
     });
   }
 
@@ -157,7 +211,7 @@ export class PostService {
   async findPublishedBySlug(siteId: string, slug: string): Promise<Post | null> {
     return this.postRepository.findOne({
       where: {
-        site_id: siteId,
+        siteId: siteId,
         slug,
         status: PostStatus.PUBLISHED,
       },

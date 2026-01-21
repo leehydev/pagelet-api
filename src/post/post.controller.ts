@@ -38,12 +38,12 @@ export class PostController {
       slug: post.slug,
       content: post.content,
       status: post.status,
-      published_at: post.published_at,
-      seo_title: post.seo_title,
-      seo_description: post.seo_description,
-      og_image_url: post.og_image_url,
-      created_at: post.created_at,
-      updated_at: post.updated_at,
+      published_at: post.publishedAt,
+      seo_title: post.seoTitle,
+      seo_description: post.seoDescription,
+      og_image_url: post.ogImageUrl,
+      created_at: post.createdAt,
+      updated_at: post.updatedAt,
     });
   }
 }

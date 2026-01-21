@@ -20,15 +20,15 @@ export class StorageUsageService {
    */
   async getOrCreate(siteId: string): Promise<SiteStorageUsage> {
     let usage = await this.storageUsageRepository.findOne({
-      where: { site_id: siteId },
+      where: { siteId: siteId },
     });
 
     if (!usage) {
       usage = this.storageUsageRepository.create({
-        site_id: siteId,
-        used_bytes: 0,
-        reserved_bytes: 0,
-        max_bytes: 1073741824, // 1GB 기본값
+        siteId: siteId,
+        usedBytes: 0,
+        reservedBytes: 0,
+        maxBytes: 1073741824, // 1GB 기본값
       });
       usage = await this.storageUsageRepository.save(usage);
       this.logger.log(`Created storage usage for site: ${siteId}`);
@@ -42,7 +42,7 @@ export class StorageUsageService {
    */
   async getAvailableBytes(siteId: string): Promise<number> {
     const usage = await this.getOrCreate(siteId);
-    return usage.max_bytes - (usage.used_bytes + usage.reserved_bytes);
+    return usage.maxBytes - (usage.usedBytes + usage.reservedBytes);
   }
 
   /**
@@ -51,24 +51,24 @@ export class StorageUsageService {
   async reserveBytes(siteId: string, sizeBytes: number): Promise<void> {
     return await this.dataSource.transaction(async (manager) => {
       let usage = await manager.findOne(SiteStorageUsage, {
-        where: { site_id: siteId },
+        where: { siteId: siteId },
         lock: { mode: 'pessimistic_write' },
       });
 
       if (!usage) {
         // 없으면 생성
         usage = manager.create(SiteStorageUsage, {
-          site_id: siteId,
-          used_bytes: 0,
-          reserved_bytes: 0,
-          max_bytes: 1073741824, // 1GB 기본값
+          siteId: siteId,
+          usedBytes: 0,
+          reservedBytes: 0,
+          maxBytes: 1073741824, // 1GB 기본값
         });
         usage = await manager.save(SiteStorageUsage, usage);
         this.logger.log(`Created storage usage for site: ${siteId} during reservation`);
 
         // 생성 후 다시 락을 걸어서 조회 (동시성 안전성 보장)
         usage = await manager.findOne(SiteStorageUsage, {
-          where: { site_id: siteId },
+          where: { siteId: siteId },
           lock: { mode: 'pessimistic_write' },
         });
 
@@ -78,14 +78,14 @@ export class StorageUsageService {
       }
 
       // 용량 체크
-      const totalUsed = usage.used_bytes + usage.reserved_bytes;
-      const available = usage.max_bytes - totalUsed;
+      const totalUsed = Number(usage.usedBytes) + Number(usage.reservedBytes);
+      const available = usage.maxBytes - totalUsed;
 
       if (sizeBytes > available) {
-        const usedMB = Math.round((usage.used_bytes / 1024 / 1024) * 10) / 10;
-        const reservedMB = Math.round((usage.reserved_bytes / 1024 / 1024) * 10) / 10;
+        const usedMB = Math.round((usage.usedBytes / 1024 / 1024) * 10) / 10;
+        const reservedMB = Math.round((usage.reservedBytes / 1024 / 1024) * 10) / 10;
         const totalUsedMB = Math.round((totalUsed / 1024 / 1024) * 10) / 10;
-        const maxMB = Math.round((usage.max_bytes / 1024 / 1024) * 10) / 10;
+        const maxMB = Math.round((usage.maxBytes / 1024 / 1024) * 10) / 10;
         const requestedMB = Math.round((sizeBytes / 1024 / 1024) * 10) / 10;
         const availableMB = Math.max(0, Math.round((available / 1024 / 1024) * 10) / 10);
 
@@ -93,22 +93,22 @@ export class StorageUsageService {
           ErrorCode.STORAGE_EXCEEDED,
           `저장 용량이 부족합니다. (사용 중: ${usedMB}MB, 예약 중: ${reservedMB}MB, 총 사용: ${totalUsedMB}MB / 최대: ${maxMB}MB, 요청: ${requestedMB}MB, 여유: ${availableMB}MB)`,
           {
-            usedBytes: usage.used_bytes,
-            reservedBytes: usage.reserved_bytes,
+            usedBytes: usage.usedBytes,
+            reservedBytes: usage.reservedBytes,
             totalUsedBytes: totalUsed,
-            maxBytes: usage.max_bytes,
+            maxBytes: usage.maxBytes,
             availableBytes: Math.max(0, available),
             requestedBytes: sizeBytes,
           },
         );
       }
 
-      // reserved_bytes 증가
-      usage.reserved_bytes += sizeBytes;
+      // reservedBytes 증가
+      usage.reservedBytes += sizeBytes;
       await manager.save(SiteStorageUsage, usage);
 
       this.logger.log(
-        `Reserved ${sizeBytes} bytes for site ${siteId}. Reserved: ${usage.reserved_bytes}, Used: ${usage.used_bytes}`,
+        `Reserved ${sizeBytes} bytes for site ${siteId}. Reserved: ${usage.reservedBytes}, Used: ${usage.usedBytes}`,
       );
     });
   }
@@ -123,24 +123,24 @@ export class StorageUsageService {
   ): Promise<void> {
     return await this.dataSource.transaction(async (manager) => {
       let usage = await manager.findOne(SiteStorageUsage, {
-        where: { site_id: siteId },
+        where: { siteId: siteId },
         lock: { mode: 'pessimistic_write' },
       });
 
       if (!usage) {
         // 없으면 생성 (이론적으로는 reserveBytes에서 생성되어야 하지만, 방어적 코드)
         usage = manager.create(SiteStorageUsage, {
-          site_id: siteId,
-          used_bytes: 0,
-          reserved_bytes: 0,
-          max_bytes: 1073741824, // 1GB 기본값
+          siteId: siteId,
+          usedBytes: 0,
+          reservedBytes: 0,
+          maxBytes: 1073741824, // 1GB 기본값
         });
         usage = await manager.save(SiteStorageUsage, usage);
         this.logger.warn(`Created storage usage for site: ${siteId} during commit (unexpected)`);
 
         // 생성 후 다시 락을 걸어서 조회 (동시성 안전성 보장)
         usage = await manager.findOne(SiteStorageUsage, {
-          where: { site_id: siteId },
+          where: { siteId: siteId },
           lock: { mode: 'pessimistic_write' },
         });
 
@@ -149,20 +149,20 @@ export class StorageUsageService {
         }
       }
 
-      // reserved_bytes 감소, used_bytes 증가
-      usage.reserved_bytes -= reservedSizeBytes;
-      usage.used_bytes += actualSizeBytes;
+      // reservedBytes 감소, usedBytes 증가
+      usage.reservedBytes -= reservedSizeBytes;
+      usage.usedBytes += actualSizeBytes;
 
       // 음수 방지
-      if (usage.reserved_bytes < 0) {
+      if (usage.reservedBytes < 0) {
         this.logger.warn(`Reserved bytes became negative for site ${siteId}. Setting to 0.`);
-        usage.reserved_bytes = 0;
+        usage.reservedBytes = 0;
       }
 
       await manager.save(SiteStorageUsage, usage);
 
       this.logger.log(
-        `Committed ${actualSizeBytes} bytes (reserved: ${reservedSizeBytes}) for site ${siteId}. Reserved: ${usage.reserved_bytes}, Used: ${usage.used_bytes}`,
+        `Committed ${actualSizeBytes} bytes (reserved: ${reservedSizeBytes}) for site ${siteId}. Reserved: ${usage.reservedBytes}, Used: ${usage.usedBytes}`,
       );
     });
   }
@@ -173,7 +173,7 @@ export class StorageUsageService {
   async releaseBytes(siteId: string, sizeBytes: number): Promise<void> {
     return await this.dataSource.transaction(async (manager) => {
       const usage = await manager.findOne(SiteStorageUsage, {
-        where: { site_id: siteId },
+        where: { siteId: siteId },
         lock: { mode: 'pessimistic_write' },
       });
 
@@ -183,19 +183,53 @@ export class StorageUsageService {
         return;
       }
 
-      // reserved_bytes 감소
-      usage.reserved_bytes -= sizeBytes;
+      // reservedBytes 감소
+      usage.reservedBytes -= sizeBytes;
 
       // 음수 방지
-      if (usage.reserved_bytes < 0) {
+      if (usage.reservedBytes < 0) {
         this.logger.warn(`Reserved bytes became negative for site ${siteId}. Setting to 0.`);
-        usage.reserved_bytes = 0;
+        usage.reservedBytes = 0;
       }
 
       await manager.save(SiteStorageUsage, usage);
 
       this.logger.log(
-        `Released ${sizeBytes} bytes for site ${siteId}. Reserved: ${usage.reserved_bytes}, Used: ${usage.used_bytes}`,
+        `Released ${sizeBytes} bytes for site ${siteId}. Reserved: ${usage.reservedBytes}, Used: ${usage.usedBytes}`,
+      );
+    });
+  }
+
+  /**
+   * 사용 중인 용량 해제 (트랜잭션 + row lock)
+   * cleanup job에서 orphaned PostImage 삭제 시 사용
+   */
+  async releaseUsedBytes(siteId: string, sizeBytes: number): Promise<void> {
+    return await this.dataSource.transaction(async (manager) => {
+      const usage = await manager.findOne(SiteStorageUsage, {
+        where: { siteId: siteId },
+        lock: { mode: 'pessimistic_write' },
+      });
+
+      if (!usage) {
+        // 이미 삭제되었거나 존재하지 않음 (idempotent)
+        this.logger.warn(`Storage usage not found for site ${siteId}, skipping release used bytes`);
+        return;
+      }
+
+      // usedBytes 감소
+      usage.usedBytes -= sizeBytes;
+
+      // 음수 방지
+      if (usage.usedBytes < 0) {
+        this.logger.warn(`Used bytes became negative for site ${siteId}. Setting to 0.`);
+        usage.usedBytes = 0;
+      }
+
+      await manager.save(SiteStorageUsage, usage);
+
+      this.logger.log(
+        `Released ${sizeBytes} used bytes for site ${siteId}. Reserved: ${usage.reservedBytes}, Used: ${usage.usedBytes}`,
       );
     });
   }

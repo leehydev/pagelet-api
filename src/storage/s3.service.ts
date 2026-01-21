@@ -91,6 +91,14 @@ export class S3Service {
   }
 
   /**
+   * Assets CDN Base URL 반환
+   * @returns Base URL (예: https://assets.pagelet-dev.kr)
+   */
+  getAssetsCdnBaseUrl(): string {
+    return this.assetsCdnUrl;
+  }
+
+  /**
    * S3 Key 생성
    * @param siteId 사이트 ID
    * @param filename 원본 파일명

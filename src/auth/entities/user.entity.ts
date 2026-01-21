@@ -35,17 +35,17 @@ export class User {
   name: string | null;
 
   @Column({ type: 'varchar', length: 20, default: AccountStatus.ONBOARDING })
-  account_status: AccountStatus;
+  accountStatus: AccountStatus;
 
   @Column({ type: 'integer', nullable: true })
-  onboarding_step: number | null;
+  onboardingStep: number | null;
 
   @CreateDateColumn({ type: 'timestamptz' })
-  created_at: Date;
+  createdAt: Date;
 
   @UpdateDateColumn({ type: 'timestamptz' })
-  updated_at: Date;
+  updatedAt: Date;
 
   @OneToMany(() => SocialAccount, (socialAccount) => socialAccount.user)
-  social_accounts: SocialAccount[];
+  socialAccounts: SocialAccount[];
 }

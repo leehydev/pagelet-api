@@ -42,10 +42,10 @@ export class PublicPostController {
           title: post.title,
           slug: post.slug,
           content: post.content,
-          published_at: post.published_at!,
-          seo_title: post.seo_title,
-          seo_description: post.seo_description,
-          og_image_url: post.og_image_url,
+          published_at: post.publishedAt!,
+          seo_title: post.seoTitle,
+          seo_description: post.seoDescription,
+          og_image_url: post.ogImageUrl,
         }),
     );
   }
@@ -82,10 +82,10 @@ export class PublicPostController {
       title: post.title,
       slug: post.slug,
       content: post.content,
-      published_at: post.published_at!,
-      seo_title: post.seo_title,
-      seo_description: post.seo_description,
-      og_image_url: post.og_image_url,
+      published_at: post.publishedAt!,
+      seo_title: post.seoTitle,
+      seo_description: post.seoDescription,
+      og_image_url: post.ogImageUrl,
     });
   }
 }

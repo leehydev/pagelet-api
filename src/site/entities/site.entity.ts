@@ -16,7 +16,7 @@ export class Site {
   id: string;
 
   @Column({ type: 'uuid' })
-  user_id: string;
+  userId: string;
 
   @ManyToOne(() => User, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'user_id' })
@@ -33,63 +33,63 @@ export class Site {
 
   // 브랜딩
   @Column({ type: 'varchar', length: 500, nullable: true })
-  logo_image_url: string | null;
+  logoImageUrl: string | null;
 
   @Column({ type: 'varchar', length: 500, nullable: true })
-  favicon_url: string | null;
+  faviconUrl: string | null;
 
   // SEO
   @Column({ type: 'varchar', length: 500, nullable: true })
-  og_image_url: string | null;
+  ogImageUrl: string | null;
 
   @Column({ type: 'varchar', length: 120, nullable: true })
-  seo_title: string | null;
+  seoTitle: string | null;
 
   @Column({ type: 'text', nullable: true })
-  seo_description: string | null;
+  seoDescription: string | null;
 
   @Column({ type: 'varchar', length: 500, nullable: true })
-  seo_keywords: string | null;
+  seoKeywords: string | null;
 
   @Column({ type: 'varchar', length: 500, nullable: true })
-  canonical_base_url: string | null;
+  canonicalBaseUrl: string | null;
 
   @Column({ type: 'boolean', default: false })
-  robots_index: boolean;
+  robotsIndex: boolean;
 
   // 연락처
   @Column({ type: 'varchar', length: 255, nullable: true })
-  contact_email: string | null;
+  contactEmail: string | null;
 
   @Column({ type: 'varchar', length: 50, nullable: true })
-  contact_phone: string | null;
+  contactPhone: string | null;
 
   @Column({ type: 'text', nullable: true })
   address: string | null;
 
   // 소셜 링크
   @Column({ type: 'varchar', length: 500, nullable: true })
-  kakao_channel_url: string | null;
+  kakaoChannelUrl: string | null;
 
   @Column({ type: 'varchar', length: 500, nullable: true })
-  naver_map_url: string | null;
+  naverMapUrl: string | null;
 
   @Column({ type: 'varchar', length: 500, nullable: true })
-  instagram_url: string | null;
+  instagramUrl: string | null;
 
   // 사업자 정보
   @Column({ type: 'varchar', length: 20, nullable: true })
-  business_number: string | null;
+  businessNumber: string | null;
 
   @Column({ type: 'varchar', length: 100, nullable: true })
-  business_name: string | null;
+  businessName: string | null;
 
   @Column({ type: 'varchar', length: 50, nullable: true })
-  representative_name: string | null;
+  representativeName: string | null;
 
   @CreateDateColumn({ type: 'timestamptz' })
-  created_at: Date;
+  createdAt: Date;
 
   @UpdateDateColumn({ type: 'timestamptz' })
-  updated_at: Date;
+  updatedAt: Date;
 }

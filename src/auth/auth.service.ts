@@ -78,13 +78,13 @@ export class AuthService {
     const socialAccount = await this.socialAccountRepository.findOne({
       where: {
         provider: OAuthProvider.KAKAO,
-        provider_user_id: oauthUserInfo.id,
+        providerUserId: oauthUserInfo.id,
       },
       relations: ['user'],
     });
 
     if (socialAccount) {
-      this.logger.log(`Found existing user via social account: ${socialAccount.user_id}`);
+      this.logger.log(`Found existing user via social account: ${socialAccount.userId}`);
       return socialAccount.user;
     }
 
@@ -105,8 +105,8 @@ export class AuthService {
     const newUser = this.userRepository.create({
       email,
       name: oauthUserInfo.name,
-      account_status: AccountStatus.ONBOARDING,
-      onboarding_step: 1,
+      accountStatus: AccountStatus.ONBOARDING,
+      onboardingStep: 1,
     });
 
     const savedUser = await this.userRepository.save(newUser);
@@ -124,26 +124,26 @@ export class AuthService {
     const existing = await this.socialAccountRepository.findOne({
       where: {
         provider: OAuthProvider.KAKAO,
-        provider_user_id: providerUserId,
+        providerUserId: providerUserId,
       },
     });
 
     if (existing) {
       // 업데이트
-      existing.user_id = userId;
-      existing.is_active = true;
-      existing.connected_at = new Date();
+      existing.userId = userId;
+      existing.isActive = true;
+      existing.connectedAt = new Date();
       const updated = await this.socialAccountRepository.save(existing);
       this.logger.log(`Updated social account: ${updated.id}`);
       return updated;
     } else {
       // 생성
       const newSocialAccount = this.socialAccountRepository.create({
-        user_id: userId,
+        userId: userId,
         provider: OAuthProvider.KAKAO,
-        provider_user_id: providerUserId,
-        is_active: true,
-        connected_at: new Date(),
+        providerUserId: providerUserId,
+        isActive: true,
+        connectedAt: new Date(),
       });
       const saved = await this.socialAccountRepository.save(newSocialAccount);
       this.logger.log(`Created new social account: ${saved.id}`);
@@ -192,10 +192,10 @@ export class AuthService {
       id: user.id,
       email: user.email,
       name: user.name,
-      accountStatus: user.account_status,
-      onboardingStep: user.onboarding_step,
-      createdAt: user.created_at,
-      updatedAt: user.updated_at,
+      accountStatus: user.accountStatus,
+      onboardingStep: user.onboardingStep,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
     };
   }
 }

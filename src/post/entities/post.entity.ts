@@ -20,20 +20,20 @@ export const PostStatus = {
 export type PostStatus = (typeof PostStatus)[keyof typeof PostStatus];
 
 @Entity('posts')
-@Index(['site_id', 'slug'], { unique: true })
+@Index(['siteId', 'slug'], { unique: true })
 export class Post {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
   @Column({ type: 'uuid' })
-  user_id: string;
+  userId: string;
 
   @ManyToOne(() => User, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'user_id' })
   user: User;
 
   @Column({ type: 'uuid' })
-  site_id: string;
+  siteId: string;
 
   @ManyToOne(() => Site, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'site_id' })
@@ -56,20 +56,20 @@ export class Post {
   status: string;
 
   @Column({ type: 'timestamptz', nullable: true })
-  published_at: Date | null;
+  publishedAt: Date | null;
 
   @Column({ type: 'varchar', length: 255, nullable: true })
-  seo_title: string | null;
+  seoTitle: string | null;
 
   @Column({ type: 'varchar', length: 500, nullable: true })
-  seo_description: string | null;
+  seoDescription: string | null;
 
   @Column({ type: 'varchar', length: 500, nullable: true })
-  og_image_url: string | null;
+  ogImageUrl: string | null;
 
   @CreateDateColumn({ type: 'timestamptz' })
-  created_at: Date;
+  createdAt: Date;
 
   @UpdateDateColumn({ type: 'timestamptz' })
-  updated_at: Date;
+  updatedAt: Date;
 }
