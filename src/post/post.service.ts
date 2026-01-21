@@ -229,6 +229,7 @@ export class PostService {
         siteId: siteId, 
         status: PostStatus.PUBLISHED,
       },
+      relations: ['category'],
       order: { publishedAt: 'DESC' },
     });
   }
@@ -243,6 +244,7 @@ export class PostService {
         slug,
         status: PostStatus.PUBLISHED,
       },
+      relations: ['category'],
     });
   }
 
@@ -264,6 +266,7 @@ export class PostService {
         categoryId: category.id,
         status: PostStatus.PUBLISHED,
       },
+      relations: ['category'],
       order: { publishedAt: 'DESC' },
     });
   }

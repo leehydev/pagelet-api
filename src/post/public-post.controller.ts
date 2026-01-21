@@ -54,6 +54,8 @@ export class PublicPostController {
           seoTitle: post.seoTitle,
           seoDescription: post.seoDescription,
           ogImageUrl: post.ogImageUrl,
+          categoryName: post.category?.name || null,
+          categorySlug: post.category?.slug || null,
         }),
     );
   }
@@ -95,6 +97,8 @@ export class PublicPostController {
       seoTitle: post.seoTitle,
       seoDescription: post.seoDescription,
       ogImageUrl: post.ogImageUrl,
+      categoryName: post.category?.name || null,
+      categorySlug: post.category?.slug || null,
     });
   }
 }

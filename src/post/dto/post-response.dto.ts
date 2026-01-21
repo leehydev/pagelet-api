@@ -29,6 +29,8 @@ export class PublicPostResponseDto {
   seoTitle: string | null;
   seoDescription: string | null;
   ogImageUrl: string | null;
+  categoryName: string | null;
+  categorySlug: string | null;
 
   constructor(partial: Partial<PublicPostResponseDto>) {
     Object.assign(this, partial);

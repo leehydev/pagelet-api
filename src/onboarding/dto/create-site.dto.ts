@@ -3,7 +3,7 @@ import { IsNotEmpty, IsString, MaxLength, Matches, MinLength } from 'class-valid
 export class CreateSiteDto {
   @IsNotEmpty({ message: '사이트 이름은 필수입니다' })
   @IsString()
-  @MaxLength(255)
+  @MaxLength(20, { message: '사이트 이름은 최대 20자까지 가능합니다' })
   name: string;
 
   @IsNotEmpty({ message: 'slug는 필수입니다' })
