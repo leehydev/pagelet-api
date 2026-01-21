@@ -234,6 +234,20 @@ export class PostService {
   }
 
   /**
+   * ID로 발행된 게시글 조회 (Public용)
+   */
+  async findPublishedById(siteId: string, postId: string): Promise<Post | null> {
+    return this.postRepository.findOne({
+      where: {
+        id: postId,
+        siteId: siteId,
+        status: PostStatus.PUBLISHED,
+      },
+      relations: ['category'],
+    });
+  }
+
+  /**
    * slug로 발행된 게시글 조회 (Public용)
    */
   async findPublishedBySlug(siteId: string, slug: string): Promise<Post | null> {

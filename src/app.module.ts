@@ -12,6 +12,8 @@ import { AuthModule } from './auth/auth.module';
 import { OnboardingModule } from './onboarding/onboarding.module';
 import { SiteModule } from './site/site.module';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
+import { AccountStatusGuard } from './auth/guards/account-status.guard';
+import { User } from './auth/entities/user.entity';
 
 import { PostModule } from './post/post.module';
 import { StorageModule } from './storage/storage.module';
@@ -31,6 +33,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     CategoryModule,
     StorageModule,
     ScheduleModule.forRoot(),
+    TypeOrmModule.forFeature([User]), // AccountStatusGuard에서 User Repository 사용
   ],
   controllers: [AppController],
   providers: [
@@ -42,6 +45,10 @@ import { ScheduleModule } from '@nestjs/schedule';
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: AccountStatusGuard,
     },
   ],
 })

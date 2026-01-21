@@ -11,6 +11,8 @@ import { SocialAccount } from './social-account.entity';
 export const AccountStatus = {
   ONBOARDING: 'ONBOARDING',
   ACTIVE: 'ACTIVE',
+  SUSPENDED: 'SUSPENDED', // 서비스 이용불가
+  WITHDRAWN: 'WITHDRAWN', // 탈퇴
 } as const;
 
 export type AccountStatus = (typeof AccountStatus)[keyof typeof AccountStatus];

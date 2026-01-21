@@ -65,7 +65,7 @@ export class PublicPostController {
 
   /**
    * GET /public/posts/:slug?siteSlug=xxx
-   * 공개 게시글 상세 조회
+   * 공개 게시글 상세 조회 (slug 기반)
    */
   @Get(':slug')
   async getPublicPostBySlug(

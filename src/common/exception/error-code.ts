@@ -52,6 +52,18 @@ export const ErrorCode = {
     'Invalid credentials',
   ),
 
+  // 계정 상태 관련 에러
+  ACCOUNT_SUSPENDED: new ErrorCodeDefinition(
+    'ACCOUNT_001',
+    HttpStatus.FORBIDDEN,
+    'Account is suspended',
+  ),
+  ACCOUNT_WITHDRAWN: new ErrorCodeDefinition(
+    'ACCOUNT_002',
+    HttpStatus.FORBIDDEN,
+    'Account has been withdrawn',
+  ),
+
   // OAuth 관련 에러
   OAUTH_INVALID_CODE: new ErrorCodeDefinition(
     'OAUTH_001',
