@@ -5,6 +5,7 @@ import {
   PutObjectCommand,
   HeadObjectCommand,
   DeleteObjectCommand,
+  CopyObjectCommand,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
@@ -99,7 +100,8 @@ export class S3Service {
   }
 
   /**
-   * S3 Key 생성
+   * S3 Key 생성 (레거시 - 하위 호환성)
+   * @deprecated Use generatePostImageKey instead
    * @param siteId 사이트 ID
    * @param filename 원본 파일명
    * @returns S3 Key
@@ -109,5 +111,74 @@ export class S3Service {
     const random = Math.random().toString(36).substring(2, 15);
     const ext = filename.split('.').pop()?.toLowerCase() || 'bin';
     return `uploads/${siteId}/${timestamp}-${random}.${ext}`;
+  }
+
+  /**
+   * 게시글 이미지 S3 Key 생성
+   * 경로: uploads/sites/{siteId}/posts/{postId}/images/{imageId}.{ext}
+   * @param siteId 사이트 ID
+   * @param postId 게시글 ID (없으면 'unassigned')
+   * @param imageId 이미지 ID
+   * @param ext 파일 확장자
+   * @returns S3 Key
+   */
+  generatePostImageKey(
+    siteId: string,
+    postId: string | null,
+    imageId: string,
+    ext: string,
+  ): string {
+    const folder = postId || 'unassigned';
+    return `uploads/sites/${siteId}/posts/${folder}/images/${imageId}.${ext}`;
+  }
+
+  /**
+   * 브랜딩 임시 S3 Key 생성
+   * 경로: uploads/sites/{siteId}/branding/tmp/{type}_{timestamp}.{ext}
+   * @param siteId 사이트 ID
+   * @param type 브랜딩 타입 (logo, favicon, og)
+   * @param ext 파일 확장자
+   * @returns S3 Key
+   */
+  generateBrandingTmpKey(siteId: string, type: string, ext: string): string {
+    const timestamp = Date.now();
+    return `uploads/sites/${siteId}/branding/tmp/${type}_${timestamp}.${ext}`;
+  }
+
+  /**
+   * 브랜딩 최종 S3 Key 생성
+   * 경로: uploads/sites/{siteId}/branding/{type}.{ext}
+   * @param siteId 사이트 ID
+   * @param type 브랜딩 타입 (logo, favicon, og)
+   * @param ext 파일 확장자
+   * @returns S3 Key
+   */
+  generateBrandingFinalKey(siteId: string, type: string, ext: string): string {
+    return `uploads/sites/${siteId}/branding/${type}.${ext}`;
+  }
+
+  /**
+   * S3 오브젝트 복사
+   * @param sourceKey 원본 S3 Key
+   * @param destKey 대상 S3 Key
+   */
+  async copyObject(sourceKey: string, destKey: string): Promise<void> {
+    const command = new CopyObjectCommand({
+      Bucket: this.bucket,
+      CopySource: `${this.bucket}/${sourceKey}`,
+      Key: destKey,
+    });
+
+    await this.s3Client.send(command);
+    this.logger.log(`Copied S3 object: ${sourceKey} -> ${destKey}`);
+  }
+
+  /**
+   * 파일명에서 확장자 추출
+   * @param filename 파일명
+   * @returns 확장자 (소문자)
+   */
+  extractExtension(filename: string): string {
+    return filename.split('.').pop()?.toLowerCase() || 'bin';
   }
 }

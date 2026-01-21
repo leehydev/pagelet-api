@@ -110,6 +110,7 @@ export class SiteService {
       id: site.id,
       name: site.name,
       slug: site.slug,
+      updatedAt: site.updatedAt,
       logoImageUrl: site.logoImageUrl,
       faviconUrl: site.faviconUrl,
       ogImageUrl: site.ogImageUrl,
