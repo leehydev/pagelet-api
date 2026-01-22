@@ -339,6 +339,29 @@ export class PostService {
   }
 
   /**
+   * 게시글 삭제
+   * - 연결된 이미지는 postId를 null로 설정하여 cleanup 대상으로 만듦
+   */
+  async deletePost(postId: string, siteId: string): Promise<void> {
+    // 게시글 조회
+    const post = await this.postRepository.findOne({ where: { id: postId } });
+    if (!post || post.siteId !== siteId) {
+      throw BusinessException.fromErrorCode(ErrorCode.POST_NOT_FOUND);
+    }
+
+    // 연결된 이미지들의 postId를 null로 설정 (cleanup 대상)
+    const linkedImages = await this.postImageService.findByPostId(postId);
+    for (const image of linkedImages) {
+      await this.postImageService.unlinkFromPost(image.id);
+      this.logger.log(`Unlinked image ${image.s3Key} from post ${postId} for deletion`);
+    }
+
+    // 게시글 삭제
+    await this.postRepository.remove(post);
+    this.logger.log(`Deleted post: ${postId}`);
+  }
+
+  /**
    * 게시글 수정
    */
   async updatePost(postId: string, siteId: string, dto: UpdatePostDto): Promise<Post> {

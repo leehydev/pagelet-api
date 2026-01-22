@@ -15,6 +15,7 @@ import { Site } from '../../site/entities/site.entity';
 export const PostStatus = {
   DRAFT: 'DRAFT',
   PUBLISHED: 'PUBLISHED',
+  PRIVATE: 'PRIVATE', // 발행했지만 비공개
 } as const;
 
 export type PostStatus = (typeof PostStatus)[keyof typeof PostStatus];
