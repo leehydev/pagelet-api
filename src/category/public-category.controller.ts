@@ -5,6 +5,7 @@ import { SiteService } from '../site/site.service';
 import { BusinessException } from '../common/exception/business.exception';
 import { ErrorCode } from '../common/exception/error-code';
 import { Public } from '../auth/decorators/public.decorator';
+import { PostStatus } from '../post/entities/post.entity';
 
 @Controller('public/categories')
 @Public()
@@ -34,7 +35,10 @@ export class PublicCategoryController {
 
     const categories = await this.categoryService.findBySiteId(site.id);
     const categoryIds = categories.map((c) => c.id);
-    const postCounts = await this.categoryService.getPostCountsByCategories(categoryIds);
+    const postCounts = await this.categoryService.getPostCountsByCategories(
+      categoryIds,
+      PostStatus.PUBLISHED,
+    );
 
     return categories.map(
       (category) =>

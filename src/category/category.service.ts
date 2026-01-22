@@ -5,7 +5,7 @@ import { Category } from './entities/category.entity';
 import { CreateCategoryDto, UpdateCategoryDto } from './dto';
 import { BusinessException } from '../common/exception/business.exception';
 import { ErrorCode } from '../common/exception/error-code';
-import { Post } from '../post/entities/post.entity';
+import { Post, PostStatus } from '../post/entities/post.entity';
 
 // 예약 slug 목록
 const RESERVED_CATEGORY_SLUGS = new Set(['all', 'uncategorized', '미분류']);
@@ -249,20 +249,29 @@ export class CategoryService {
 
   /**
    * 여러 카테고리의 게시글 수를 한 번에 조회
+   * @param categoryIds 카테고리 ID 목록
+   * @param status 특정 상태의 게시글만 카운트 (옵션)
    */
-  async getPostCountsByCategories(categoryIds: string[]): Promise<Map<string, number>> {
+  async getPostCountsByCategories(
+    categoryIds: string[],
+    status?: PostStatus,
+  ): Promise<Map<string, number>> {
     // 빈 배열인 경우 빈 Map 반환 (IN ()는 SQL 문법 오류 발생)
     if (categoryIds.length === 0) {
       return new Map<string, number>();
     }
 
-    const counts = await this.postRepository
+    const queryBuilder = this.postRepository
       .createQueryBuilder('post')
       .select('post.categoryId', 'categoryId')
       .addSelect('COUNT(*)', 'count')
-      .where('post.categoryId IN (:...categoryIds)', { categoryIds })
-      .groupBy('post.categoryId')
-      .getRawMany();
+      .where('post.categoryId IN (:...categoryIds)', { categoryIds });
+
+    if (status) {
+      queryBuilder.andWhere('post.status = :status', { status });
+    }
+
+    const counts = await queryBuilder.groupBy('post.categoryId').getRawMany();
 
     const countMap = new Map<string, number>();
     counts.forEach((item) => {
