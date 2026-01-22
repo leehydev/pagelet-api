@@ -1,5 +1,14 @@
-import { Controller, Get, Post, Res, Query, HttpStatus } from '@nestjs/common';
-import type { Response } from 'express';
+import {
+  Controller,
+  Get,
+  Post,
+  Res,
+  Req,
+  Query,
+  HttpStatus,
+  UnauthorizedException,
+} from '@nestjs/common';
+import type { Request, Response } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service';
 import { OAuthStateUtil } from './utils/oauth-state.util';
@@ -118,11 +127,42 @@ export class AuthController {
   }
 
   /**
+   * POST /auth/refresh
+   * 토큰 리프레시 - refresh_token 쿠키로 새 access_token 발급
+   */
+  @Public()
+  @Post('refresh')
+  async refresh(@Req() req: Request, @Res() res: Response): Promise<void> {
+    const refreshToken = req.cookies?.refresh_token;
+
+    if (!refreshToken) {
+      throw new UnauthorizedException('Refresh token not found');
+    }
+
+    const result = await this.authService.refreshAccessToken(refreshToken);
+
+    // 새 access_token을 쿠키에 설정
+    CookieUtil.setAccessTokenCookie(res, result.accessToken, this.configService);
+
+    res.status(HttpStatus.OK).json({
+      success: true,
+      isCached: result.isCached,
+    });
+  }
+
+  /**
    * POST /auth/logout
-   * 로그아웃 - 쿠키 삭제
+   * 로그아웃 - Redis 토큰 삭제 + 쿠키 삭제
    */
   @Post('logout')
-  async logout(@Res() res: Response): Promise<void> {
+  async logout(
+    @CurrentUser() user: UserPrincipal,
+    @Res() res: Response,
+  ): Promise<void> {
+    // Redis에서 refresh token 삭제
+    await this.authService.removeRefreshToken(user.userId);
+
+    // 쿠키 삭제
     CookieUtil.clearCookies(res, this.configService, 'access_token', 'refresh_token');
     res.status(HttpStatus.OK).json({ message: 'Logged out successfully' });
   }

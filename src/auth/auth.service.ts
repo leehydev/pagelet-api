@@ -1,9 +1,11 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
-import type { JwtSignOptions } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import Redis from 'ioredis';
+import ms from 'ms';
+import type { StringValue } from 'ms';
 import { User, AccountStatus } from './entities/user.entity';
 import { SocialAccount, OAuthProvider } from './entities/social-account.entity';
 import { KakaoOAuthService } from './oauth/services/kakao-oauth.service';
@@ -14,6 +16,11 @@ import { UserResponseDto } from './dto/user-response.dto';
 import { BusinessException } from '../common/exception/business.exception';
 import { ErrorCode } from '../common/exception/error-code';
 import { JwtConfig } from '../config/jwt.config';
+import { RedisService } from '../common/redis/redis.service';
+import {
+  RedisLock,
+  RedisLockConflictException,
+} from '../common/decorators/redis-lock.decorator';
 
 /**
  * Auth Service
@@ -22,6 +29,11 @@ import { JwtConfig } from '../config/jwt.config';
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
+  private readonly redis: Redis;
+
+  // Redis 키 prefix
+  private readonly REFRESH_TOKEN_PREFIX = 'auth:refresh:';
+  private readonly REFRESH_RESULT_PREFIX = 'refresh-result:';
 
   constructor(
     @InjectRepository(User)
@@ -31,7 +43,10 @@ export class AuthService {
     private readonly kakaoOAuthService: KakaoOAuthService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
-  ) {}
+    private readonly redisService: RedisService,
+  ) {
+    this.redis = this.redisService.getClient();
+  }
 
   /**
    * Kakao OAuth 로그인 처리
@@ -152,9 +167,9 @@ export class AuthService {
   }
 
   /**
-   * JWT 토큰 생성 (Access + Refresh)
+   * JWT 토큰 생성 (Access + Refresh) + Redis 저장
    */
-  private async generateTokens(
+  async generateTokens(
     userId: string,
   ): Promise<{ accessToken: string; refreshToken: string }> {
     const jwtConfig = this.configService.get<JwtConfig>('jwt')!;
@@ -173,7 +188,122 @@ export class AuthService {
       }),
     ]);
 
+    // Redis에 refresh token 저장
+    const refreshTtlSeconds = Math.floor(
+      ms(jwtConfig.refresh.expiresIn as StringValue) / 1000,
+    );
+    await this.redis.set(
+      `${this.REFRESH_TOKEN_PREFIX}${userId}`,
+      refreshToken,
+      'EX',
+      refreshTtlSeconds,
+    );
+
+    this.logger.log(`Stored refresh token in Redis for user: ${userId}`);
+
     return { accessToken, refreshToken };
+  }
+
+  /**
+   * Access Token 리프레시
+   * @param refreshToken Refresh Token (쿠키에서 추출)
+   * @returns 새 Access Token (캐시 여부 포함)
+   */
+  async refreshAccessToken(
+    refreshToken: string,
+  ): Promise<{ accessToken: string; isCached: boolean }> {
+    const jwtConfig = this.configService.get<JwtConfig>('jwt')!;
+
+    // 1. Refresh Token JWT 검증
+    let payload: JwtPayload;
+    try {
+      payload = this.jwtService.verify(refreshToken, {
+        secret: jwtConfig.refresh.secret,
+      });
+    } catch {
+      throw new UnauthorizedException('만료되었거나 유효하지 않은 토큰입니다.');
+    }
+
+    const userId = payload.sub;
+
+    try {
+      // 2. 캐시된 결과 확인 (동시 요청 처리)
+      const cached = await this.redis.get(
+        `${this.REFRESH_RESULT_PREFIX}${userId}`,
+      );
+      if (cached) {
+        this.logger.log(`Returning cached access token for user: ${userId}`);
+        return { accessToken: cached, isCached: true };
+      }
+
+      // 3. 락 획득 후 새 토큰 발급
+      const newAccessToken = await this.refreshTokenWithLock(
+        userId,
+        refreshToken,
+      );
+      return { accessToken: newAccessToken, isCached: false };
+    } catch (err) {
+      if (err instanceof RedisLockConflictException) {
+        // 락 충돌 시 잠시 대기 후 캐시 확인
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+
+        const cached = await this.redis.get(
+          `${this.REFRESH_RESULT_PREFIX}${userId}`,
+        );
+        if (cached) {
+          return { accessToken: cached, isCached: true };
+        }
+
+        throw new UnauthorizedException('토큰 갱신 실패');
+      }
+      throw err;
+    }
+  }
+
+  /**
+   * 락을 획득하고 토큰 리프레시 수행
+   */
+  @RedisLock((args) => `refresh-lock:${args[0]}`, 5)
+  private async refreshTokenWithLock(
+    userId: string,
+    refreshToken: string,
+  ): Promise<string> {
+    const jwtConfig = this.configService.get<JwtConfig>('jwt')!;
+
+    // Redis에 저장된 토큰과 비교
+    const savedToken = await this.redis.get(
+      `${this.REFRESH_TOKEN_PREFIX}${userId}`,
+    );
+    if (!savedToken || savedToken !== refreshToken) {
+      throw new UnauthorizedException('유효하지 않은 토큰입니다.');
+    }
+
+    // 새 Access Token 발급
+    const payload: JwtPayload = { sub: userId };
+    const newAccessToken = await this.jwtService.signAsync(payload, {
+      secret: jwtConfig.access.secret,
+      expiresIn: jwtConfig.access.expiresIn,
+    });
+
+    // 결과 캐시 (동시 요청용, 10초)
+    await this.redis.set(
+      `${this.REFRESH_RESULT_PREFIX}${userId}`,
+      newAccessToken,
+      'EX',
+      10,
+    );
+
+    this.logger.log(`Refreshed access token for user: ${userId}`);
+
+    return newAccessToken;
+  }
+
+  /**
+   * Refresh Token 삭제 (로그아웃)
+   */
+  async removeRefreshToken(userId: string): Promise<void> {
+    await this.redis.del(`${this.REFRESH_TOKEN_PREFIX}${userId}`);
+    this.logger.log(`Removed refresh token for user: ${userId}`);
   }
 
   /**
