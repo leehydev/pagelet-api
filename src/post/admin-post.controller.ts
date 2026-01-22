@@ -1,4 +1,5 @@
 import { Controller, Post, Get, Patch, Delete, Body, Query, Param, UseGuards } from '@nestjs/common';
+import { ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { PostService } from './post.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
@@ -8,6 +9,7 @@ import type { UserPrincipal } from '../auth/types/jwt-payload.interface';
 import { AdminSiteGuard } from '../auth/guards/admin-site.guard';
 import { BusinessException } from '../common/exception/business.exception';
 import { ErrorCode } from '../common/exception/error-code';
+import { PaginationQueryDto, PaginatedResponseDto } from '../common/dto';
 import { PostListResponseDto, PostResponseDto } from './dto/post-response.dto';
 import { Site } from '../site/entities/site.entity';
 
@@ -49,19 +51,37 @@ export class AdminPostController {
   }
 
   /**
-   * GET /admin/sites/:siteId/posts?categoryId=xxx
-   * 내 게시글 목록 조회
+   * GET /admin/sites/:siteId/posts?page=1&limit=10&categoryId=xxx
+   * 내 게시글 목록 조회 (페이징 지원)
    * categoryId가 제공되면 해당 카테고리의 게시글만 조회
    */
   @Get()
+  @ApiOperation({ summary: '내 게시글 목록 조회 (페이징)' })
+  @ApiQuery({ name: 'page', required: false, type: Number, description: '현재 페이지 (기본값: 1)' })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: '페이지당 항목 수 (기본값: 10, 최대: 100)',
+  })
+  @ApiQuery({ name: 'categoryId', required: false, type: String, description: '카테고리 필터' })
+  @ApiResponse({
+    status: 200,
+    description: '게시글 목록 및 페이지네이션 메타데이터',
+  })
   async getMyPosts(
     @CurrentUser() user: UserPrincipal,
     @CurrentSite() site: Site,
+    @Query() paginationQuery: PaginationQueryDto,
     @Query('categoryId') categoryId?: string,
-  ): Promise<PostListResponseDto[]> {
-    const posts = await this.postService.findByUserId(user.userId, site.id, categoryId);
+  ): Promise<PaginatedResponseDto<PostListResponseDto>> {
+    const result = await this.postService.findByUserId(user.userId, site.id, {
+      categoryId,
+      page: paginationQuery.page,
+      limit: paginationQuery.limit,
+    });
 
-    return posts.map(
+    const items = result.items.map(
       (post) =>
         new PostListResponseDto({
           id: post.id,
@@ -77,6 +97,8 @@ export class AdminPostController {
           categoryName: post.category?.name || null,
         }),
     );
+
+    return PaginatedResponseDto.create(items, result.meta.totalItems, result.meta.page, result.meta.limit);
   }
 
   /**
