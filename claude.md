@@ -278,3 +278,22 @@ gh api graphql -f query='query { node(id: "PVT_kwHODhZUJs4BNL9F") { ... on Proje
 - 브랜치명은 이슈 번호를 포함하여 추적 가능하도록 합니다
 - PR은 반드시 이슈와 연결되어야 합니다
 - 스테이터스 변경은 각 단계에서 자동으로 수행됩니다
+
+## 서브 에이전트
+
+에이전트 정의는 `.claude/agents/` 참조:
+
+| 에이전트 | 파일 | 역할 |
+|---------|------|------|
+| Architect | `.claude/agents/architect.md` | 요구사항 분석, 이슈 생성, 태스크 파일 정의 |
+| Developer | `.claude/agents/developer.md` | 태스크 구현, 빌드/테스트, PR 생성 |
+
+### 협업 흐름
+
+```
+사용자 요청 → [Architect] → 이슈 + 태스크(backlog/)
+    ↓
+사용자 승인 → [Developer] → 구현 + PR + 태스크(review/)
+    ↓
+PR 머지 → 태스크(done/)
+```

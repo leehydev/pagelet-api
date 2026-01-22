@@ -9,6 +9,7 @@ import { ErrorCode } from '../common/exception/error-code';
 import { PostImageService } from '../storage/post-image.service';
 import { S3Service } from '../storage/s3.service';
 import { CategoryService } from '../category/category.service';
+import { PaginatedResponseDto } from '../common/dto';
 
 @Injectable()
 export class PostService {
@@ -248,19 +249,28 @@ export class PostService {
   }
 
   /**
-   * 사용자의 게시글 목록 조회 (Admin용)
+   * 사용자의 게시글 목록 조회 (Admin용) - 페이징 지원
    */
-  async findByUserId(userId: string, siteId: string, categoryId?: string): Promise<Post[]> {
+  async findByUserId(
+    userId: string,
+    siteId: string,
+    options: { categoryId?: string; page?: number; limit?: number } = {},
+  ): Promise<PaginatedResponseDto<Post>> {
+    const { categoryId, page = 1, limit = 10 } = options;
     const where: any = { userId: userId, siteId: siteId };
     if (categoryId) {
       where.categoryId = categoryId;
     }
 
-    return this.postRepository.find({
+    const [posts, totalItems] = await this.postRepository.findAndCount({
       where,
       relations: ['category'],
       order: { createdAt: 'DESC' },
+      skip: (page - 1) * limit,
+      take: limit,
     });
+
+    return PaginatedResponseDto.create(posts, totalItems, page, limit);
   }
 
   /**
