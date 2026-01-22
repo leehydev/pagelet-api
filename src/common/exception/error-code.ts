@@ -167,6 +167,23 @@ export const ErrorCode = {
     HttpStatus.BAD_REQUEST,
     'Cannot delete category with existing posts',
   ),
+
+  // 배너 관련 에러
+  BANNER_NOT_FOUND: new ErrorCodeDefinition(
+    'BANNER_001',
+    HttpStatus.NOT_FOUND,
+    '배너를 찾을 수 없습니다',
+  ),
+  BANNER_LIMIT_EXCEEDED: new ErrorCodeDefinition(
+    'BANNER_002',
+    HttpStatus.BAD_REQUEST,
+    '배너는 최대 5개까지 등록할 수 있습니다',
+  ),
+  BANNER_INVALID_LINK: new ErrorCodeDefinition(
+    'BANNER_003',
+    HttpStatus.BAD_REQUEST,
+    '유효하지 않은 링크 URL입니다',
+  ),
 } as const;
 
 /**
