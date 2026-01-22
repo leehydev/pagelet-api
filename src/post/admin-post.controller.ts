@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Patch, Body, Query, Param, UseGuards } from '@nestjs/common';
+import { Controller, Post, Get, Patch, Delete, Body, Query, Param, UseGuards } from '@nestjs/common';
 import { PostService } from './post.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
@@ -166,5 +166,18 @@ export class AdminPostController {
       createdAt: post.createdAt,
       updatedAt: post.updatedAt,
     });
+  }
+
+  /**
+   * DELETE /admin/sites/:siteId/posts/:id
+   * 게시글 삭제
+   */
+  @Delete(':id')
+  async deletePost(
+    @CurrentSite() site: Site,
+    @Param('id') postId: string,
+  ): Promise<{ success: boolean }> {
+    await this.postService.deletePost(postId, site.id);
+    return { success: true };
   }
 }
