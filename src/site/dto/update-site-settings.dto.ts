@@ -1,11 +1,4 @@
-import {
-  IsString,
-  IsBoolean,
-  IsOptional,
-  IsUrl,
-  IsEmail,
-  MaxLength,
-} from 'class-validator';
+import { IsString, IsBoolean, IsOptional, IsUrl, IsEmail, MaxLength, IsIn } from 'class-validator';
 
 export class UpdateSiteSettingsDto {
   // 브랜딩
@@ -94,4 +87,11 @@ export class UpdateSiteSettingsDto {
   @IsString()
   @MaxLength(50)
   representativeName?: string | null;
+
+  // 폰트 설정
+  @IsOptional()
+  @IsIn(['noto_sans', 'noto_serif', null], {
+    message: 'fontKey는 noto_sans, noto_serif 또는 null이어야 합니다',
+  })
+  fontKey?: 'noto_sans' | 'noto_serif' | null;
 }

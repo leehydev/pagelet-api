@@ -145,6 +145,7 @@ export class SiteService {
       businessNumber: site.businessNumber,
       businessName: site.businessName,
       representativeName: site.representativeName,
+      fontKey: site.fontKey,
     };
   }
 
@@ -172,6 +173,7 @@ export class SiteService {
       businessNumber: site.businessNumber,
       businessName: site.businessName,
       representativeName: site.representativeName,
+      fontKey: site.fontKey,
     };
   }
 
@@ -216,6 +218,7 @@ export class SiteService {
     if (dto.businessNumber !== undefined) site.businessNumber = dto.businessNumber;
     if (dto.businessName !== undefined) site.businessName = dto.businessName;
     if (dto.representativeName !== undefined) site.representativeName = dto.representativeName;
+    if (dto.fontKey !== undefined) site.fontKey = dto.fontKey;
 
     const updated = await this.siteRepository.save(site);
     this.logger.log(`Updated site settings: ${updated.id}`);

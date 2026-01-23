@@ -33,4 +33,7 @@ export class PublicSiteSettingsResponseDto {
   businessNumber: string | null;
   businessName: string | null;
   representativeName: string | null;
+
+  // 폰트 설정
+  fontKey: string | null;
 }

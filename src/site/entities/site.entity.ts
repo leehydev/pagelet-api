@@ -87,6 +87,10 @@ export class Site {
   @Column({ type: 'varchar', length: 50, nullable: true })
   representativeName: string | null;
 
+  // 폰트 설정
+  @Column({ type: 'varchar', length: 20, nullable: true, default: null })
+  fontKey: string | null; // 'noto_sans' | 'noto_serif'
+
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;
 
