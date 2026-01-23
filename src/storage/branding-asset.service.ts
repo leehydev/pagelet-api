@@ -16,6 +16,7 @@ export class BrandingAssetService {
     [BrandingType.LOGO]: ['image/png', 'image/jpeg', 'image/webp', 'image/svg+xml'],
     [BrandingType.FAVICON]: ['image/png', 'image/x-icon', 'image/vnd.microsoft.icon', 'image/ico'],
     [BrandingType.OG]: ['image/png', 'image/jpeg', 'image/webp'],
+    [BrandingType.CTA]: ['image/png', 'image/jpeg', 'image/webp'],
   };
 
   // 브랜딩 타입별 최대 파일 크기 (bytes)
@@ -23,6 +24,7 @@ export class BrandingAssetService {
     [BrandingType.LOGO]: 2 * 1024 * 1024, // 2MB
     [BrandingType.FAVICON]: 512 * 1024, // 512KB
     [BrandingType.OG]: 5 * 1024 * 1024, // 5MB
+    [BrandingType.CTA]: 5 * 1024 * 1024, // 5MB
   };
 
   constructor(
@@ -133,7 +135,7 @@ export class BrandingAssetService {
   private getUpdateData(
     type: BrandingType,
     publicUrl: string,
-  ): { logoImageUrl?: string; faviconUrl?: string; ogImageUrl?: string } {
+  ): { logoImageUrl?: string; faviconUrl?: string; ogImageUrl?: string; ctaImageUrl?: string } {
     switch (type) {
       case BrandingType.LOGO:
         return { logoImageUrl: publicUrl };
@@ -141,6 +143,8 @@ export class BrandingAssetService {
         return { faviconUrl: publicUrl };
       case BrandingType.OG:
         return { ogImageUrl: publicUrl };
+      case BrandingType.CTA:
+        return { ctaImageUrl: publicUrl };
     }
   }
 }

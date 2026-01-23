@@ -5,6 +5,7 @@ export const BrandingType = {
   LOGO: 'logo',
   FAVICON: 'favicon',
   OG: 'og',
+  CTA: 'cta',
 } as const;
 
 export type BrandingType = (typeof BrandingType)[keyof typeof BrandingType];
@@ -12,7 +13,7 @@ export type BrandingType = (typeof BrandingType)[keyof typeof BrandingType];
 export class BrandingPresignDto {
   @ApiProperty({
     description: '브랜딩 타입',
-    enum: ['logo', 'favicon', 'og'],
+    enum: ['logo', 'favicon', 'og', 'cta'],
     example: 'logo',
   })
   @IsEnum(BrandingType)
