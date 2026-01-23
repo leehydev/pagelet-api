@@ -20,8 +20,30 @@ async function bootstrap() {
 
   // CORS 설정 (크로스 도메인 쿠키 지원)
   const frontendUrl = configService.get<string>('FRONTEND_URL', 'http://localhost:3001');
+  const tenantDomain = configService.get<string>('TENANT_DOMAIN', 'localhost:3001');
   app.enableCors({
-    origin: frontendUrl,
+    origin: (origin, callback) => {
+      // origin이 없는 경우 (서버 간 요청 등) 허용
+      if (!origin) {
+        callback(null, true);
+        return;
+      }
+      // FRONTEND_URL 허용
+      if (origin === frontendUrl) {
+        callback(null, true);
+        return;
+      }
+      // 테넌트 서브도메인 허용 (*.pagelet-dev.kr)
+      const tenantPattern = new RegExp(
+        `^https?://[a-z0-9-]+\\.${tenantDomain.replace('.', '\\.')}$`,
+      );
+      if (tenantPattern.test(origin)) {
+        callback(null, true);
+        return;
+      }
+
+      callback(new Error('CORS not allowed'), false);
+    },
     credentials: true, // 쿠키 전송 허용
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],

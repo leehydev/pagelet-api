@@ -390,6 +390,59 @@ export class PostService {
   }
 
   /**
+   * 현재 게시글 기준 인접 게시글 조회
+   * - 현재 게시글을 포함하여 총 5개 반환
+   * - publishedAt 기준 앞뒤 2개씩
+   * - 처음/끝 부분은 가능한 만큼만 반환
+   */
+  async findAdjacentPosts(
+    siteId: string,
+    currentPostId: string,
+    count: number = 5,
+  ): Promise<{ posts: Post[]; currentIndex: number }> {
+    // 해당 사이트의 모든 PUBLISHED 게시글을 publishedAt DESC 순으로 조회
+    const allPosts = await this.postRepository.find({
+      where: {
+        siteId: siteId,
+        status: PostStatus.PUBLISHED,
+      },
+      order: { publishedAt: 'DESC' },
+      select: ['id', 'title', 'slug', 'ogImageUrl', 'publishedAt'],
+    });
+
+    // 현재 게시글의 인덱스 찾기
+    const currentIndex = allPosts.findIndex((post) => post.id === currentPostId);
+
+    if (currentIndex === -1) {
+      // 현재 게시글이 없으면 빈 배열 반환
+      return { posts: [], currentIndex: -1 };
+    }
+
+    // 앞뒤 2개씩 슬라이스 (경계 처리)
+    const halfCount = Math.floor(count / 2);
+    let startIndex = currentIndex - halfCount;
+    let endIndex = currentIndex + halfCount;
+
+    // 경계 조정
+    if (startIndex < 0) {
+      // 앞에 공간이 부족하면 뒤로 더 가져옴
+      endIndex = Math.min(endIndex - startIndex, allPosts.length - 1);
+      startIndex = 0;
+    }
+
+    if (endIndex >= allPosts.length) {
+      // 뒤에 공간이 부족하면 앞에서 더 가져옴
+      startIndex = Math.max(0, startIndex - (endIndex - allPosts.length + 1));
+      endIndex = allPosts.length - 1;
+    }
+
+    const adjacentPosts = allPosts.slice(startIndex, endIndex + 1);
+    const newCurrentIndex = currentIndex - startIndex;
+
+    return { posts: adjacentPosts, currentIndex: newCurrentIndex };
+  }
+
+  /**
    * 게시글 수정
    */
   async updatePost(postId: string, siteId: string, dto: UpdatePostDto): Promise<Post> {

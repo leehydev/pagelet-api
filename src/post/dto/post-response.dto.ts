@@ -1,5 +1,18 @@
 import { PostStatus } from '../entities/post.entity';
 
+export class AdjacentPostDto {
+  id: string;
+  title: string;
+  slug: string;
+  ogImageUrl: string | null;
+  publishedAt: Date;
+  isCurrent: boolean;
+
+  constructor(partial: Partial<AdjacentPostDto>) {
+    Object.assign(this, partial);
+  }
+}
+
 export class PostResponseDto {
   id: string;
   title: string;
@@ -38,6 +51,7 @@ export class PublicPostResponseDto {
   ogImageUrl: string | null;
   categoryName: string | null;
   categorySlug: string | null;
+  adjacentPosts?: AdjacentPostDto[];
 
   constructor(partial: Partial<PublicPostResponseDto>) {
     Object.assign(this, partial);

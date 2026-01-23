@@ -156,6 +156,11 @@ export class SiteService {
       businessName: site.businessName,
       representativeName: site.representativeName,
       fontKey: site.fontKey,
+      ctaEnabled: site.ctaEnabled,
+      ctaType: site.ctaType,
+      ctaText: site.ctaText,
+      ctaImageUrl: site.ctaImageUrl,
+      ctaLink: site.ctaLink,
     };
   }
 
@@ -164,6 +169,7 @@ export class SiteService {
    */
   toPublicSettingsResponse(site: Site): PublicSiteSettingsResponseDto {
     return {
+      id: site.id,
       name: site.name,
       slug: site.slug,
       logoImageUrl: site.logoImageUrl,
@@ -184,6 +190,11 @@ export class SiteService {
       businessName: site.businessName,
       representativeName: site.representativeName,
       fontKey: site.fontKey,
+      ctaEnabled: site.ctaEnabled,
+      ctaType: site.ctaType,
+      ctaText: site.ctaText,
+      ctaImageUrl: site.ctaImageUrl,
+      ctaLink: site.ctaLink,
     };
   }
 
@@ -228,6 +239,11 @@ export class SiteService {
     if (dto.businessName !== undefined) site.businessName = dto.businessName;
     if (dto.representativeName !== undefined) site.representativeName = dto.representativeName;
     if (dto.fontKey !== undefined) site.fontKey = dto.fontKey;
+    if (dto.ctaEnabled !== undefined) site.ctaEnabled = dto.ctaEnabled;
+    if (dto.ctaType !== undefined) site.ctaType = dto.ctaType;
+    if (dto.ctaText !== undefined) site.ctaText = dto.ctaText;
+    if (dto.ctaImageUrl !== undefined) site.ctaImageUrl = dto.ctaImageUrl;
+    if (dto.ctaLink !== undefined) site.ctaLink = dto.ctaLink;
 
     const updated = await this.siteRepository.save(site);
     this.logger.log(`Updated site settings: ${updated.id}`);

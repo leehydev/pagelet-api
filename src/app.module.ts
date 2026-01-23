@@ -20,6 +20,7 @@ import { StorageModule } from './storage/storage.module';
 import { CategoryModule } from './category/category.module';
 import { BannerModule } from './banner/banner.module';
 import { SuperAdminModule } from './superadmin/superadmin.module';
+import { AnalyticsModule } from './analytics/analytics.module';
 import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
@@ -36,6 +37,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     StorageModule,
     BannerModule,
     SuperAdminModule,
+    AnalyticsModule,
     ScheduleModule.forRoot(),
     TypeOrmModule.forFeature([User]), // AccountStatusGuard에서 User Repository 사용
   ],

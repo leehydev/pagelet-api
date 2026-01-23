@@ -1,0 +1,79 @@
+# Dependencies (Docker에서 재설치)
+node_modules
+npm-debug.log
+yarn-error.log
+
+# Build output (Docker에서 재빌드)
+dist
+build
+*.tsbuildinfo
+
+# Environment variables (보안!)
+.env
+.env.local
+.env.development
+.env.production
+.env.test
+!.env.example
+
+# Git
+.git
+.gitignore
+.gitattributes
+.github
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# Tests (프로덕션 이미지에 불필요)
+coverage
+.nyc_output
+**/*.test.ts
+**/*.spec.ts
+**/*.e2e-spec.ts
+test/
+tests/
+
+# Documentation
+README.md
+CHANGELOG.md
+LICENSE
+docs/
+*.md
+
+# CI/CD
+.github
+.gitlab-ci.yml
+.circleci
+
+# Docker (Docker 파일 자체)
+Dockerfile
+Dockerfile.*
+.dockerignore
+docker-compose.yml
+docker-compose.*.yml
+
+# Logs
+logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Temporary files
+*.tmp
+*.temp
+.cache
+
+# Editor config (런타임에 불필요)
+.prettierrc
+.prettierrc.*
+.eslintrc.js
+.eslintrc.json
+.editorconfig
