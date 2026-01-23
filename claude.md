@@ -114,7 +114,7 @@ npm run test:e2e
 1. **브랜치 생성**
    - 브랜치명 규칙: `feature/issue-{이슈번호}-{간단한-설명}` 또는 `fix/issue-{이슈번호}-{간단한-설명}`
    - 예: `feature/issue-26-github-kanban-integration`
-   - 현재 브랜치에서 새 브랜치를 생성하고 체크아웃
+   - `development` 브랜치에서 새 브랜치를 생성하고 체크아웃
 
 2. **이슈를 프로젝트에 연결 (아직 연결되지 않은 경우)**
    - GitHub GraphQL API를 사용하여 이슈를 프로젝트에 추가
@@ -144,7 +144,7 @@ npm run test:e2e
      - 작업 내용 요약
      - 변경 사항 설명
      - 테스트 방법 (필요한 경우)
-   - base 브랜치: `main` (또는 기본 브랜치)
+   - base 브랜치: `development`
    - head 브랜치: 작업한 브랜치
 
 2. **PR을 프로젝트에 연결**
