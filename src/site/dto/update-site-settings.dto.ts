@@ -89,4 +89,30 @@ export class UpdateSiteSettingsDto {
     message: 'fontKey는 noto_sans, noto_serif 또는 null이어야 합니다',
   })
   fontKey?: 'noto_sans' | 'noto_serif' | null;
+
+  // CTA 설정
+  @IsOptional()
+  @IsBoolean()
+  ctaEnabled?: boolean;
+
+  @IsOptional()
+  @IsIn(['text', 'image', null], {
+    message: 'ctaType은 text, image 또는 null이어야 합니다',
+  })
+  ctaType?: 'text' | 'image' | null;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(100, { message: 'CTA 텍스트는 최대 100자까지 가능합니다' })
+  ctaText?: string | null;
+
+  @IsOptional()
+  @IsUrl({}, { message: '올바른 URL 형식이어야 합니다' })
+  @MaxLength(500)
+  ctaImageUrl?: string | null;
+
+  @IsOptional()
+  @IsUrl({}, { message: '올바른 URL 형식이어야 합니다' })
+  @MaxLength(500)
+  ctaLink?: string | null;
 }

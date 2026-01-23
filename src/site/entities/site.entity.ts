@@ -88,6 +88,22 @@ export class Site {
   @Column({ type: 'varchar', length: 20, nullable: true, default: null })
   fontKey: string | null; // 'noto_sans' | 'noto_serif'
 
+  // CTA 설정
+  @Column({ type: 'boolean', default: false })
+  ctaEnabled: boolean;
+
+  @Column({ type: 'varchar', length: 20, nullable: true })
+  ctaType: string | null; // 'text' | 'image'
+
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  ctaText: string | null;
+
+  @Column({ type: 'varchar', length: 500, nullable: true })
+  ctaImageUrl: string | null;
+
+  @Column({ type: 'varchar', length: 500, nullable: true })
+  ctaLink: string | null;
+
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;
 
