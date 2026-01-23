@@ -201,10 +201,12 @@ describe('Auth (e2e)', () => {
   describe('Public endpoints', () => {
     it('should allow access to public endpoints without token', () => {
       // Assuming /auth/kakao is public (has @Public() decorator)
-      return request(app.getHttpServer()).get('/auth/kakao').expect((res) => {
-        // Should not be 401 (might be redirect or other status)
-        expect(res.status).not.toBe(401);
-      });
+      return request(app.getHttpServer())
+        .get('/auth/kakao')
+        .expect((res) => {
+          // Should not be 401 (might be redirect or other status)
+          expect(res.status).not.toBe(401);
+        });
     });
   });
 });

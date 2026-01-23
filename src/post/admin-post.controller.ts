@@ -1,4 +1,14 @@
-import { Controller, Post, Get, Patch, Delete, Body, Query, Param, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Patch,
+  Delete,
+  Body,
+  Query,
+  Param,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { PostService } from './post.service';
 import { CreatePostDto } from './dto/create-post.dto';
@@ -99,7 +109,12 @@ export class AdminPostController {
         }),
     );
 
-    return PaginatedResponseDto.create(items, result.meta.totalItems, result.meta.page, result.meta.limit);
+    return PaginatedResponseDto.create(
+      items,
+      result.meta.totalItems,
+      result.meta.page,
+      result.meta.limit,
+    );
   }
 
   /**
@@ -109,7 +124,12 @@ export class AdminPostController {
   @Get('search')
   @ApiOperation({ summary: '게시글 검색 (오토컴플리트용)' })
   @ApiQuery({ name: 'q', required: true, type: String, description: '검색어' })
-  @ApiQuery({ name: 'limit', required: false, type: Number, description: '최대 결과 수 (기본값: 10)' })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: '최대 결과 수 (기본값: 10)',
+  })
   async searchPosts(
     @CurrentSite() site: Site,
     @Query('q') query: string,

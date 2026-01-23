@@ -12,7 +12,12 @@ import { AdminSiteGuard } from '../auth/guards/admin-site.guard';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Site])],
-  controllers: [PublicSiteController, AdminSiteController, AdminSiteSettingsController, PublicSiteSettingsController],
+  controllers: [
+    PublicSiteController,
+    AdminSiteController,
+    AdminSiteSettingsController,
+    PublicSiteSettingsController,
+  ],
   providers: [SiteService, SiteGuard, PublicSiteGuard, AdminSiteGuard],
   exports: [SiteService, SiteGuard, PublicSiteGuard, AdminSiteGuard],
 })

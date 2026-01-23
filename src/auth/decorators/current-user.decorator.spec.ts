@@ -12,7 +12,7 @@ describe('CurrentUser Decorator', () => {
     return {
       switchToHttp: () => ({
         getRequest: () => ({
-          user: user === null ? undefined : user ?? mockUserPrincipal,
+          user: user === null ? undefined : (user ?? mockUserPrincipal),
         }),
         getResponse: () => ({}),
         getNext: () => jest.fn(),

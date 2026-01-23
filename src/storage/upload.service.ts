@@ -57,7 +57,12 @@ export class UploadService {
 
     // 생성된 imageId로 새 경로 규칙의 S3 Key 생성
     // uploads/sites/{siteId}/posts/{postId}/images/{imageId}.{ext}
-    const s3Key = this.s3Service.generatePostImageKey(siteId, dto.postId || null, postImage.id, ext);
+    const s3Key = this.s3Service.generatePostImageKey(
+      siteId,
+      dto.postId || null,
+      postImage.id,
+      ext,
+    );
 
     // PostImage의 s3Key 업데이트
     await this.postImageService.updateS3Key(postImage.id, s3Key);

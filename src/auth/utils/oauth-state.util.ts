@@ -6,7 +6,7 @@ import { RedisService } from '../../common/redis/redis.service';
 /**
  * OAuth State 유틸리티
  * OAuth 인증 플로우 중 CSRF 공격 방지를 위한 state 파라미터 관리
- * 
+ *
  * OAuth State란?
  * - OAuth 인증 시작 시 생성되는 임시 토큰
  * - 인증 완료 후 콜백에서 검증하여 요청의 유효성을 확인

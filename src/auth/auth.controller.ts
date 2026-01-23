@@ -155,10 +155,7 @@ export class AuthController {
    * 로그아웃 - Redis 토큰 삭제 + 쿠키 삭제
    */
   @Post('logout')
-  async logout(
-    @CurrentUser() user: UserPrincipal,
-    @Res() res: Response,
-  ): Promise<void> {
+  async logout(@CurrentUser() user: UserPrincipal, @Res() res: Response): Promise<void> {
     // Redis에서 refresh token 삭제
     await this.authService.removeRefreshToken(user.userId);
 

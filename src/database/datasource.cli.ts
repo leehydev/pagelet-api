@@ -21,7 +21,7 @@ export default new DataSource({
   logging: process.env.NODE_ENV === 'development',
   ssl: process.env.DB_RDS_CA_BASE64
     ? {
-        ca: Buffer.from(process.env.DB_RDS_CA_BASE64!, 'base64').toString('utf-8'),
+        ca: Buffer.from(process.env.DB_RDS_CA_BASE64, 'base64').toString('utf-8'),
       }
     : false,
   namingStrategy: new SnakeNamingStrategy(),

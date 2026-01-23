@@ -13,9 +13,7 @@ export class PublicSiteController {
    */
   @Public()
   @Get('check-slug')
-  async checkSlug(
-    @Query('slug') slug: string,
-  ): Promise<{ available: boolean; message?: string }> {
+  async checkSlug(@Query('slug') slug: string): Promise<{ available: boolean; message?: string }> {
     if (!slug) {
       return { available: false, message: 'slug is required' };
     }
@@ -40,9 +38,7 @@ export class PublicSiteController {
    */
   @Public()
   @Get(':slug/settings')
-  async getSettingsBySlug(
-    @Param('slug') slug: string,
-  ): Promise<SiteSettingsResponseDto> {
+  async getSettingsBySlug(@Param('slug') slug: string): Promise<SiteSettingsResponseDto> {
     return this.siteService.getSettingsBySlug(slug);
   }
 }

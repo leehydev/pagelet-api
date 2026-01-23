@@ -20,7 +20,9 @@ export class PublicCategoryController {
    * 공개 카테고리 목록 조회
    */
   @Get()
-  async getPublicCategories(@Query('siteSlug') siteSlug: string): Promise<PublicCategoryResponseDto[]> {
+  async getPublicCategories(
+    @Query('siteSlug') siteSlug: string,
+  ): Promise<PublicCategoryResponseDto[]> {
     if (!siteSlug) {
       throw BusinessException.fromErrorCode(
         ErrorCode.COMMON_BAD_REQUEST,

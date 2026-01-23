@@ -27,25 +27,15 @@ export class RedisLockConflictException extends Error {
  * }
  * ```
  */
-export function RedisLock(
-  keyFn: (args: unknown[]) => string,
-  ttl = 5,
-  redisKey = 'redis',
-) {
-  return function (
-    _target: unknown,
-    _propertyKey: string,
-    descriptor: PropertyDescriptor,
-  ) {
+export function RedisLock(keyFn: (args: unknown[]) => string, ttl = 5, redisKey = 'redis') {
+  return function (_target: unknown, _propertyKey: string, descriptor: PropertyDescriptor) {
     const originalMethod = descriptor.value;
 
     descriptor.value = async function (...args: unknown[]) {
       const redis: Redis = (this as Record<string, unknown>)[redisKey] as Redis;
 
       if (!redis) {
-        throw new Error(
-          `Redis client not found. Ensure '${redisKey}' is injected in the class.`,
-        );
+        throw new Error(`Redis client not found. Ensure '${redisKey}' is injected in the class.`);
       }
 
       const lockKey = keyFn(args);

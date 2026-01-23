@@ -26,10 +26,7 @@ export class OnboardingController {
    * 사이트 생성 (Step 2)
    */
   @Post('site')
-  async createSite(
-    @CurrentUser() user: UserPrincipal,
-    @Body() dto: CreateSiteDto,
-  ): Promise<void> {
+  async createSite(@CurrentUser() user: UserPrincipal, @Body() dto: CreateSiteDto): Promise<void> {
     await this.onboardingService.createSite(user.userId, dto);
   }
 

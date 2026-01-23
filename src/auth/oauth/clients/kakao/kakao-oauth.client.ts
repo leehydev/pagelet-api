@@ -112,9 +112,7 @@ export class KakaoOAuthClient implements OAuthProviderClient {
         email: kakaoAccount?.email || null,
         name: kakaoAccount?.profile?.nickname || userData.properties?.nickname || null,
         profileImage:
-          kakaoAccount?.profile?.profile_image_url ||
-          userData.properties?.profile_image ||
-          null,
+          kakaoAccount?.profile?.profile_image_url || userData.properties?.profile_image || null,
         // 원본 데이터도 포함 (필요시 사용)
         raw: userData,
       };

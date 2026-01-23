@@ -1,12 +1,4 @@
-import {
-  IsString,
-  MaxLength,
-  IsOptional,
-  IsIn,
-  Matches,
-  IsUrl,
-  IsObject,
-} from 'class-validator';
+import { IsString, MaxLength, IsOptional, IsIn, Matches, IsUrl, IsObject } from 'class-validator';
 import { PostStatus } from '../entities/post.entity';
 
 export class UpdatePostDto {

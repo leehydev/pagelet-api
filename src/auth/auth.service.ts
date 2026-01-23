@@ -17,10 +17,7 @@ import { BusinessException } from '../common/exception/business.exception';
 import { ErrorCode } from '../common/exception/error-code';
 import { JwtConfig } from '../config/jwt.config';
 import { RedisService } from '../common/redis/redis.service';
-import {
-  RedisLock,
-  RedisLockConflictException,
-} from '../common/decorators/redis-lock.decorator';
+import { RedisLock, RedisLockConflictException } from '../common/decorators/redis-lock.decorator';
 
 /**
  * Auth Service
@@ -169,9 +166,7 @@ export class AuthService {
   /**
    * JWT 토큰 생성 (Access + Refresh) + Redis 저장
    */
-  async generateTokens(
-    userId: string,
-  ): Promise<{ accessToken: string; refreshToken: string }> {
+  async generateTokens(userId: string): Promise<{ accessToken: string; refreshToken: string }> {
     const jwtConfig = this.configService.get<JwtConfig>('jwt')!;
     const payload: JwtPayload = {
       sub: userId,
@@ -189,9 +184,7 @@ export class AuthService {
     ]);
 
     // Redis에 refresh token 저장
-    const refreshTtlSeconds = Math.floor(
-      ms(jwtConfig.refresh.expiresIn as StringValue) / 1000,
-    );
+    const refreshTtlSeconds = Math.floor(ms(jwtConfig.refresh.expiresIn) / 1000);
     await this.redis.set(
       `${this.REFRESH_TOKEN_PREFIX}${userId}`,
       refreshToken,
@@ -228,28 +221,21 @@ export class AuthService {
 
     try {
       // 2. 캐시된 결과 확인 (동시 요청 처리)
-      const cached = await this.redis.get(
-        `${this.REFRESH_RESULT_PREFIX}${userId}`,
-      );
+      const cached = await this.redis.get(`${this.REFRESH_RESULT_PREFIX}${userId}`);
       if (cached) {
         this.logger.log(`Returning cached access token for user: ${userId}`);
         return { accessToken: cached, isCached: true };
       }
 
       // 3. 락 획득 후 새 토큰 발급
-      const newAccessToken = await this.refreshTokenWithLock(
-        userId,
-        refreshToken,
-      );
+      const newAccessToken = await this.refreshTokenWithLock(userId, refreshToken);
       return { accessToken: newAccessToken, isCached: false };
     } catch (err) {
       if (err instanceof RedisLockConflictException) {
         // 락 충돌 시 잠시 대기 후 캐시 확인
         await new Promise((resolve) => setTimeout(resolve, 1000));
 
-        const cached = await this.redis.get(
-          `${this.REFRESH_RESULT_PREFIX}${userId}`,
-        );
+        const cached = await this.redis.get(`${this.REFRESH_RESULT_PREFIX}${userId}`);
         if (cached) {
           return { accessToken: cached, isCached: true };
         }
@@ -264,16 +250,11 @@ export class AuthService {
    * 락을 획득하고 토큰 리프레시 수행
    */
   @RedisLock((args) => `refresh-lock:${args[0]}`, 5)
-  private async refreshTokenWithLock(
-    userId: string,
-    refreshToken: string,
-  ): Promise<string> {
+  private async refreshTokenWithLock(userId: string, refreshToken: string): Promise<string> {
     const jwtConfig = this.configService.get<JwtConfig>('jwt')!;
 
     // Redis에 저장된 토큰과 비교
-    const savedToken = await this.redis.get(
-      `${this.REFRESH_TOKEN_PREFIX}${userId}`,
-    );
+    const savedToken = await this.redis.get(`${this.REFRESH_TOKEN_PREFIX}${userId}`);
     if (!savedToken || savedToken !== refreshToken) {
       throw new UnauthorizedException('유효하지 않은 토큰입니다.');
     }
@@ -286,12 +267,7 @@ export class AuthService {
     });
 
     // 결과 캐시 (동시 요청용, 10초)
-    await this.redis.set(
-      `${this.REFRESH_RESULT_PREFIX}${userId}`,
-      newAccessToken,
-      'EX',
-      10,
-    );
+    await this.redis.set(`${this.REFRESH_RESULT_PREFIX}${userId}`, newAccessToken, 'EX', 10);
 
     this.logger.log(`Refreshed access token for user: ${userId}`);
 
