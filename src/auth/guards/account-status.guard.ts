@@ -55,6 +55,9 @@ export class AccountStatusGuard implements CanActivate {
 
     if (!allowedStatuses.includes(dbUser.accountStatus)) {
       // 상태에 따른 에러 코드 반환
+      if (dbUser.accountStatus === AccountStatus.PENDING) {
+        throw BusinessException.fromErrorCode(ErrorCode.ACCOUNT_PENDING);
+      }
       if (dbUser.accountStatus === AccountStatus.SUSPENDED) {
         throw BusinessException.fromErrorCode(ErrorCode.ACCOUNT_SUSPENDED);
       }

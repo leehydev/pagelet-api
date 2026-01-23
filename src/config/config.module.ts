@@ -56,6 +56,9 @@ import { JoiMsString } from 'src/common/utils/validation/joi-ms-string';
 
         // Tenant
         TENANT_DOMAIN: Joi.string().default('pagelet-dev.kr'),
+
+        // SuperAdmin
+        SUPERADMIN_USER_IDS: Joi.string().optional().default(''),
       }),
     }),
   ],

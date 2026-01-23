@@ -10,6 +10,7 @@ import { SocialAccount } from './social-account.entity';
 
 export const AccountStatus = {
   ONBOARDING: 'ONBOARDING',
+  PENDING: 'PENDING', // 가입 대기 (관리자 승인 필요)
   ACTIVE: 'ACTIVE',
   SUSPENDED: 'SUSPENDED', // 서비스 이용불가
   WITHDRAWN: 'WITHDRAWN', // 탈퇴
