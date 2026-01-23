@@ -34,16 +34,14 @@ async function bootstrap() {
         return;
       }
       // 테넌트 서브도메인 허용 (*.pagelet-dev.kr)
-      const tenantPattern = new RegExp(`^https?://[a-z0-9-]+\\.${tenantDomain.replace('.', '\\.')}$`);
+      const tenantPattern = new RegExp(
+        `^https?://[a-z0-9-]+\\.${tenantDomain.replace('.', '\\.')}$`,
+      );
       if (tenantPattern.test(origin)) {
         callback(null, true);
         return;
       }
-      // localhost 개발 환경 허용
-      if (origin.startsWith('http://localhost:')) {
-        callback(null, true);
-        return;
-      }
+
       callback(new Error('CORS not allowed'), false);
     },
     credentials: true, // 쿠키 전송 허용

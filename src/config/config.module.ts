@@ -23,6 +23,7 @@ import { JoiMsString } from 'src/common/utils/validation/joi-ms-string';
         DB_USERNAME: Joi.string().required(),
         DB_PASSWORD: Joi.string().required(),
         DB_DATABASE: Joi.string().required(),
+        DB_SCHEMA: Joi.string().optional(),
         DB_RDS_CA_BASE64: Joi.string().optional(),
 
         // JWT
@@ -35,6 +36,11 @@ import { JoiMsString } from 'src/common/utils/validation/joi-ms-string';
         KAKAO_CLIENT_ID: Joi.string().required(),
         KAKAO_CLIENT_SECRET: Joi.string().required(),
         KAKAO_REDIRECT_URI: Joi.string().required(),
+
+        // Naver OAuth
+        NAVER_CLIENT_ID: Joi.string().required(),
+        NAVER_CLIENT_SECRET: Joi.string().required(),
+        NAVER_REDIRECT_URI: Joi.string().required(),
 
         // Frontend
         FRONTEND_URL: Joi.string().default('http://localhost:3001'),
