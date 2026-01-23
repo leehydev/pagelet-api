@@ -12,6 +12,7 @@ import { ErrorCode } from '../../common/exception/error-code';
  * SUSPENDED, WITHDRAWN 상태는 차단
  *
  * @Public() 데코레이터가 있거나 인증되지 않은 요청은 건너뜀
+ * @AllowPending() 데코레이터가 있으면 PENDING 상태도 허용
  */
 @Injectable()
 export class AccountStatusGuard implements CanActivate {
@@ -50,8 +51,19 @@ export class AccountStatusGuard implements CanActivate {
       throw BusinessException.fromErrorCode(ErrorCode.USER_NOT_FOUND);
     }
 
+    // @AllowPending() 데코레이터 확인
+    const allowPending = this.reflector.getAllAndOverride<boolean>('allowPending', [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+
     // 허용된 상태인지 확인
     const allowedStatuses: AccountStatus[] = [AccountStatus.ONBOARDING, AccountStatus.ACTIVE];
+
+    // @AllowPending() 데코레이터가 있으면 PENDING도 허용
+    if (allowPending) {
+      allowedStatuses.push(AccountStatus.PENDING);
+    }
 
     if (!allowedStatuses.includes(dbUser.accountStatus)) {
       // 상태에 따른 에러 코드 반환
