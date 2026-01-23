@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { APP_ENV } from 'env';
 import { DataSource } from 'typeorm';
 import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 import { addTransactionalDataSource } from 'typeorm-transactional';
@@ -13,6 +12,8 @@ import { addTransactionalDataSource } from 'typeorm-transactional';
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
         const dbConfig = configService.get('database');
+        const IS_PRODUCTION = process.env.NODE_ENV === 'production';
+
         return {
           type: 'postgres',
           host: dbConfig.host,
@@ -25,7 +26,7 @@ import { addTransactionalDataSource } from 'typeorm-transactional';
           autoLoadEntities: true,
           synchronize: false,
           migrations: [__dirname + '/migrations/*{.ts,.js}'],
-          migrationsRun: APP_ENV === 'local',
+          migrationsRun: !IS_PRODUCTION,
           namingStrategy: new SnakeNamingStrategy(),
           logging: process.env.NODE_ENV !== 'production', // 운영에서는 false
         };
