@@ -1,4 +1,5 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Site } from './entities/site.entity';
@@ -45,7 +46,16 @@ export class SiteService {
   constructor(
     @InjectRepository(Site)
     private readonly siteRepository: Repository<Site>,
+    private readonly configService: ConfigService,
   ) {}
+
+  /**
+   * slug 기반으로 canonical base URL 생성
+   */
+  private generateCanonicalBaseUrl(slug: string): string {
+    const tenantDomain = this.configService.get<string>('TENANT_DOMAIN');
+    return `https://${slug}.${tenantDomain}`;
+  }
 
   /**
    * slug 사용 가능 여부 확인
@@ -134,7 +144,7 @@ export class SiteService {
       seoTitle: site.seoTitle,
       seoDescription: site.seoDescription,
       seoKeywords: site.seoKeywords,
-      canonicalBaseUrl: site.canonicalBaseUrl,
+      canonicalBaseUrl: this.generateCanonicalBaseUrl(site.slug),
       robotsIndex: site.robotsIndex,
       contactEmail: site.contactEmail,
       contactPhone: site.contactPhone,
@@ -162,7 +172,7 @@ export class SiteService {
       seoTitle: site.seoTitle,
       seoDescription: site.seoDescription,
       seoKeywords: site.seoKeywords,
-      canonicalBaseUrl: site.canonicalBaseUrl,
+      canonicalBaseUrl: this.generateCanonicalBaseUrl(site.slug),
       robotsIndex: site.robotsIndex,
       contactEmail: site.contactEmail,
       contactPhone: site.contactPhone,
@@ -207,7 +217,6 @@ export class SiteService {
     if (dto.seoTitle !== undefined) site.seoTitle = dto.seoTitle;
     if (dto.seoDescription !== undefined) site.seoDescription = dto.seoDescription;
     if (dto.seoKeywords !== undefined) site.seoKeywords = dto.seoKeywords;
-    if (dto.canonicalBaseUrl !== undefined) site.canonicalBaseUrl = dto.canonicalBaseUrl;
     if (dto.robotsIndex !== undefined) site.robotsIndex = dto.robotsIndex;
     if (dto.contactEmail !== undefined) site.contactEmail = dto.contactEmail;
     if (dto.contactPhone !== undefined) site.contactPhone = dto.contactPhone;
