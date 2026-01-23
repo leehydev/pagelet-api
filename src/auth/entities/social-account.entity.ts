@@ -13,6 +13,7 @@ import { User } from './user.entity';
 // TypeScript 타입 (DB enum 사용 안 함)
 export const OAuthProvider = {
   KAKAO: 'KAKAO',
+  NAVER: 'NAVER',
 } as const;
 
 export type OAuthProvider = (typeof OAuthProvider)[keyof typeof OAuthProvider];

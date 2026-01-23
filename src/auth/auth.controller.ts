@@ -26,6 +26,7 @@ import type { UserResponseDto } from './dto/user-response.dto';
 @Controller('auth')
 export class AuthController {
   private readonly kakaoAuthUrl = 'https://kauth.kakao.com/oauth/authorize';
+  private readonly naverAuthUrl = 'https://nid.naver.com/oauth2.0/authorize';
 
   constructor(
     private readonly authService: AuthService,
@@ -104,6 +105,80 @@ export class AuthController {
 
       // 로그인 처리
       const loginResult = await this.authService.loginWithKakao(code);
+
+      // HttpOnly 쿠키에 토큰 설정
+      CookieUtil.setAccessTokenCookie(res, loginResult.accessToken, this.configService);
+      CookieUtil.setRefreshTokenCookie(res, loginResult.refreshToken, this.configService);
+
+      // 프론트엔드로 redirect (성공)
+      res.redirect(`${frontendUrl}/auth/success`);
+    } catch (error) {
+      // 에러 발생 시 프론트엔드로 redirect
+      const errorMessage = error instanceof Error ? error.message : 'unknown_error';
+      res.redirect(`${frontendUrl}/auth/error?error=${encodeURIComponent(errorMessage)}`);
+    }
+  }
+
+  /**
+   * GET /auth/naver
+   * Naver OAuth 시작 - Naver authorize URL로 redirect
+   */
+  @Public()
+  @Get('naver')
+  async startNaverOAuth(@Res() res: Response): Promise<void> {
+    try {
+      // Naver OAuth URL 생성
+      const clientId = this.configService.get<string>('NAVER_CLIENT_ID');
+      const redirectUri = this.configService.get<string>('NAVER_REDIRECT_URI');
+
+      const params = new URLSearchParams({
+        client_id: clientId!,
+        redirect_uri: redirectUri!,
+        response_type: 'code',
+      });
+
+      const authUrl = `${this.naverAuthUrl}?${params.toString()}`;
+
+      // Naver로 redirect
+      res.redirect(authUrl);
+    } catch (error) {
+      const frontendUrl = this.configService.get<string>('FRONTEND_URL', 'http://localhost:3001');
+      res.redirect(`${frontendUrl}/auth/error?message=oauth_init_failed`);
+    }
+  }
+
+  /**
+   * GET /auth/naver/callback
+   * Naver OAuth 콜백 - code를 받아 로그인 처리 후 프론트엔드로 redirect
+   */
+  @Public()
+  @Get('naver/callback')
+  async naverOAuthCallback(
+    @Query('code') code: string,
+    @Query('state') state: string,
+    @Query('error') error: string,
+    @Query('error_description') errorDescription: string,
+    @Res() res: Response,
+  ): Promise<void> {
+    const frontendUrl = this.configService.get<string>('FRONTEND_URL', 'http://localhost:3001');
+
+    try {
+      // 에러 처리
+      if (error) {
+        res.redirect(
+          `${frontendUrl}/auth/error?error=${encodeURIComponent(error)}&description=${encodeURIComponent(errorDescription || '')}`,
+        );
+        return;
+      }
+
+      // Code 검증
+      if (!code) {
+        res.redirect(`${frontendUrl}/auth/error?error=missing_code`);
+        return;
+      }
+
+      // 로그인 처리
+      const loginResult = await this.authService.loginWithNaver(code);
 
       // HttpOnly 쿠키에 토큰 설정
       CookieUtil.setAccessTokenCookie(res, loginResult.accessToken, this.configService);
