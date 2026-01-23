@@ -14,10 +14,10 @@ outputs:
 
 ## 레포지토리 경로
 
-| 레포지토리 | 경로 | 용도 |
-|-----------|------|------|
+| 레포지토리  | 경로                                       | 용도                        |
+| ----------- | ------------------------------------------ | --------------------------- |
 | pagelet-api | `/Users/mary/Projects/pagelet/pagelet-api` | 백엔드 (NestJS) - 현재 레포 |
-| pagelet-app | `/Users/mary/Projects/pagelet/pagelet-app` | 프론트엔드 (Next.js) |
+| pagelet-app | `/Users/mary/Projects/pagelet/pagelet-app` | 프론트엔드 (Next.js)        |
 
 **참고:** 백엔드 작업 시 프론트엔드 코드를 참조하여 API 응답 형식, 타입 정의 등을 확인할 수 있습니다.
 
@@ -48,6 +48,7 @@ gh api graphql -f query='mutation { updateProjectV2ItemFieldValue(input: {projec
 - 필요시 마이그레이션 직접 작성 (`src/database/migrations/` 디렉토리에 생성)
 
 **마이그레이션 파일 작성 규칙:**
+
 - 파일명: `{timestamp}-{MigrationName}.ts` (예: `1737500000000-AddPostPagination.ts`)
 - TypeORM 마이그레이션 클래스 형식 준수
 - `up()`: 변경 적용, `down()`: 롤백 로직 작성
@@ -94,9 +95,9 @@ gh api graphql -f query='mutation { updateProjectV2ItemFieldValue(input: {projec
 
 ## GitHub 프로젝트 Status 옵션 ID
 
-| Status | Option ID |
-|--------|-----------|
-| Todo | `f75ad846` |
+| Status      | Option ID  |
+| ----------- | ---------- |
+| Todo        | `f75ad846` |
 | In Progress | `47fc9ee4` |
-| pr | `9ef8707a` |
-| Done | `98236657` |
+| pr          | `9ef8707a` |
+| Done        | `98236657` |
