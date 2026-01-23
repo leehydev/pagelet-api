@@ -169,6 +169,7 @@ export class SiteService {
    */
   toPublicSettingsResponse(site: Site): PublicSiteSettingsResponseDto {
     return {
+      id: site.id,
       name: site.name,
       slug: site.slug,
       logoImageUrl: site.logoImageUrl,

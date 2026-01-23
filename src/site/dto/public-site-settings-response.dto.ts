@@ -4,6 +4,7 @@
  */
 export class PublicSiteSettingsResponseDto {
   // 기본 정보
+  id: string;
   name: string;
   slug: string;
 
