@@ -23,28 +23,10 @@ export class OnboardingController {
 
   /**
    * POST /onboarding/site
-   * 사이트 생성 (Step 2)
+   * 사이트 생성 (Step 2) - 완료 시 온보딩 종료
    */
   @Post('site')
   async createSite(@CurrentUser() user: UserPrincipal, @Body() dto: CreateSiteDto): Promise<void> {
     await this.onboardingService.createSite(user.userId, dto);
-  }
-
-  /**
-   * POST /onboarding/skip-first-post
-   * 첫 글 작성 스킵 (Step 3)
-   */
-  @Post('skip-first-post')
-  async skipFirstPost(@CurrentUser() user: UserPrincipal): Promise<void> {
-    await this.onboardingService.skipFirstPost(user.userId);
-  }
-
-  /**
-   * POST /onboarding/complete
-   * 온보딩 완료 (첫 글 작성 후 호출)
-   */
-  @Post('complete')
-  async completeOnboarding(@CurrentUser() user: UserPrincipal): Promise<void> {
-    await this.onboardingService.completeOnboarding(user.userId);
   }
 }

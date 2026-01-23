@@ -47,7 +47,7 @@ export class OnboardingService {
   }
 
   /**
-   * 사이트 생성 (Step 2)
+   * 사이트 생성 (Step 2) - 완료 시 온보딩 종료
    */
   async createSite(userId: string, dto: CreateSiteDto): Promise<void> {
     const user = await this.userRepository.findOne({ where: { id: userId } });
@@ -75,44 +75,10 @@ export class OnboardingService {
     // 사이트 생성
     await this.siteService.createSite(userId, dto.name, dto.slug);
 
-    // 다음 단계로 이동
-    user.onboardingStep = OnboardingStep.FIRST_POST;
-    await this.userRepository.save(user);
-    this.logger.log(`User ${userId} completed site step`);
-  }
-
-  /**
-   * 온보딩 완료 (첫 글 작성 또는 스킵)
-   */
-  async completeOnboarding(userId: string): Promise<void> {
-    const user = await this.userRepository.findOne({ where: { id: userId } });
-
-    if (!user) {
-      throw BusinessException.fromErrorCode(ErrorCode.USER_NOT_FOUND);
-    }
-
-    // 온보딩 상태가 아니면 에러
-    if (user.accountStatus !== AccountStatus.ONBOARDING) {
-      throw BusinessException.fromErrorCode(ErrorCode.ONBOARDING_NOT_ALLOWED);
-    }
-
-    // 현재 단계가 3이 아니면 에러
-    if (user.onboardingStep !== OnboardingStep.FIRST_POST) {
-      throw BusinessException.fromErrorCode(ErrorCode.ONBOARDING_INVALID_STEP);
-    }
-
     // 온보딩 완료
     user.accountStatus = AccountStatus.ACTIVE;
     user.onboardingStep = null;
     await this.userRepository.save(user);
     this.logger.log(`User ${userId} completed onboarding`);
-  }
-
-  /**
-   * 첫 글 스킵 (Step 3 스킵)
-   */
-  async skipFirstPost(userId: string): Promise<void> {
-    await this.completeOnboarding(userId);
-    this.logger.log(`User ${userId} skipped first post`);
   }
 }
