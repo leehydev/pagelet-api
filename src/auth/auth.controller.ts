@@ -127,6 +127,9 @@ export class AuthController {
   @Get('naver')
   async startNaverOAuth(@Res() res: Response): Promise<void> {
     try {
+      // State 생성 (CSRF 방지 - 네이버는 state 필수)
+      const state = await this.oauthStateUtil.generateState();
+
       // Naver OAuth URL 생성
       const clientId = this.configService.get<string>('NAVER_CLIENT_ID');
       const redirectUri = this.configService.get<string>('NAVER_REDIRECT_URI');
@@ -135,6 +138,7 @@ export class AuthController {
         client_id: clientId!,
         redirect_uri: redirectUri!,
         response_type: 'code',
+        state,
       });
 
       const authUrl = `${this.naverAuthUrl}?${params.toString()}`;
@@ -168,6 +172,12 @@ export class AuthController {
         res.redirect(
           `${frontendUrl}/auth/error?error=${encodeURIComponent(error)}&description=${encodeURIComponent(errorDescription || '')}`,
         );
+        return;
+      }
+
+      // State 검증 (CSRF 방지 - 네이버는 state 필수)
+      if (!(await this.oauthStateUtil.validateState(state))) {
+        res.redirect(`${frontendUrl}/auth/error?error=invalid_state`);
         return;
       }
 

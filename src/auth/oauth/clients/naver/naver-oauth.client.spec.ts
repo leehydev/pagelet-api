@@ -144,6 +144,40 @@ describe('NaverOAuthClient', () => {
         'TOKEN_EXCHANGE_FAILED',
       );
     });
+
+    it('200 응답에 error 필드가 있을 때 INVALID_GRANT 에러를 던져야 함', async () => {
+      const mockResponse: AxiosResponse = {
+        data: {
+          error: 'invalid_grant',
+          error_description: 'authorization code not found',
+        },
+        status: 200,
+        statusText: 'OK',
+        headers: {},
+        config: {} as any,
+      };
+
+      httpService.post.mockReturnValue(of(mockResponse));
+
+      await expect(client.exchangeCodeForToken('invalid-code')).rejects.toThrow('INVALID_GRANT');
+    });
+
+    it('200 응답에 unknown error 필드가 있을 때 TOKEN_EXCHANGE_FAILED 에러를 던져야 함', async () => {
+      const mockResponse: AxiosResponse = {
+        data: {
+          error: 'unknown_error',
+          error_description: 'something went wrong',
+        },
+        status: 200,
+        statusText: 'OK',
+        headers: {},
+        config: {} as any,
+      };
+
+      httpService.post.mockReturnValue(of(mockResponse));
+
+      await expect(client.exchangeCodeForToken('test-code')).rejects.toThrow('TOKEN_EXCHANGE_FAILED');
+    });
   });
 
   describe('getUserInfo', () => {

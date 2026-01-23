@@ -52,6 +52,23 @@ export class NaverOAuthClient implements OAuthProviderClient {
         }),
       );
 
+      // 네이버 API는 200 응답에도 error 필드로 에러를 반환할 수 있음
+      const data = response.data as NaverTokenResponseDto & {
+        error?: string;
+        error_description?: string;
+      };
+      if (data.error) {
+        this.logger.error(`Token exchange error in response: ${data.error} - ${data.error_description}`);
+        if (data.error === 'invalid_grant') {
+          throw new Error('INVALID_GRANT');
+        } else if (data.error === 'invalid_client') {
+          throw new Error('INVALID_CLIENT');
+        } else if (data.error === 'invalid_request') {
+          throw new Error('INVALID_REQUEST');
+        }
+        throw new Error('TOKEN_EXCHANGE_FAILED');
+      }
+
       this.logger.debug('Token exchange successful');
 
       return {
@@ -61,6 +78,11 @@ export class NaverOAuthClient implements OAuthProviderClient {
         expires_in: response.data.expires_in,
       };
     } catch (error) {
+      // 내부에서 던진 에러는 그대로 re-throw
+      if (error instanceof Error && ['INVALID_GRANT', 'INVALID_CLIENT', 'INVALID_REQUEST', 'TOKEN_EXCHANGE_FAILED'].includes(error.message)) {
+        throw error;
+      }
+
       const axiosError = error as AxiosError<{ error: string; error_description?: string }>;
 
       if (axiosError.response) {
