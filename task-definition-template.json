@@ -1,0 +1,147 @@
+{
+  "family": "pagelet-task",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "512",
+  "memory": "1024",
+  "executionRoleArn": "arn:aws:iam::800511960362:role/ecsTaskExecutionRole",
+  "taskRoleArn": "arn:aws:iam::800511960362:role/ecsTaskRole-S3Access",
+  "containerDefinitions": [
+    {
+      "name": "pagelet-app",
+      "image": "${IMAGE_URI}",
+      "portMappings": [
+        {
+          "containerPort": 3000,
+          "protocol": "tcp"
+        }
+      ],
+      "environment": [
+        {
+          "name": "NODE_ENV",
+          "value": "production"
+        },
+        {
+          "name": "PORT",
+          "value": "3000"
+        },
+        {
+          "name": "DB_HOST",
+          "value": "${DB_HOST}"
+        },
+        {
+          "name": "DB_PORT",
+          "value": "5432"
+        },
+        {
+          "name": "DB_USERNAME",
+          "value": "${DB_USERNAME}"
+        },
+        {
+          "name": "DB_PASSWORD",
+          "value": "${DB_PASSWORD}"
+        },
+        {
+          "name": "DB_DATABASE",
+          "value": "${DB_DATABASE}"
+        },
+        {
+          "name": "DB_SCHEMA",
+          "value": "${DB_SCHEMA}"
+        },
+        {
+          "name": "DB_RDS_CA_BASE64",
+          "value": "${DB_RDS_CA_BASE64}"
+        },
+        {
+          "name": "JWT_ACCESS_SECRET",
+          "value": "${JWT_ACCESS_SECRET}"
+        },
+        {
+          "name": "JWT_ACCESS_EXPIRES_IN",
+          "value": "1h"
+        },
+        {
+          "name": "JWT_REFRESH_SECRET",
+          "value": "${JWT_REFRESH_SECRET}"
+        },
+        {
+          "name": "JWT_REFRESH_EXPIRES_IN",
+          "value": "7d"
+        },
+        {
+          "name": "KAKAO_CLIENT_ID",
+          "value": "${KAKAO_CLIENT_ID}"
+        },
+        {
+          "name": "KAKAO_CLIENT_SECRET",
+          "value": "${KAKAO_CLIENT_SECRET}"
+        },
+        {
+          "name": "KAKAO_REDIRECT_URI",
+          "value": "https://api.pagelet.kr/auth/kakao/callback"
+        },
+        {
+          "name": "NAVER_CLIENT_ID",
+          "value": "${NAVER_CLIENT_ID}"
+        },
+        {
+          "name": "NAVER_CLIENT_SECRET",
+          "value": "${NAVER_CLIENT_SECRET}"
+        },
+        {
+          "name": "NAVER_REDIRECT_URI",
+          "value": "https://api.pagelet.kr/auth/naver/callback"
+        },
+        {
+          "name": "FRONTEND_URL",
+          "value": "https://app.pagelet.kr"
+        },
+        {
+          "name": "COOKIE_DOMAIN",
+          "value": ".pagelet.kr"
+        },
+        {
+          "name": "COOKIE_SECURE",
+          "value": "true"
+        },
+        {
+          "name": "TENANT_DOMAIN",
+          "value": "pagelet.kr"
+        },
+        {
+          "name": "REDIS_HOST",
+          "value": "${REDIS_HOST}"
+        },
+        {
+          "name": "REDIS_PORT",
+          "value": "13956"
+        },
+        {
+          "name": "REDIS_PASSWORD",
+          "value": "${REDIS_PASSWORD}"
+        },
+        {
+          "name": "AWS_S3_BUCKET",
+          "value": "${AWS_S3_BUCKET}"
+        },
+        {
+          "name": "AWS_S3_REGION",
+          "value": "ap-northeast-2"
+        },
+        {
+          "name": "ASSETS_CDN_URL",
+          "value": "https://assets.pagelet.kr"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/my-app",
+          "awslogs-region": "ap-northeast-2",
+          "awslogs-stream-prefix": "ecs"
+        }
+      }
+    }
+  ]
+}

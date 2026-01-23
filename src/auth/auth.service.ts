@@ -9,6 +9,7 @@ import type { StringValue } from 'ms';
 import { User, AccountStatus } from './entities/user.entity';
 import { SocialAccount, OAuthProvider } from './entities/social-account.entity';
 import { KakaoOAuthService } from './oauth/services/kakao-oauth.service';
+import { NaverOAuthService } from './oauth/services/naver-oauth.service';
 import { OAuthUserInfo } from './oauth/clients/interfaces/oauth-provider-client.interface';
 import { JwtPayload } from './types/jwt-payload.interface';
 import { LoginResponseDto } from './dto/login-response.dto';
@@ -38,6 +39,7 @@ export class AuthService {
     @InjectRepository(SocialAccount)
     private readonly socialAccountRepository: Repository<SocialAccount>,
     private readonly kakaoOAuthService: KakaoOAuthService,
+    private readonly naverOAuthService: NaverOAuthService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly redisService: RedisService,
@@ -57,10 +59,10 @@ export class AuthService {
       this.logger.log(`Kakao OAuth authentication successful for user ID: ${oauthUserInfo.id}`);
 
       // 2. 사용자 조회 또는 생성
-      const user = await this.findOrCreateUser(oauthUserInfo);
+      const user = await this.findOrCreateUser(oauthUserInfo, OAuthProvider.KAKAO);
 
       // 3. SocialAccount upsert
-      await this.upsertSocialAccount(user.id, oauthUserInfo.id);
+      await this.upsertSocialAccount(user.id, oauthUserInfo.id, OAuthProvider.KAKAO);
 
       // 4. JWT 토큰 발급
       const tokens = await this.generateTokens(user.id);
@@ -80,16 +82,53 @@ export class AuthService {
   }
 
   /**
+   * Naver OAuth 로그인 처리
+   * @param code Authorization Code
+   * @returns 로그인 응답 (JWT 토큰 포함)
+   */
+  async loginWithNaver(code: string): Promise<LoginResponseDto> {
+    try {
+      // 1. Naver OAuth 인증 (code -> userInfo)
+      const oauthUserInfo = await this.naverOAuthService.authenticate(code);
+      this.logger.log(`Naver OAuth authentication successful for user ID: ${oauthUserInfo.id}`);
+
+      // 2. 사용자 조회 또는 생성
+      const user = await this.findOrCreateUser(oauthUserInfo, OAuthProvider.NAVER);
+
+      // 3. SocialAccount upsert
+      await this.upsertSocialAccount(user.id, oauthUserInfo.id, OAuthProvider.NAVER);
+
+      // 4. JWT 토큰 발급
+      const tokens = await this.generateTokens(user.id);
+
+      return {
+        userId: user.id,
+        email: user.email,
+        name: user.name,
+        ...tokens,
+      };
+    } catch (error) {
+      this.logger.error(
+        `Naver login failed: ${error instanceof Error ? error.message : String(error)}`,
+      );
+      throw error;
+    }
+  }
+
+  /**
    * 사용자 조회 또는 생성
    * 1. social_accounts 기준으로 조회 (provider + provider_user_id)
    * 2. 없으면 email로 조회 (선택)
    * 3. 없으면 신규 생성
    */
-  private async findOrCreateUser(oauthUserInfo: OAuthUserInfo): Promise<User> {
+  private async findOrCreateUser(
+    oauthUserInfo: OAuthUserInfo,
+    provider: OAuthProvider,
+  ): Promise<User> {
     // 1. SocialAccount로 사용자 조회
     const socialAccount = await this.socialAccountRepository.findOne({
       where: {
-        provider: OAuthProvider.KAKAO,
+        provider: provider,
         providerUserId: oauthUserInfo.id,
       },
       relations: ['user'],
@@ -113,7 +152,7 @@ export class AuthService {
     }
 
     // 3. 신규 사용자 생성
-    const email = oauthUserInfo.email || `KAKAO_${oauthUserInfo.id}@noemail.local`;
+    const email = oauthUserInfo.email || `${provider}_${oauthUserInfo.id}@noemail.local`;
     const newUser = this.userRepository.create({
       email,
       name: oauthUserInfo.name,
@@ -132,10 +171,11 @@ export class AuthService {
   private async upsertSocialAccount(
     userId: string,
     providerUserId: string,
+    provider: OAuthProvider,
   ): Promise<SocialAccount> {
     const existing = await this.socialAccountRepository.findOne({
       where: {
-        provider: OAuthProvider.KAKAO,
+        provider: provider,
         providerUserId: providerUserId,
       },
     });
@@ -152,7 +192,7 @@ export class AuthService {
       // 생성
       const newSocialAccount = this.socialAccountRepository.create({
         userId: userId,
-        provider: OAuthProvider.KAKAO,
+        provider: provider,
         providerUserId: providerUserId,
         isActive: true,
         connectedAt: new Date(),
