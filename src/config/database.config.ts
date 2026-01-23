@@ -22,7 +22,7 @@ export default registerAs<DatabaseConfig>('database', () => {
     schema: process.env.DB_SCHEMA!,
     ssl: process.env.DB_RDS_CA_BASE64
       ? {
-          ca: Buffer.from(process.env.DB_RDS_CA_BASE64!, 'base64').toString('utf-8'),
+          ca: Buffer.from(process.env.DB_RDS_CA_BASE64, 'base64').toString('utf-8'),
         }
       : false,
   };

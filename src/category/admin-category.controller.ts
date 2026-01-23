@@ -92,10 +92,7 @@ export class AdminCategoryController {
    * 카테고리 삭제
    */
   @Delete(':id')
-  async deleteCategory(
-    @CurrentSite() site: Site,
-    @Param('id') categoryId: string,
-  ): Promise<void> {
+  async deleteCategory(@CurrentSite() site: Site, @Param('id') categoryId: string): Promise<void> {
     await this.categoryService.deleteCategory(categoryId, site.id);
   }
 }

@@ -375,11 +375,7 @@ export class PostService {
    * 게시글 검색 (오토컴플리트용)
    * PUBLISHED 상태의 게시글만 검색
    */
-  async searchPosts(
-    siteId: string,
-    query: string,
-    limit: number = 10,
-  ): Promise<Post[]> {
+  async searchPosts(siteId: string, query: string, limit: number = 10): Promise<Post[]> {
     const searchQuery = `%${query}%`;
 
     return this.postRepository

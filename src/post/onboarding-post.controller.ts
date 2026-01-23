@@ -31,7 +31,7 @@ export class OnboardingPostController {
     }
 
     const post = await this.postService.createPost(user.userId, site.id, dto);
-    
+
     return new PostResponseDto({
       id: post.id,
       title: post.title,

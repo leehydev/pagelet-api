@@ -3,10 +3,7 @@ import { S3Service } from './s3.service';
 import { SiteService } from '../site/site.service';
 import { BrandingPresignDto, BrandingType } from './dto/branding-presign.dto';
 import { BrandingCommitDto } from './dto/branding-commit.dto';
-import {
-  BrandingPresignResponseDto,
-  BrandingCommitResponseDto,
-} from './dto/branding-response.dto';
+import { BrandingPresignResponseDto, BrandingCommitResponseDto } from './dto/branding-response.dto';
 import { BusinessException } from '../common/exception/business.exception';
 import { ErrorCode } from '../common/exception/error-code';
 

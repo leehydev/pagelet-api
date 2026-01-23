@@ -65,7 +65,7 @@ describe('JwtAuthGuard', () => {
     it('should call super.canActivate when @Public() decorator is not present', () => {
       const context = mockExecutionContext();
       jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(false);
-      
+
       // Mock super.canActivate by spying on the guard instance's parent method
       const parentCanActivate = Object.getPrototypeOf(Object.getPrototypeOf(guard)).canActivate;
       const superCanActivateSpy = jest
@@ -87,7 +87,7 @@ describe('JwtAuthGuard', () => {
     it('should call super.canActivate when isPublic is undefined', () => {
       const context = mockExecutionContext();
       jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(undefined);
-      
+
       // Mock super.canActivate
       const superCanActivateSpy = jest
         .spyOn(Object.getPrototypeOf(Object.getPrototypeOf(guard)), 'canActivate')
@@ -108,7 +108,7 @@ describe('JwtAuthGuard', () => {
     it('should handle Promise return from super.canActivate', async () => {
       const context = mockExecutionContext();
       jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(false);
-      
+
       // Mock super.canActivate to return Promise
       const superCanActivateSpy = jest
         .spyOn(Object.getPrototypeOf(Object.getPrototypeOf(guard)), 'canActivate')

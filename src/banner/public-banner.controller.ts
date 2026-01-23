@@ -15,9 +15,7 @@ export class PublicBannerController {
    * 공개 배너 조회 (활성 상태 + 기간 내 + PUBLISHED 게시글만)
    */
   @Get()
-  async getActiveBanners(
-    @Query('siteSlug') siteSlug: string,
-  ): Promise<PublicBannerResponseDto[]> {
+  async getActiveBanners(@Query('siteSlug') siteSlug: string): Promise<PublicBannerResponseDto[]> {
     if (!siteSlug) {
       throw BusinessException.fromErrorCode(
         ErrorCode.COMMON_BAD_REQUEST,
