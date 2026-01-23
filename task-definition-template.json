@@ -8,7 +8,7 @@
   "taskRoleArn": "arn:aws:iam::800511960362:role/ecsTaskRole-S3Access",
   "containerDefinitions": [
     {
-      "name": "pagelet-app",
+      "name": "pagelet",
       "image": "${IMAGE_URI}",
       "portMappings": [
         {
