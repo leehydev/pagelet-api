@@ -372,6 +372,28 @@ export class PostService {
   }
 
   /**
+   * 게시글 검색 (오토컴플리트용)
+   * PUBLISHED 상태의 게시글만 검색
+   */
+  async searchPosts(
+    siteId: string,
+    query: string,
+    limit: number = 10,
+  ): Promise<Post[]> {
+    const searchQuery = `%${query}%`;
+
+    return this.postRepository
+      .createQueryBuilder('post')
+      .leftJoinAndSelect('post.category', 'category')
+      .where('post.siteId = :siteId', { siteId })
+      .andWhere('post.status = :status', { status: PostStatus.PUBLISHED })
+      .andWhere('(post.title ILIKE :query OR post.subtitle ILIKE :query)', { query: searchQuery })
+      .orderBy('post.publishedAt', 'DESC')
+      .take(limit)
+      .getMany();
+  }
+
+  /**
    * 게시글 수정
    */
   async updatePost(postId: string, siteId: string, dto: UpdatePostDto): Promise<Post> {

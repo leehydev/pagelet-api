@@ -1,23 +1,6 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Put,
-  Delete,
-  Body,
-  Param,
-  Query,
-  UseGuards,
-} from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards } from '@nestjs/common';
 import { BannerService } from './banner.service';
-import {
-  BannerPresignDto,
-  BannerPresignResponseDto,
-  CreateBannerDto,
-  UpdateBannerDto,
-  UpdateBannerOrderDto,
-  BannerResponseDto,
-} from './dto';
+import { CreateBannerDto, UpdateBannerDto, UpdateBannerOrderDto, BannerResponseDto } from './dto';
 import { CurrentSite } from '../auth/decorators/current-site.decorator';
 import { AdminSiteGuard } from '../auth/guards/admin-site.guard';
 import { Site } from '../site/entities/site.entity';
@@ -30,20 +13,8 @@ export class AdminBannerController {
   constructor(private readonly bannerService: BannerService) {}
 
   /**
-   * POST /admin/sites/:siteId/banners/presign
-   * 배너 이미지 업로드 URL 발급
-   */
-  @Post('presign')
-  async presign(
-    @CurrentSite() site: Site,
-    @Body() dto: BannerPresignDto,
-  ): Promise<BannerPresignResponseDto> {
-    return this.bannerService.presign(site.id, dto);
-  }
-
-  /**
    * POST /admin/sites/:siteId/banners
-   * 배너 생성
+   * 배너 생성 (postId 필수)
    */
   @Post()
   async createBanner(
@@ -51,19 +22,30 @@ export class AdminBannerController {
     @Body() dto: CreateBannerDto,
   ): Promise<BannerResponseDto> {
     const banner = await this.bannerService.create(site.id, dto);
-    return this.bannerService.toBannerResponse(banner);
+    const bannerWithPost = await this.bannerService.findById(banner.id);
+    return this.bannerService.toBannerResponse(bannerWithPost!);
   }
 
   /**
    * GET /admin/sites/:siteId/banners
-   * 배너 목록 조회 (deviceType 쿼리 파라미터로 필터링)
+   * 배너 목록 조회
    */
   @Get()
-  async getBanners(
+  async getBanners(@CurrentSite() site: Site): Promise<BannerResponseDto[]> {
+    const banners = await this.bannerService.findBySiteId(site.id);
+    return banners.map((banner) => this.bannerService.toBannerResponse(banner));
+  }
+
+  /**
+   * PUT /admin/sites/:siteId/banners/order
+   * 배너 순서 변경
+   */
+  @Put('order')
+  async updateOrder(
     @CurrentSite() site: Site,
-    @Query('deviceType') deviceType?: string,
+    @Body() dto: UpdateBannerOrderDto,
   ): Promise<BannerResponseDto[]> {
-    const banners = await this.bannerService.findBySiteId(site.id, deviceType);
+    const banners = await this.bannerService.updateOrder(site.id, dto);
     return banners.map((banner) => this.bannerService.toBannerResponse(banner));
   }
 
@@ -104,18 +86,5 @@ export class AdminBannerController {
   @Delete(':id')
   async deleteBanner(@CurrentSite() site: Site, @Param('id') bannerId: string): Promise<void> {
     await this.bannerService.delete(bannerId, site.id);
-  }
-
-  /**
-   * PUT /admin/sites/:siteId/banners/order
-   * 배너 순서 변경
-   */
-  @Put('order')
-  async updateOrder(
-    @CurrentSite() site: Site,
-    @Body() dto: UpdateBannerOrderDto,
-  ): Promise<BannerResponseDto[]> {
-    const banners = await this.bannerService.updateOrder(site.id, dto);
-    return banners.map((banner) => this.bannerService.toBannerResponse(banner));
   }
 }

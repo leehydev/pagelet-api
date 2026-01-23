@@ -11,6 +11,7 @@ import { BusinessException } from '../common/exception/business.exception';
 import { ErrorCode } from '../common/exception/error-code';
 import { PaginationQueryDto, PaginatedResponseDto } from '../common/dto';
 import { PostListResponseDto, PostResponseDto } from './dto/post-response.dto';
+import { PostSearchResultDto } from './dto/post-search-result.dto';
 import { Site } from '../site/entities/site.entity';
 
 @Controller('admin/sites/:siteId/posts')
@@ -99,6 +100,43 @@ export class AdminPostController {
     );
 
     return PaginatedResponseDto.create(items, result.meta.totalItems, result.meta.page, result.meta.limit);
+  }
+
+  /**
+   * GET /admin/sites/:siteId/posts/search?q=검색어&limit=10
+   * 게시글 검색 (오토컴플리트용, PUBLISHED 상태만)
+   */
+  @Get('search')
+  @ApiOperation({ summary: '게시글 검색 (오토컴플리트용)' })
+  @ApiQuery({ name: 'q', required: true, type: String, description: '검색어' })
+  @ApiQuery({ name: 'limit', required: false, type: Number, description: '최대 결과 수 (기본값: 10)' })
+  async searchPosts(
+    @CurrentSite() site: Site,
+    @Query('q') query: string,
+    @Query('limit') limit?: string,
+  ): Promise<PostSearchResultDto[]> {
+    if (!query) {
+      throw BusinessException.fromErrorCode(
+        ErrorCode.COMMON_BAD_REQUEST,
+        'q query parameter is required',
+      );
+    }
+
+    const limitNum = limit ? Math.min(parseInt(limit, 10), 20) : 10;
+    const posts = await this.postService.searchPosts(site.id, query, limitNum);
+
+    return posts.map(
+      (post) =>
+        new PostSearchResultDto({
+          id: post.id,
+          title: post.title,
+          subtitle: post.subtitle,
+          ogImageUrl: post.ogImageUrl,
+          categoryName: post.category?.name || null,
+          publishedAt: post.publishedAt,
+          status: post.status,
+        }),
+    );
   }
 
   /**
