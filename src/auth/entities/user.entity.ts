@@ -20,7 +20,6 @@ export type AccountStatus = (typeof AccountStatus)[keyof typeof AccountStatus];
 export const OnboardingStep = {
   PROFILE: 1,
   SITE: 2,
-  FIRST_POST: 3,
 } as const;
 
 export type OnboardingStep = (typeof OnboardingStep)[keyof typeof OnboardingStep];
