@@ -75,10 +75,10 @@ export class OnboardingService {
     // 사이트 생성
     await this.siteService.createSite(userId, dto.name, dto.slug);
 
-    // 온보딩 완료
-    user.accountStatus = AccountStatus.ACTIVE;
+    // 온보딩 완료 - 베타 기간 동안 PENDING 상태로 설정 (관리자 승인 필요)
+    user.accountStatus = AccountStatus.PENDING;
     user.onboardingStep = null;
     await this.userRepository.save(user);
-    this.logger.log(`User ${userId} completed onboarding`);
+    this.logger.log(`User ${userId} completed onboarding, awaiting approval`);
   }
 }

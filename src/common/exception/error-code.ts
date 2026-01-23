@@ -63,6 +63,11 @@ export const ErrorCode = {
     HttpStatus.FORBIDDEN,
     'Account has been withdrawn',
   ),
+  ACCOUNT_PENDING: new ErrorCodeDefinition(
+    'ACCOUNT_003',
+    HttpStatus.FORBIDDEN,
+    'Account is pending approval',
+  ),
 
   // OAuth 관련 에러
   OAUTH_INVALID_CODE: new ErrorCodeDefinition(

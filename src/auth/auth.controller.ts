@@ -14,6 +14,7 @@ import { AuthService } from './auth.service';
 import { OAuthStateUtil } from './utils/oauth-state.util';
 import { CookieUtil } from './utils/cookie.util';
 import { Public } from './decorators/public.decorator';
+import { AllowPending } from './decorators/allow-pending.decorator';
 import { CurrentUser } from './decorators/current-user.decorator';
 import type { UserPrincipal } from './types/jwt-payload.interface';
 import type { UserResponseDto } from './dto/user-response.dto';
@@ -120,7 +121,9 @@ export class AuthController {
   /**
    * GET /auth/me
    * 현재 로그인한 사용자 정보 조회
+   * PENDING 상태의 사용자도 자신의 정보를 확인할 수 있어야 함
    */
+  @AllowPending()
   @Get('me')
   async getCurrentUser(@CurrentUser() user: UserPrincipal): Promise<UserResponseDto> {
     return this.authService.getUserById(user.userId);
