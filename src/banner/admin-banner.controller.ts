@@ -6,13 +6,10 @@ import {
   Delete,
   Body,
   Param,
-  Query,
   UseGuards,
 } from '@nestjs/common';
 import { BannerService } from './banner.service';
 import {
-  BannerPresignDto,
-  BannerPresignResponseDto,
   CreateBannerDto,
   UpdateBannerDto,
   UpdateBannerOrderDto,
@@ -30,20 +27,8 @@ export class AdminBannerController {
   constructor(private readonly bannerService: BannerService) {}
 
   /**
-   * POST /admin/sites/:siteId/banners/presign
-   * 배너 이미지 업로드 URL 발급
-   */
-  @Post('presign')
-  async presign(
-    @CurrentSite() site: Site,
-    @Body() dto: BannerPresignDto,
-  ): Promise<BannerPresignResponseDto> {
-    return this.bannerService.presign(site.id, dto);
-  }
-
-  /**
    * POST /admin/sites/:siteId/banners
-   * 배너 생성
+   * 배너 생성 (postId 필수)
    */
   @Post()
   async createBanner(
@@ -51,19 +36,17 @@ export class AdminBannerController {
     @Body() dto: CreateBannerDto,
   ): Promise<BannerResponseDto> {
     const banner = await this.bannerService.create(site.id, dto);
-    return this.bannerService.toBannerResponse(banner);
+    const bannerWithPost = await this.bannerService.findById(banner.id);
+    return this.bannerService.toBannerResponse(bannerWithPost!);
   }
 
   /**
    * GET /admin/sites/:siteId/banners
-   * 배너 목록 조회 (deviceType 쿼리 파라미터로 필터링)
+   * 배너 목록 조회
    */
   @Get()
-  async getBanners(
-    @CurrentSite() site: Site,
-    @Query('deviceType') deviceType?: string,
-  ): Promise<BannerResponseDto[]> {
-    const banners = await this.bannerService.findBySiteId(site.id, deviceType);
+  async getBanners(@CurrentSite() site: Site): Promise<BannerResponseDto[]> {
+    const banners = await this.bannerService.findBySiteId(site.id);
     return banners.map((banner) => this.bannerService.toBannerResponse(banner));
   }
 

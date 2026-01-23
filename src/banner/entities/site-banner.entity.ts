@@ -8,13 +8,7 @@ import {
   JoinColumn,
 } from 'typeorm';
 import { Site } from '../../site/entities/site.entity';
-
-// Device Type (DB enum 대신 const object 사용)
-export const DeviceType = {
-  DESKTOP: 'desktop',
-  MOBILE: 'mobile',
-} as const;
-export type DeviceType = (typeof DeviceType)[keyof typeof DeviceType];
+import { Post } from '../../post/entities/post.entity';
 
 @Entity('site_banners')
 export class SiteBanner {
@@ -28,14 +22,12 @@ export class SiteBanner {
   @JoinColumn({ name: 'site_id' })
   site: Site;
 
-  @Column({ type: 'varchar', length: 500, name: 'image_url' })
-  imageUrl: string;
+  @Column({ type: 'uuid', name: 'post_id' })
+  postId: string;
 
-  @Column({ type: 'varchar', length: 500, name: 'link_url', nullable: true })
-  linkUrl: string | null;
-
-  @Column({ type: 'boolean', name: 'open_in_new_tab', default: true })
-  openInNewTab: boolean;
+  @ManyToOne(() => Post, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'post_id' })
+  post: Post;
 
   @Column({ type: 'boolean', name: 'is_active', default: true })
   isActive: boolean;
@@ -48,12 +40,6 @@ export class SiteBanner {
 
   @Column({ type: 'int', name: 'display_order', default: 0 })
   displayOrder: number;
-
-  @Column({ type: 'varchar', length: 255, name: 'alt_text', nullable: true })
-  altText: string | null;
-
-  @Column({ type: 'varchar', length: 20, name: 'device_type' })
-  deviceType: string;
 
   @CreateDateColumn({ type: 'timestamptz', name: 'created_at' })
   createdAt: Date;

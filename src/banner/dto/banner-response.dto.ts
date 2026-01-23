@@ -1,15 +1,26 @@
+export class BannerPostDto {
+  id: string;
+  title: string;
+  subtitle: string;
+  slug: string;
+  ogImageUrl: string | null;
+  categoryId: string | null;
+  categoryName: string | null;
+  publishedAt: Date | null;
+
+  constructor(partial: Partial<BannerPostDto>) {
+    Object.assign(this, partial);
+  }
+}
+
 export class BannerResponseDto {
   id: string;
-  siteId: string;
-  imageUrl: string;
-  linkUrl: string | null;
-  openInNewTab: boolean;
+  postId: string;
+  post: BannerPostDto;
   isActive: boolean;
   startAt: Date | null;
   endAt: Date | null;
   displayOrder: number;
-  altText: string | null;
-  deviceType: string;
   createdAt: Date;
   updatedAt: Date;
 
@@ -18,12 +29,22 @@ export class BannerResponseDto {
   }
 }
 
+export class PublicBannerPostDto {
+  title: string;
+  subtitle: string;
+  slug: string;
+  ogImageUrl: string | null;
+  categoryName: string | null;
+  publishedAt: Date | null;
+
+  constructor(partial: Partial<PublicBannerPostDto>) {
+    Object.assign(this, partial);
+  }
+}
+
 export class PublicBannerResponseDto {
   id: string;
-  imageUrl: string;
-  linkUrl: string | null;
-  openInNewTab: boolean;
-  altText: string | null;
+  post: PublicBannerPostDto;
   displayOrder: number;
 
   constructor(partial: Partial<PublicBannerResponseDto>) {
