@@ -77,6 +77,11 @@ jobs:
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
         echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
+    - name: Install envsubst
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y gettext-base
+
     - name: Prepare Task Definition
       id: task-def
       env:
@@ -100,6 +105,8 @@ jobs:
         # Template에서 환경변수 치환
         envsubst < task-definition-template.json > task-definition.json
         
+        # 생성된 파일 확인
+        echo "Generated task-definition.json:"
         # 생성된 파일 확인 (디버깅용)
         cat task-definition.json
 
