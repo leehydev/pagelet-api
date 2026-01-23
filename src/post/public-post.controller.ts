@@ -3,7 +3,7 @@ import { PostService } from './post.service';
 import { SiteService } from '../site/site.service';
 import { BusinessException } from '../common/exception/business.exception';
 import { ErrorCode } from '../common/exception/error-code';
-import { PublicPostResponseDto } from './dto/post-response.dto';
+import { PublicPostResponseDto, AdjacentPostDto } from './dto/post-response.dto';
 import { Public } from '../auth/decorators/public.decorator';
 
 @Controller('public/posts')
@@ -90,6 +90,24 @@ export class PublicPostController {
       throw BusinessException.fromErrorCode(ErrorCode.POST_NOT_FOUND);
     }
 
+    // 인접 게시글 조회
+    const { posts: adjacentPosts, currentIndex } = await this.postService.findAdjacentPosts(
+      site.id,
+      post.id,
+    );
+
+    const adjacentPostDtos = adjacentPosts.map(
+      (adjacentPost, index) =>
+        new AdjacentPostDto({
+          id: adjacentPost.id,
+          title: adjacentPost.title,
+          slug: adjacentPost.slug,
+          ogImageUrl: adjacentPost.ogImageUrl,
+          publishedAt: adjacentPost.publishedAt!,
+          isCurrent: index === currentIndex,
+        }),
+    );
+
     return new PublicPostResponseDto({
       id: post.id,
       title: post.title,
@@ -105,6 +123,7 @@ export class PublicPostController {
       ogImageUrl: post.ogImageUrl,
       categoryName: post.category?.name || null,
       categorySlug: post.category?.slug || null,
+      adjacentPosts: adjacentPostDtos,
     });
   }
 }
