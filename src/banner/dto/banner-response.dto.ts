@@ -7,6 +7,7 @@ export class BannerPostDto {
   categoryId: string | null;
   categoryName: string | null;
   publishedAt: Date | null;
+  status: string;
 
   constructor(partial: Partial<BannerPostDto>) {
     Object.assign(this, partial);

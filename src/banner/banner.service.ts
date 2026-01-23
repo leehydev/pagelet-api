@@ -279,6 +279,7 @@ export class BannerService {
         categoryId: banner.post.categoryId,
         categoryName: banner.post.category?.name || null,
         publishedAt: banner.post.publishedAt,
+        status: banner.post.status,
       }),
       isActive: banner.isActive,
       startAt: banner.startAt,

@@ -1,20 +1,6 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Put,
-  Delete,
-  Body,
-  Param,
-  UseGuards,
-} from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards } from '@nestjs/common';
 import { BannerService } from './banner.service';
-import {
-  CreateBannerDto,
-  UpdateBannerDto,
-  UpdateBannerOrderDto,
-  BannerResponseDto,
-} from './dto';
+import { CreateBannerDto, UpdateBannerDto, UpdateBannerOrderDto, BannerResponseDto } from './dto';
 import { CurrentSite } from '../auth/decorators/current-site.decorator';
 import { AdminSiteGuard } from '../auth/guards/admin-site.guard';
 import { Site } from '../site/entities/site.entity';
@@ -47,6 +33,19 @@ export class AdminBannerController {
   @Get()
   async getBanners(@CurrentSite() site: Site): Promise<BannerResponseDto[]> {
     const banners = await this.bannerService.findBySiteId(site.id);
+    return banners.map((banner) => this.bannerService.toBannerResponse(banner));
+  }
+
+  /**
+   * PUT /admin/sites/:siteId/banners/order
+   * 배너 순서 변경
+   */
+  @Put('order')
+  async updateOrder(
+    @CurrentSite() site: Site,
+    @Body() dto: UpdateBannerOrderDto,
+  ): Promise<BannerResponseDto[]> {
+    const banners = await this.bannerService.updateOrder(site.id, dto);
     return banners.map((banner) => this.bannerService.toBannerResponse(banner));
   }
 
@@ -87,18 +86,5 @@ export class AdminBannerController {
   @Delete(':id')
   async deleteBanner(@CurrentSite() site: Site, @Param('id') bannerId: string): Promise<void> {
     await this.bannerService.delete(bannerId, site.id);
-  }
-
-  /**
-   * PUT /admin/sites/:siteId/banners/order
-   * 배너 순서 변경
-   */
-  @Put('order')
-  async updateOrder(
-    @CurrentSite() site: Site,
-    @Body() dto: UpdateBannerOrderDto,
-  ): Promise<BannerResponseDto[]> {
-    const banners = await this.bannerService.updateOrder(site.id, dto);
-    return banners.map((banner) => this.bannerService.toBannerResponse(banner));
   }
 }
