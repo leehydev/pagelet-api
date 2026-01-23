@@ -36,4 +36,11 @@ export class PublicSiteSettingsResponseDto {
 
   // 폰트 설정
   fontKey: string | null;
+
+  // CTA 설정
+  ctaEnabled: boolean;
+  ctaType: string | null;
+  ctaText: string | null;
+  ctaImageUrl: string | null;
+  ctaLink: string | null;
 }
