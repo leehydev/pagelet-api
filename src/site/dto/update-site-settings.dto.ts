@@ -33,11 +33,6 @@ export class UpdateSiteSettingsDto {
   seoKeywords?: string | null;
 
   @IsOptional()
-  @IsUrl({}, { message: '올바른 URL 형식이어야 합니다' })
-  @MaxLength(500)
-  canonicalBaseUrl?: string | null;
-
-  @IsOptional()
   @IsBoolean()
   robotsIndex?: boolean;
 

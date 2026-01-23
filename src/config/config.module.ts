@@ -53,6 +53,9 @@ import { JoiMsString } from 'src/common/utils/validation/joi-ms-string';
         AWS_S3_BUCKET: Joi.string().default('pagelet-uploads'),
         AWS_S3_REGION: Joi.string().default('ap-northeast-2'),
         ASSETS_CDN_URL: Joi.string().default('https://assets.pagelet-dev.kr'),
+
+        // Tenant
+        TENANT_DOMAIN: Joi.string().default('pagelet-dev.kr'),
       }),
     }),
   ],

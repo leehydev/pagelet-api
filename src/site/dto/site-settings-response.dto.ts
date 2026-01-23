@@ -14,7 +14,7 @@ export class SiteSettingsResponseDto {
   seoTitle: string | null;
   seoDescription: string | null;
   seoKeywords: string | null;
-  canonicalBaseUrl: string | null;
+  canonicalBaseUrl: string;
   robotsIndex: boolean;
 
   // 연락처

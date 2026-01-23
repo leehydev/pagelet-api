@@ -24,8 +24,10 @@ seoTitle: string       // SEO 제목
 seoDescription: string // SEO 설명
 seoKeywords: string    // SEO 키워드
 ogImageUrl: string     // OG 이미지
-canonicalBaseUrl: string // 정규 URL
 robotsIndex: boolean   // 검색엔진 색인 허용
+
+// 계산 필드 (API 응답에만 포함, DB에 저장 안됨)
+// canonicalBaseUrl: 자동 생성 (https://{slug}.{TENANT_DOMAIN})
 
 // 연락처
 contactEmail: string

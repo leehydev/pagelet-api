@@ -51,9 +51,6 @@ export class Site {
   @Column({ type: 'varchar', length: 500, nullable: true })
   seoKeywords: string | null;
 
-  @Column({ type: 'varchar', length: 500, nullable: true })
-  canonicalBaseUrl: string | null;
-
   @Column({ type: 'boolean', default: false })
   robotsIndex: boolean;
 

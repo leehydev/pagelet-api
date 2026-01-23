@@ -16,7 +16,7 @@ export class PublicSiteSettingsResponseDto {
   seoTitle: string | null;
   seoDescription: string | null;
   seoKeywords: string | null;
-  canonicalBaseUrl: string | null;
+  canonicalBaseUrl: string;
   robotsIndex: boolean;
 
   // 연락처 (공개)
