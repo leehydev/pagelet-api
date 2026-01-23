@@ -49,7 +49,12 @@ gh api graphql -f query='mutation { updateProjectV2ItemFieldValue(input: {projec
 
 **마이그레이션 파일 작성 규칙:**
 
-- 파일명: `{timestamp}-{MigrationName}.ts` (예: `1737500000000-AddPostPagination.ts`)
+- 파일명: `{timestamp}-{MigrationName}.ts`
+- **타임스탬프는 반드시 현재 시간을 조회하여 사용:**
+  ```bash
+  # 현재 타임스탬프 조회 (밀리초)
+  date +%s000
+  ```
 - TypeORM 마이그레이션 클래스 형식 준수
 - `up()`: 변경 적용, `down()`: 롤백 로직 작성
 
