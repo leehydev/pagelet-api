@@ -15,7 +15,7 @@ export class AppController {
   @Get('health')
   @Public()
   @ApiTags('Health')
-  @ApiOperation({ summary: 'Health check' })
+  @ApiOperation({ summary: 'Health check!' })
   healthCheck(): { status: string } {
     return { status: 'ok' };
   }

@@ -1,10 +1,13 @@
 import { Controller, Get, Query, Param } from '@nestjs/common';
 import { PostService } from './post.service';
 import { SiteService } from '../site/site.service';
+import { CategoryService } from '../category/category.service';
 import { BusinessException } from '../common/exception/business.exception';
 import { ErrorCode } from '../common/exception/error-code';
 import { PublicPostResponseDto, AdjacentPostDto } from './dto/post-response.dto';
+import { PublicPostListQueryDto, PublicPostDetailQueryDto } from './dto/public-post-query.dto';
 import { Public } from '../auth/decorators/public.decorator';
+import { PaginatedResponseDto } from '../common/dto';
 
 @Controller('public/posts')
 @Public()
@@ -12,18 +15,20 @@ export class PublicPostController {
   constructor(
     private readonly postService: PostService,
     private readonly siteService: SiteService,
+    private readonly categoryService: CategoryService,
   ) {}
 
   /**
-   * GET /public/posts?siteSlug=xxx&categorySlug=xxx
-   * 공개 게시글 목록 조회 (PUBLISHED만)
+   * GET /public/posts?siteSlug=xxx&categorySlug=xxx&page=1&limit=10
+   * 공개 게시글 목록 조회 (PUBLISHED만) - 페이징 지원
    * categorySlug가 제공되면 해당 카테고리의 게시글만 조회
    */
   @Get()
   async getPublicPosts(
-    @Query('siteSlug') siteSlug: string,
-    @Query('categorySlug') categorySlug?: string,
-  ): Promise<PublicPostResponseDto[]> {
+    @Query() query: PublicPostListQueryDto,
+  ): Promise<PaginatedResponseDto<PublicPostResponseDto>> {
+    const { siteSlug, categorySlug, page, limit } = query;
+
     if (!siteSlug) {
       throw BusinessException.fromErrorCode(
         ErrorCode.COMMON_BAD_REQUEST,
@@ -38,11 +43,15 @@ export class PublicPostController {
     }
 
     // categorySlug가 제공되면 카테고리별 게시글 조회
-    const posts = categorySlug
-      ? await this.postService.findPublishedBySiteIdAndCategorySlug(site.id, categorySlug)
-      : await this.postService.findPublishedBySiteId(site.id);
+    const paginatedResult = categorySlug
+      ? await this.postService.findPublishedBySiteIdAndCategorySlug(site.id, categorySlug, {
+          page,
+          limit,
+        })
+      : await this.postService.findPublishedBySiteId(site.id, { page, limit });
 
-    return posts.map(
+    // Post -> PublicPostResponseDto 변환
+    const items = paginatedResult.items.map(
       (post) =>
         new PublicPostResponseDto({
           id: post.id,
@@ -61,17 +70,22 @@ export class PublicPostController {
           categorySlug: post.category?.slug || null,
         }),
     );
+
+    return new PaginatedResponseDto(items, paginatedResult.meta);
   }
 
   /**
-   * GET /public/posts/:slug?siteSlug=xxx
+   * GET /public/posts/:slug?siteSlug=xxx&categorySlug=xxx
    * 공개 게시글 상세 조회 (slug 기반)
+   * categorySlug가 제공되면 해당 카테고리 내에서 인접 게시글 조회
    */
   @Get(':slug')
   async getPublicPostBySlug(
     @Param('slug') postSlug: string,
-    @Query('siteSlug') siteSlug: string,
+    @Query() query: PublicPostDetailQueryDto,
   ): Promise<PublicPostResponseDto> {
+    const { siteSlug, categorySlug } = query;
+
     if (!siteSlug) {
       throw BusinessException.fromErrorCode(
         ErrorCode.COMMON_BAD_REQUEST,
@@ -90,10 +104,20 @@ export class PublicPostController {
       throw BusinessException.fromErrorCode(ErrorCode.POST_NOT_FOUND);
     }
 
-    // 인접 게시글 조회
+    // categorySlug가 제공되면 해당 카테고리 내에서 인접 게시글 조회
+    let categoryId: string | undefined;
+    if (categorySlug) {
+      const category = await this.categoryService.findBySlug(site.id, categorySlug);
+      if (category) {
+        categoryId = category.id;
+      }
+    }
+
+    // 인접 게시글 조회 (categoryId가 있으면 해당 카테고리 내에서만)
     const { posts: adjacentPosts, currentIndex } = await this.postService.findAdjacentPosts(
       site.id,
       post.id,
+      { categoryId },
     );
 
     const adjacentPostDtos = adjacentPosts.map(
