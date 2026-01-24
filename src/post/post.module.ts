@@ -5,13 +5,14 @@ import { AdminPostController } from './admin-post.controller';
 import { PublicPostController } from './public-post.controller';
 import { PostService } from './post.service';
 import { Post } from './entities/post.entity';
+import { PostDraft } from './entities/post-draft.entity';
 import { SiteModule } from '../site/site.module';
 import { StorageModule } from '../storage/storage.module';
 import { CategoryModule } from '../category/category.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Post]),
+    TypeOrmModule.forFeature([Post, PostDraft]),
     SiteModule,
     StorageModule,
     forwardRef(() => CategoryModule),
