@@ -5,6 +5,7 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   OneToOne,
+  ManyToOne,
   JoinColumn,
 } from 'typeorm';
 import { Post } from './post.entity';
@@ -47,6 +48,10 @@ export class PostDraft {
 
   @Column({ type: 'uuid', nullable: true })
   categoryId: string | null;
+
+  @ManyToOne('Category', { onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'category_id' })
+  category: any;
 
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;
