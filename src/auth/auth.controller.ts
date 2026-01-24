@@ -106,12 +106,11 @@ export class AuthController {
       // 로그인 처리
       const loginResult = await this.authService.loginWithKakao(code);
 
-      // HttpOnly 쿠키에 토큰 설정
-      CookieUtil.setAccessTokenCookie(res, loginResult.accessToken, this.configService);
-      CookieUtil.setRefreshTokenCookie(res, loginResult.refreshToken, this.configService);
-
-      // 프론트엔드로 redirect (성공)
-      res.redirect(`${frontendUrl}/auth/success`);
+      // 프론트엔드 API Route로 토큰 전달 (크로스 도메인 지원)
+      const callbackUrl = new URL(`${frontendUrl}/api/auth/callback`);
+      callbackUrl.searchParams.set('accessToken', loginResult.accessToken);
+      callbackUrl.searchParams.set('refreshToken', loginResult.refreshToken);
+      res.redirect(callbackUrl.toString());
     } catch (error) {
       // 에러 발생 시 프론트엔드로 redirect
       const errorMessage = error instanceof Error ? error.message : 'unknown_error';
@@ -190,12 +189,11 @@ export class AuthController {
       // 로그인 처리
       const loginResult = await this.authService.loginWithNaver(code);
 
-      // HttpOnly 쿠키에 토큰 설정
-      CookieUtil.setAccessTokenCookie(res, loginResult.accessToken, this.configService);
-      CookieUtil.setRefreshTokenCookie(res, loginResult.refreshToken, this.configService);
-
-      // 프론트엔드로 redirect (성공)
-      res.redirect(`${frontendUrl}/auth/success`);
+      // 프론트엔드 API Route로 토큰 전달 (크로스 도메인 지원)
+      const callbackUrl = new URL(`${frontendUrl}/api/auth/callback`);
+      callbackUrl.searchParams.set('accessToken', loginResult.accessToken);
+      callbackUrl.searchParams.set('refreshToken', loginResult.refreshToken);
+      res.redirect(callbackUrl.toString());
     } catch (error) {
       // 에러 발생 시 프론트엔드로 redirect
       const errorMessage = error instanceof Error ? error.message : 'unknown_error';
@@ -216,12 +214,16 @@ export class AuthController {
 
   /**
    * POST /auth/refresh
-   * 토큰 리프레시 - refresh_token 쿠키로 새 access_token 발급
+   * 토큰 리프레시 - Authorization 헤더 또는 쿠키로 새 access_token 발급
    */
   @Public()
   @Post('refresh')
   async refresh(@Req() req: Request, @Res() res: Response): Promise<void> {
-    const refreshToken = req.cookies?.refresh_token;
+    // Authorization 헤더 우선, 쿠키 fallback (하위 호환)
+    const authHeader = req.headers.authorization;
+    const refreshToken = authHeader?.startsWith('Bearer ')
+      ? authHeader.slice(7)
+      : req.cookies?.refresh_token;
 
     if (!refreshToken) {
       throw new UnauthorizedException('Refresh token not found');
@@ -229,9 +231,17 @@ export class AuthController {
 
     const result = await this.authService.refreshAccessToken(refreshToken);
 
-    // 새 access_token을 쿠키에 설정
-    CookieUtil.setAccessTokenCookie(res, result.accessToken, this.configService);
+    // Authorization 헤더로 요청한 경우: JSON으로 accessToken 반환 (크로스 도메인용)
+    if (authHeader) {
+      res.status(HttpStatus.OK).json({
+        accessToken: result.accessToken,
+        isCached: result.isCached,
+      });
+      return;
+    }
 
+    // 쿠키로 요청한 경우: 기존 방식 유지 (하위 호환)
+    CookieUtil.setAccessTokenCookie(res, result.accessToken, this.configService);
     res.status(HttpStatus.OK).json({
       success: true,
       isCached: result.isCached,
