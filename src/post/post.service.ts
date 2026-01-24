@@ -1,3 +1,4 @@
+import * as crypto from 'crypto';
 import { Injectable, Logger, Inject, forwardRef } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -33,7 +34,7 @@ export class PostService {
   private generateSlug(title: string): string {
     return title
       .toLowerCase()
-      .replace(/[^a-z0-9가-힣\s-]/g, '')
+      .replace(/[^a-z0-9\s-]/g, '')
       .replace(/\s+/g, '-')
       .replace(/-+/g, '-')
       .replace(/^-|-$/g, '')
@@ -61,12 +62,15 @@ export class PostService {
    * 유니크한 slug 생성 (중복 시 숫자 접미사 추가)
    */
   async generateUniqueSlug(siteId: string, title: string, excludePostId?: string): Promise<string> {
+    // 한글이 포함된 경우 UUID 생성
+    if (/[가-힣]/.test(title)) {
+      return crypto.randomUUID();
+    }
+
     const baseSlug = this.generateSlug(title);
 
     if (!baseSlug) {
-      // 한글 등으로만 구성된 경우 timestamp 기반 slug 생성
-      const timestamp = Date.now().toString(36);
-      return `post-${timestamp}`;
+      return crypto.randomUUID();
     }
 
     let slug = baseSlug;
