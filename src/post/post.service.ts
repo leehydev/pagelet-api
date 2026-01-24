@@ -291,17 +291,26 @@ export class PostService {
   }
 
   /**
-   * 사이트의 발행된 게시글 목록 조회 (Public용)
+   * 사이트의 발행된 게시글 목록 조회 (Public용) - 페이징 지원
    */
-  async findPublishedBySiteId(siteId: string): Promise<Post[]> {
-    return this.postRepository.find({
+  async findPublishedBySiteId(
+    siteId: string,
+    options: { page?: number; limit?: number } = {},
+  ): Promise<PaginatedResponseDto<Post>> {
+    const { page = 1, limit = 10 } = options;
+
+    const [posts, totalItems] = await this.postRepository.findAndCount({
       where: {
         siteId: siteId,
         status: PostStatus.PUBLISHED,
       },
       relations: ['category'],
       order: { publishedAt: 'DESC' },
+      skip: (page - 1) * limit,
+      take: limit,
     });
+
+    return PaginatedResponseDto.create(posts, totalItems, page, limit);
   }
 
   /**
@@ -333,18 +342,21 @@ export class PostService {
   }
 
   /**
-   * 카테고리 slug로 발행된 게시글 목록 조회 (Public용)
+   * 카테고리 slug로 발행된 게시글 목록 조회 (Public용) - 페이징 지원
    */
   async findPublishedBySiteIdAndCategorySlug(
     siteId: string,
     categorySlug: string,
-  ): Promise<Post[]> {
+    options: { page?: number; limit?: number } = {},
+  ): Promise<PaginatedResponseDto<Post>> {
+    const { page = 1, limit = 10 } = options;
+
     const category = await this.categoryService.findBySlug(siteId, categorySlug);
     if (!category) {
-      return [];
+      return PaginatedResponseDto.create([], 0, page, limit);
     }
 
-    return this.postRepository.find({
+    const [posts, totalItems] = await this.postRepository.findAndCount({
       where: {
         siteId: siteId,
         categoryId: category.id,
@@ -352,7 +364,11 @@ export class PostService {
       },
       relations: ['category'],
       order: { publishedAt: 'DESC' },
+      skip: (page - 1) * limit,
+      take: limit,
     });
+
+    return PaginatedResponseDto.create(posts, totalItems, page, limit);
   }
 
   /**
@@ -401,18 +417,29 @@ export class PostService {
    * - 현재 게시글을 포함하여 총 5개 반환
    * - publishedAt 기준 앞뒤 2개씩
    * - 처음/끝 부분은 가능한 만큼만 반환
+   * - categoryId가 제공되면 해당 카테고리 내에서만 조회
    */
   async findAdjacentPosts(
     siteId: string,
     currentPostId: string,
-    count: number = 5,
+    options: { count?: number; categoryId?: string } = {},
   ): Promise<{ posts: Post[]; currentIndex: number }> {
-    // 해당 사이트의 모든 PUBLISHED 게시글을 publishedAt DESC 순으로 조회
+    const { count = 5, categoryId } = options;
+
+    // 조회 조건 설정
+    const whereCondition: any = {
+      siteId: siteId,
+      status: PostStatus.PUBLISHED,
+    };
+
+    // categoryId가 제공되면 해당 카테고리로 필터링
+    if (categoryId) {
+      whereCondition.categoryId = categoryId;
+    }
+
+    // 해당 사이트의 PUBLISHED 게시글을 publishedAt DESC 순으로 조회
     const allPosts = await this.postRepository.find({
-      where: {
-        siteId: siteId,
-        status: PostStatus.PUBLISHED,
-      },
+      where: whereCondition,
       order: { publishedAt: 'DESC' },
       select: ['id', 'title', 'slug', 'ogImageUrl', 'publishedAt'],
     });
