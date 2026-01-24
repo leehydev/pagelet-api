@@ -184,6 +184,18 @@ export const ErrorCode = {
     HttpStatus.NOT_FOUND,
     '배너를 찾을 수 없습니다',
   ),
+
+  // 시스템 설정 관련 에러
+  SETTING_NOT_FOUND: new ErrorCodeDefinition(
+    'SETTING_001',
+    HttpStatus.NOT_FOUND,
+    '시스템 설정을 찾을 수 없습니다',
+  ),
+  SETTING_INVALID_VALUE: new ErrorCodeDefinition(
+    'SETTING_002',
+    HttpStatus.BAD_REQUEST,
+    '유효하지 않은 설정 값입니다',
+  ),
   BANNER_LIMIT_EXCEEDED: new ErrorCodeDefinition(
     'BANNER_002',
     HttpStatus.BAD_REQUEST,
