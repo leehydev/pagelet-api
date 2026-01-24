@@ -6,7 +6,7 @@ export class AddPostDraftsTable1769251636000 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
     // post_drafts 테이블 생성
     await queryRunner.query(`
-      CREATE TABLE "post_drafts" (
+      CREATE TABLE IF NOT EXISTS "post_drafts" (
         "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
         "post_id" uuid NOT NULL,
         "title" character varying(500) NOT NULL,
@@ -25,24 +25,38 @@ export class AddPostDraftsTable1769251636000 implements MigrationInterface {
       )
     `);
 
-    // post_id 외래키 제약조건 추가
+    // post_id 외래키 제약조건 추가 (존재하지 않는 경우에만)
     await queryRunner.query(`
-      ALTER TABLE "post_drafts"
-      ADD CONSTRAINT "FK_post_drafts_post"
-      FOREIGN KEY ("post_id")
-      REFERENCES "posts"("id")
-      ON DELETE CASCADE
-      ON UPDATE NO ACTION
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM pg_constraint WHERE conname = 'FK_post_drafts_post'
+        ) THEN
+          ALTER TABLE "post_drafts"
+          ADD CONSTRAINT "FK_post_drafts_post"
+          FOREIGN KEY ("post_id")
+          REFERENCES "posts"("id")
+          ON DELETE CASCADE
+          ON UPDATE NO ACTION;
+        END IF;
+      END $$;
     `);
 
-    // category_id 외래키 제약조건 추가
+    // category_id 외래키 제약조건 추가 (존재하지 않는 경우에만)
     await queryRunner.query(`
-      ALTER TABLE "post_drafts"
-      ADD CONSTRAINT "FK_post_drafts_category"
-      FOREIGN KEY ("category_id")
-      REFERENCES "categories"("id")
-      ON DELETE SET NULL
-      ON UPDATE NO ACTION
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM pg_constraint WHERE conname = 'FK_post_drafts_category'
+        ) THEN
+          ALTER TABLE "post_drafts"
+          ADD CONSTRAINT "FK_post_drafts_category"
+          FOREIGN KEY ("category_id")
+          REFERENCES "categories"("id")
+          ON DELETE SET NULL
+          ON UPDATE NO ACTION;
+        END IF;
+      END $$;
     `);
   }
 
@@ -50,18 +64,18 @@ export class AddPostDraftsTable1769251636000 implements MigrationInterface {
     // category_id 외래키 제약조건 제거
     await queryRunner.query(`
       ALTER TABLE "post_drafts"
-      DROP CONSTRAINT "FK_post_drafts_category"
+      DROP CONSTRAINT IF EXISTS "FK_post_drafts_category"
     `);
 
     // post_id 외래키 제약조건 제거
     await queryRunner.query(`
       ALTER TABLE "post_drafts"
-      DROP CONSTRAINT "FK_post_drafts_post"
+      DROP CONSTRAINT IF EXISTS "FK_post_drafts_post"
     `);
 
     // post_drafts 테이블 제거
     await queryRunner.query(`
-      DROP TABLE "post_drafts"
+      DROP TABLE IF EXISTS "post_drafts"
     `);
   }
 }

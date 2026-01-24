@@ -47,7 +47,7 @@ export class CreatePostDto {
 
   @IsOptional()
   @IsString()
-  @IsIn(Object.values(PostStatus), { message: 'status는 DRAFT 또는 PUBLISHED만 가능합니다' })
+  @IsIn(Object.values(PostStatus), { message: 'status는 PRIVATE 또는 PUBLISHED만 가능합니다' })
   status?: string;
 
   @IsOptional()

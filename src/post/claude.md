@@ -11,9 +11,8 @@
 ### 상태 값
 
 ```typescript
-PostStatus.DRAFT      // 임시저장
-PostStatus.PUBLISHED  // 발행됨
-PostStatus.PRIVATE    // 발행했지만 비공개
+PostStatus.PRIVATE    // 비공개 (새 글 또는 비공개 전환)
+PostStatus.PUBLISHED  // 공개
 ```
 
 ### 컨텐츠 필드

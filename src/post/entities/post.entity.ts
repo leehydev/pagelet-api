@@ -13,9 +13,8 @@ import { Site } from '../../site/entities/site.entity';
 
 // TypeScript 타입 (DB enum 사용 안 함)
 export const PostStatus = {
-  DRAFT: 'DRAFT',
-  PUBLISHED: 'PUBLISHED',
-  PRIVATE: 'PRIVATE', // 발행했지만 비공개
+  PRIVATE: 'PRIVATE', // 비공개 (새 글 또는 비공개 전환)
+  PUBLISHED: 'PUBLISHED', // 공개
 } as const;
 
 export type PostStatus = (typeof PostStatus)[keyof typeof PostStatus];
@@ -64,7 +63,7 @@ export class Post {
   @Column({
     type: 'varchar',
     length: 50,
-    default: PostStatus.DRAFT,
+    default: PostStatus.PRIVATE,
   })
   status: string;
 

@@ -1,3 +1,4 @@
+import * as crypto from 'crypto';
 import { Injectable, Logger, Inject, forwardRef } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -33,7 +34,7 @@ export class PostService {
   private generateSlug(title: string): string {
     return title
       .toLowerCase()
-      .replace(/[^a-z0-9가-힣\s-]/g, '')
+      .replace(/[^a-z0-9\s-]/g, '')
       .replace(/\s+/g, '-')
       .replace(/-+/g, '-')
       .replace(/^-|-$/g, '')
@@ -61,12 +62,15 @@ export class PostService {
    * 유니크한 slug 생성 (중복 시 숫자 접미사 추가)
    */
   async generateUniqueSlug(siteId: string, title: string, excludePostId?: string): Promise<string> {
+    // 한글이 포함된 경우 UUID 생성
+    if (/[가-힣]/.test(title)) {
+      return crypto.randomUUID();
+    }
+
     const baseSlug = this.generateSlug(title);
 
     if (!baseSlug) {
-      // 한글 등으로만 구성된 경우 timestamp 기반 slug 생성
-      const timestamp = Date.now().toString(36);
-      return `post-${timestamp}`;
+      return crypto.randomUUID();
     }
 
     let slug = baseSlug;
@@ -102,7 +106,7 @@ export class PostService {
     }
 
     // status 처리
-    const status = dto.status || PostStatus.DRAFT;
+    const status = dto.status || PostStatus.PRIVATE;
     const publishedAt = status === PostStatus.PUBLISHED ? new Date() : null;
 
     // category 처리: 제공되지 않으면 기본 카테고리 할당
@@ -475,8 +479,8 @@ export class PostService {
     const newStatus = dto.status || post.status;
     let publishedAt = post.publishedAt;
 
-    // DRAFT → PUBLISHED로 변경 시 publishedAt 설정
-    if (post.status === PostStatus.DRAFT && newStatus === PostStatus.PUBLISHED) {
+    // PRIVATE → PUBLISHED로 변경 시 publishedAt 설정
+    if (post.status === PostStatus.PRIVATE && newStatus === PostStatus.PUBLISHED) {
       publishedAt = new Date();
     }
 
