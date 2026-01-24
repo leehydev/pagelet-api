@@ -439,4 +439,41 @@ export class AdminPostController {
       hasDraft: false,
     });
   }
+
+  /**
+   * POST /admin/sites/:siteId/posts/:id/unpublish
+   * 비공개 전환 (PUBLISHED -> PRIVATE)
+   * 드래프트가 있으면 드래프트 내용을 게시글에 머지 후 비공개 전환
+   */
+  @Post(':id/unpublish')
+  @ApiOperation({ summary: '게시글 비공개 전환' })
+  @ApiResponse({ status: 200, description: '비공개 전환 성공', type: PostResponseDto })
+  @ApiResponse({ status: 400, description: '게시글이 발행 상태가 아님' })
+  @ApiResponse({ status: 404, description: '게시글을 찾을 수 없음' })
+  async unpublishPost(
+    @CurrentSite() site: Site,
+    @Param('id') postId: string,
+  ): Promise<PostResponseDto> {
+    const post = await this.postService.unpublishPost(postId, site.id);
+
+    return new PostResponseDto({
+      id: post.id,
+      title: post.title,
+      subtitle: post.subtitle,
+      slug: post.slug,
+      content: post.content,
+      contentJson: post.contentJson,
+      contentHtml: post.contentHtml,
+      contentText: post.contentText,
+      status: post.status,
+      publishedAt: post.publishedAt,
+      seoTitle: post.seoTitle,
+      seoDescription: post.seoDescription,
+      ogImageUrl: post.ogImageUrl,
+      categoryId: post.categoryId,
+      createdAt: post.createdAt,
+      updatedAt: post.updatedAt,
+      hasDraft: false,
+    });
+  }
 }

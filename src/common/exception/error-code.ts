@@ -128,6 +128,11 @@ export const ErrorCode = {
     HttpStatus.FORBIDDEN,
     'Access denied to this post',
   ),
+  POST_NOT_PUBLISHED: new ErrorCodeDefinition(
+    'POST_004',
+    HttpStatus.BAD_REQUEST,
+    'Post is not published',
+  ),
 
   // Storage 관련 에러
   STORAGE_EXCEEDED: new ErrorCodeDefinition(
