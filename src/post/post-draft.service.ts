@@ -54,6 +54,7 @@ export class PostDraftService {
         postId,
         title: dto.title ?? post.title,
         subtitle: dto.subtitle ?? post.subtitle,
+        slug: dto.slug ?? post.slug,
         contentJson: dto.contentJson ?? post.contentJson,
         contentHtml: dto.contentHtml ?? post.contentHtml,
         contentText: dto.contentText ?? post.contentText,
@@ -66,6 +67,7 @@ export class PostDraftService {
       // 드래프트가 있으면 제공된 필드만 업데이트
       if (dto.title !== undefined) draft.title = dto.title;
       if (dto.subtitle !== undefined) draft.subtitle = dto.subtitle;
+      if (dto.slug !== undefined) draft.slug = dto.slug;
       if (dto.contentJson !== undefined) draft.contentJson = dto.contentJson;
       if (dto.contentHtml !== undefined) draft.contentHtml = dto.contentHtml;
       if (dto.contentText !== undefined) draft.contentText = dto.contentText;
@@ -115,6 +117,7 @@ export class PostDraftService {
       postId: post.id,
       title: post.title,
       subtitle: post.subtitle,
+      slug: post.slug,
       contentJson: post.contentJson,
       contentHtml: post.contentHtml,
       contentText: post.contentText,
@@ -150,6 +153,7 @@ export class PostDraftService {
       // 드래프트 내용을 게시글에 복사
       post.title = draft.title;
       post.subtitle = draft.subtitle;
+      post.slug = draft.slug;
       post.contentJson = draft.contentJson;
       post.contentHtml = draft.contentHtml;
       post.contentText = draft.contentText;
