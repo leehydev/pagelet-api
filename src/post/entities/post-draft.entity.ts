@@ -28,6 +28,9 @@ export class PostDraft {
   @Column({ type: 'varchar', length: 500 })
   subtitle: string;
 
+  @Column({ type: 'varchar', length: 255 })
+  slug: string;
+
   @Column({ type: 'jsonb', nullable: true })
   contentJson: Record<string, any> | null;
 

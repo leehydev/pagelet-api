@@ -1,4 +1,4 @@
-import { IsOptional, IsString, IsUUID, MaxLength } from 'class-validator';
+import { IsOptional, IsString, IsUUID, Matches, MaxLength } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
 export class SaveDraftDto {
@@ -13,6 +13,15 @@ export class SaveDraftDto {
   @IsString()
   @MaxLength(500, { message: '부제목은 최대 500자까지 가능합니다' })
   subtitle?: string;
+
+  @ApiPropertyOptional({ description: 'Slug (URL 경로)', maxLength: 255 })
+  @IsOptional()
+  @IsString()
+  @MaxLength(255, { message: 'Slug는 최대 255자까지 가능합니다' })
+  @Matches(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, {
+    message: 'Slug는 영소문자, 숫자, 하이픈만 사용 가능합니다',
+  })
+  slug?: string;
 
   @ApiPropertyOptional({ description: 'Tiptap 에디터 JSON 데이터' })
   @IsOptional()
