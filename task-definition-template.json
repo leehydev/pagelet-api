@@ -79,7 +79,7 @@
         },
         {
           "name": "KAKAO_REDIRECT_URI",
-          "value": "https://api.pagelet.kr/auth/kakao/callback"
+          "value": "https://pagelet-api.kr/auth/kakao/callback"
         },
         {
           "name": "NAVER_CLIENT_ID",
@@ -91,7 +91,7 @@
         },
         {
           "name": "NAVER_REDIRECT_URI",
-          "value": "https://api.pagelet.kr/auth/naver/callback"
+          "value": "https://pagelet-api.kr/auth/naver/callback"
         },
         {
           "name": "FRONTEND_URL",
