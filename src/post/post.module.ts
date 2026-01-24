@@ -4,6 +4,7 @@ import { OnboardingPostController } from './onboarding-post.controller';
 import { AdminPostController } from './admin-post.controller';
 import { PublicPostController } from './public-post.controller';
 import { PostService } from './post.service';
+import { PostDraftService } from './post-draft.service';
 import { Post } from './entities/post.entity';
 import { PostDraft } from './entities/post-draft.entity';
 import { SiteModule } from '../site/site.module';
@@ -18,7 +19,7 @@ import { CategoryModule } from '../category/category.module';
     forwardRef(() => CategoryModule),
   ],
   controllers: [OnboardingPostController, AdminPostController, PublicPostController],
-  providers: [PostService],
-  exports: [PostService],
+  providers: [PostService, PostDraftService],
+  exports: [PostService, PostDraftService],
 })
 export class PostModule {}

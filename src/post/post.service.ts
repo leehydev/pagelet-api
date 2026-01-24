@@ -10,6 +10,7 @@ import { PostImageService } from '../storage/post-image.service';
 import { S3Service } from '../storage/s3.service';
 import { CategoryService } from '../category/category.service';
 import { PaginatedResponseDto } from '../common/dto';
+import { PostDraftService } from './post-draft.service';
 
 @Injectable()
 export class PostService {
@@ -22,6 +23,8 @@ export class PostService {
     private readonly s3Service: S3Service,
     @Inject(forwardRef(() => CategoryService))
     private readonly categoryService: CategoryService,
+    @Inject(forwardRef(() => PostDraftService))
+    private readonly postDraftService: PostDraftService,
   ) {}
 
   /**
@@ -496,6 +499,57 @@ export class PostService {
     this.logger.log(`Updated post: ${saved.id}, status: ${saved.status}`);
 
     // 이미지 동기화 (contentHtml + ogImageUrl의 이미지를 postId와 연결, 제거된 이미지는 unlink)
+    await this.syncPostImages(siteId, saved.id, saved.contentHtml, saved.ogImageUrl);
+
+    return saved;
+  }
+
+  /**
+   * 게시글 비공개 전환
+   * - PUBLISHED 상태의 게시글을 PRIVATE로 변경
+   * - 드래프트가 있는 경우 드래프트 내용을 게시글에 머지 후 드래프트 삭제
+   */
+  async unpublishPost(postId: string, siteId: string): Promise<Post> {
+    // 게시글 조회
+    const post = await this.postRepository.findOne({ where: { id: postId } });
+    if (!post || post.siteId !== siteId) {
+      throw BusinessException.fromErrorCode(ErrorCode.POST_NOT_FOUND);
+    }
+
+    // PUBLISHED 상태 확인
+    if (post.status !== PostStatus.PUBLISHED) {
+      throw BusinessException.fromErrorCode(ErrorCode.POST_NOT_PUBLISHED);
+    }
+
+    // 드래프트 확인 및 머지
+    const draft = await this.postDraftService.findByPostId(postId);
+    if (draft) {
+      // 드래프트 내용으로 게시글 업데이트
+      post.title = draft.title;
+      post.subtitle = draft.subtitle;
+      post.contentJson = draft.contentJson;
+      post.contentHtml = draft.contentHtml;
+      post.contentText = draft.contentText;
+      post.seoTitle = draft.seoTitle;
+      post.seoDescription = draft.seoDescription;
+      post.ogImageUrl = draft.ogImageUrl;
+      post.categoryId = draft.categoryId;
+
+      // 드래프트 삭제
+      await this.postDraftService.deleteDraft(postId, siteId);
+
+      this.logger.log(`Unpublish with draft merge: ${postId}`);
+    } else {
+      this.logger.log(`Unpublish without draft: ${postId}`);
+    }
+
+    // status를 PRIVATE로 변경, publishedAt을 null로
+    post.status = PostStatus.PRIVATE;
+    post.publishedAt = null;
+
+    const saved = await this.postRepository.save(post);
+
+    // 이미지 동기화
     await this.syncPostImages(siteId, saved.id, saved.contentHtml, saved.ogImageUrl);
 
     return saved;
