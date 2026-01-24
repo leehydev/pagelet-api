@@ -7,6 +7,8 @@ import { CreateSiteDto } from './dto/create-site.dto';
 import { BusinessException } from '../common/exception/business.exception';
 import { ErrorCode } from '../common/exception/error-code';
 import { SiteService } from '../site/site.service';
+import { SystemSettingService } from '../config/system-setting.service';
+import { RegistrationMode, SystemSettingKey } from '../config/constants/registration-mode';
 
 @Injectable()
 export class OnboardingService {
@@ -16,6 +18,7 @@ export class OnboardingService {
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
     private readonly siteService: SiteService,
+    private readonly systemSettingService: SystemSettingService,
   ) {}
 
   /**
@@ -75,10 +78,21 @@ export class OnboardingService {
     // 사이트 생성
     await this.siteService.createSite(userId, dto.name, dto.slug);
 
-    // 온보딩 완료 - 베타 기간 동안 PENDING 상태로 설정 (관리자 승인 필요)
-    user.accountStatus = AccountStatus.PENDING;
+    // 회원가입 모드에 따라 계정 상태 결정
+    const registrationMode = await this.systemSettingService.getOrDefault(
+      SystemSettingKey.REGISTRATION_MODE,
+      RegistrationMode.PENDING,
+    );
+
+    user.accountStatus =
+      registrationMode === RegistrationMode.ACTIVE ? AccountStatus.ACTIVE : AccountStatus.PENDING;
     user.onboardingStep = null;
     await this.userRepository.save(user);
-    this.logger.log(`User ${userId} completed onboarding, awaiting approval`);
+
+    if (user.accountStatus === AccountStatus.PENDING) {
+      this.logger.log(`User ${userId} completed onboarding, awaiting approval`);
+    } else {
+      this.logger.log(`User ${userId} completed onboarding, account activated`);
+    }
   }
 }
