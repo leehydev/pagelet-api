@@ -58,7 +58,9 @@ export class NaverOAuthClient implements OAuthProviderClient {
         error_description?: string;
       };
       if (data.error) {
-        this.logger.error(`Token exchange error in response: ${data.error} - ${data.error_description}`);
+        this.logger.error(
+          `Token exchange error in response: ${data.error} - ${data.error_description}`,
+        );
         if (data.error === 'invalid_grant') {
           throw new Error('INVALID_GRANT');
         } else if (data.error === 'invalid_client') {
@@ -79,7 +81,12 @@ export class NaverOAuthClient implements OAuthProviderClient {
       };
     } catch (error) {
       // 내부에서 던진 에러는 그대로 re-throw
-      if (error instanceof Error && ['INVALID_GRANT', 'INVALID_CLIENT', 'INVALID_REQUEST', 'TOKEN_EXCHANGE_FAILED'].includes(error.message)) {
+      if (
+        error instanceof Error &&
+        ['INVALID_GRANT', 'INVALID_CLIENT', 'INVALID_REQUEST', 'TOKEN_EXCHANGE_FAILED'].includes(
+          error.message,
+        )
+      ) {
         throw error;
       }
 

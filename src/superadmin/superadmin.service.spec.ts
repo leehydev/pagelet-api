@@ -4,6 +4,8 @@ import { SuperAdminService } from './superadmin.service';
 import { User, AccountStatus } from '../auth/entities/user.entity';
 import { BusinessException } from '../common/exception/business.exception';
 import { ErrorCode } from '../common/exception/error-code';
+import { SystemSettingService } from '../config/system-setting.service';
+import { RegistrationMode, SystemSettingKey } from '../config/constants/registration-mode';
 
 describe('SuperAdminService', () => {
   let service: SuperAdminService;
@@ -11,6 +13,13 @@ describe('SuperAdminService', () => {
     find: jest.Mock;
     findOne: jest.Mock;
     save: jest.Mock;
+  };
+  let systemSettingService: {
+    get: jest.Mock;
+    getOrDefault: jest.Mock;
+    getOrThrow: jest.Mock;
+    set: jest.Mock;
+    getSettingEntity: jest.Mock;
   };
 
   beforeEach(async () => {
@@ -20,12 +29,24 @@ describe('SuperAdminService', () => {
       save: jest.fn(),
     };
 
+    systemSettingService = {
+      get: jest.fn(),
+      getOrDefault: jest.fn(),
+      getOrThrow: jest.fn(),
+      set: jest.fn(),
+      getSettingEntity: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         SuperAdminService,
         {
           provide: getRepositoryToken(User),
           useValue: userRepository,
+        },
+        {
+          provide: SystemSettingService,
+          useValue: systemSettingService,
         },
       ],
     }).compile();
@@ -142,6 +163,107 @@ describe('SuperAdminService', () => {
       } catch (error) {
         expect(error).toBeInstanceOf(BusinessException);
         expect((error as BusinessException).errorCode.code).toBe(ErrorCode.COMMON_BAD_REQUEST.code);
+      }
+    });
+  });
+
+  describe('getSetting', () => {
+    it('should return setting when it exists', async () => {
+      const mockSetting = {
+        key: 'registration_mode',
+        value: 'PENDING',
+        description: '회원가입 모드',
+        updatedAt: new Date('2024-01-01'),
+      };
+      systemSettingService.getSettingEntity.mockResolvedValue(mockSetting);
+
+      const result = await service.getSetting('registration_mode');
+
+      expect(result.key).toBe('registration_mode');
+      expect(result.value).toBe('PENDING');
+      expect(result.description).toBe('회원가입 모드');
+      expect(systemSettingService.getSettingEntity).toHaveBeenCalledWith('registration_mode');
+    });
+
+    it('should throw SETTING_NOT_FOUND when setting does not exist', async () => {
+      systemSettingService.getSettingEntity.mockResolvedValue(null);
+
+      await expect(service.getSetting('non_existent')).rejects.toThrow(BusinessException);
+
+      try {
+        await service.getSetting('non_existent');
+      } catch (error) {
+        expect(error).toBeInstanceOf(BusinessException);
+        expect((error as BusinessException).errorCode.code).toBe(ErrorCode.SETTING_NOT_FOUND.code);
+      }
+    });
+  });
+
+  describe('updateSetting', () => {
+    it('should update registration_mode setting with valid value', async () => {
+      const mockSetting = {
+        key: SystemSettingKey.REGISTRATION_MODE,
+        value: 'PENDING',
+        description: '회원가입 모드',
+        updatedAt: new Date('2024-01-01'),
+      };
+      const updatedSetting = {
+        ...mockSetting,
+        value: RegistrationMode.ACTIVE,
+        updatedAt: new Date('2024-01-02'),
+      };
+      systemSettingService.getSettingEntity
+        .mockResolvedValueOnce(mockSetting)
+        .mockResolvedValueOnce(updatedSetting);
+      systemSettingService.set.mockResolvedValue(undefined);
+
+      const result = await service.updateSetting(
+        SystemSettingKey.REGISTRATION_MODE,
+        RegistrationMode.ACTIVE,
+      );
+
+      expect(result.value).toBe(RegistrationMode.ACTIVE);
+      expect(systemSettingService.set).toHaveBeenCalledWith(
+        SystemSettingKey.REGISTRATION_MODE,
+        RegistrationMode.ACTIVE,
+      );
+    });
+
+    it('should throw SETTING_NOT_FOUND when setting does not exist', async () => {
+      systemSettingService.getSettingEntity.mockResolvedValue(null);
+
+      await expect(
+        service.updateSetting(SystemSettingKey.REGISTRATION_MODE, RegistrationMode.ACTIVE),
+      ).rejects.toThrow(BusinessException);
+
+      try {
+        await service.updateSetting(SystemSettingKey.REGISTRATION_MODE, RegistrationMode.ACTIVE);
+      } catch (error) {
+        expect(error).toBeInstanceOf(BusinessException);
+        expect((error as BusinessException).errorCode.code).toBe(ErrorCode.SETTING_NOT_FOUND.code);
+      }
+    });
+
+    it('should throw SETTING_INVALID_VALUE when registration_mode has invalid value', async () => {
+      const mockSetting = {
+        key: SystemSettingKey.REGISTRATION_MODE,
+        value: 'PENDING',
+        description: '회원가입 모드',
+        updatedAt: new Date('2024-01-01'),
+      };
+      systemSettingService.getSettingEntity.mockResolvedValue(mockSetting);
+
+      await expect(
+        service.updateSetting(SystemSettingKey.REGISTRATION_MODE, 'INVALID_VALUE'),
+      ).rejects.toThrow(BusinessException);
+
+      try {
+        await service.updateSetting(SystemSettingKey.REGISTRATION_MODE, 'INVALID_VALUE');
+      } catch (error) {
+        expect(error).toBeInstanceOf(BusinessException);
+        expect((error as BusinessException).errorCode.code).toBe(
+          ErrorCode.SETTING_INVALID_VALUE.code,
+        );
       }
     });
   });

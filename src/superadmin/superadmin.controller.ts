@@ -1,7 +1,9 @@
-import { Controller, Get, Post, Param, UseGuards, ParseUUIDPipe } from '@nestjs/common';
+import { Controller, Get, Post, Put, Param, Body, UseGuards, ParseUUIDPipe } from '@nestjs/common';
 import { SuperAdminService } from './superadmin.service';
 import { SuperAdminGuard } from './guards/superadmin.guard';
 import { WaitlistUserResponseDto } from './dto/waitlist-user-response.dto';
+import { SystemSettingResponseDto } from './dto/system-setting-response.dto';
+import { UpdateSystemSettingDto } from './dto/update-system-setting.dto';
 
 /**
  * 슈퍼 관리자 API
@@ -26,5 +28,24 @@ export class SuperAdminController {
   @Post('waitlist/:userId/approve')
   async approveUser(@Param('userId', ParseUUIDPipe) userId: string): Promise<void> {
     return this.superAdminService.approveUser(userId);
+  }
+
+  /**
+   * 시스템 설정 조회
+   */
+  @Get('settings/:key')
+  async getSetting(@Param('key') key: string): Promise<SystemSettingResponseDto> {
+    return this.superAdminService.getSetting(key);
+  }
+
+  /**
+   * 시스템 설정 변경
+   */
+  @Put('settings/:key')
+  async updateSetting(
+    @Param('key') key: string,
+    @Body() dto: UpdateSystemSettingDto,
+  ): Promise<SystemSettingResponseDto> {
+    return this.superAdminService.updateSetting(key, dto.value);
   }
 }

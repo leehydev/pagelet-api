@@ -176,7 +176,9 @@ describe('NaverOAuthClient', () => {
 
       httpService.post.mockReturnValue(of(mockResponse));
 
-      await expect(client.exchangeCodeForToken('test-code')).rejects.toThrow('TOKEN_EXCHANGE_FAILED');
+      await expect(client.exchangeCodeForToken('test-code')).rejects.toThrow(
+        'TOKEN_EXCHANGE_FAILED',
+      );
     });
   });
 
