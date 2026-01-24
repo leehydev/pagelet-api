@@ -6,7 +6,6 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
-import { OAuthStateUtil } from './utils/oauth-state.util';
 import { User } from './entities/user.entity';
 import { SocialAccount } from './entities/social-account.entity';
 import { OAuthModule } from './oauth/oauth.module';
@@ -34,7 +33,7 @@ import { JwtConfig } from '../config/jwt.config';
     OAuthModule,
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, OAuthStateUtil],
+  providers: [AuthService, JwtStrategy],
   exports: [AuthService, JwtStrategy],
 })
 export class AuthModule {}

@@ -2,203 +2,65 @@ import {
   Controller,
   Get,
   Post,
+  Body,
   Res,
   Req,
-  Query,
   HttpStatus,
   UnauthorizedException,
 } from '@nestjs/common';
 import type { Request, Response } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service';
-import { OAuthStateUtil } from './utils/oauth-state.util';
 import { CookieUtil } from './utils/cookie.util';
 import { Public } from './decorators/public.decorator';
 import { AllowPending } from './decorators/allow-pending.decorator';
 import { CurrentUser } from './decorators/current-user.decorator';
 import type { UserPrincipal } from './types/jwt-payload.interface';
 import type { UserResponseDto } from './dto/user-response.dto';
+import { OAuthCodeDto } from './dto/oauth-code.dto';
+import { LoginResponseDto } from './dto/login-response.dto';
 
 /**
  * Auth Controller
  * OAuth 인증 및 사용자 관리 엔드포인트
+ *
+ * OAuth 흐름 (프론트엔드 주도):
+ * 1. 프론트엔드가 OAuth 프로바이더로 직접 리다이렉트
+ * 2. 프로바이더 콜백을 프론트엔드가 받음
+ * 3. 프론트엔드가 POST /auth/{provider}/token으로 code 전달
+ * 4. 백엔드가 code 교환 후 JWT 반환
  */
 @Controller('auth')
 export class AuthController {
-  private readonly kakaoAuthUrl = 'https://kauth.kakao.com/oauth/authorize';
-  private readonly naverAuthUrl = 'https://nid.naver.com/oauth2.0/authorize';
-
   constructor(
     private readonly authService: AuthService,
-    private readonly oauthStateUtil: OAuthStateUtil,
     private readonly configService: ConfigService,
   ) {}
 
   /**
-   * GET /auth/kakao
-   * Kakao OAuth 시작 - Kakao authorize URL로 redirect
+   * POST /auth/kakao/token
+   * Kakao OAuth code를 JWT 토큰으로 교환
+   *
+   * 프론트엔드가 Kakao OAuth 콜백으로 받은 code를 전달하면
+   * 백엔드가 code → access_token → user_info 교환 후 JWT 발급
    */
   @Public()
-  @Get('kakao')
-  async startKakaoOAuth(@Res() res: Response): Promise<void> {
-    try {
-      // State 생성 (CSRF 방지, 선택적)
-      // 카카오는 state 없이도 동작하지만 보안을 위해 사용 권장
-      // const state = await this.oauthStateUtil.generateState();
-
-      // Kakao OAuth URL 생성
-      const clientId = this.configService.get<string>('KAKAO_CLIENT_ID');
-      const redirectUri = this.configService.get<string>('KAKAO_REDIRECT_URI');
-
-      const params = new URLSearchParams({
-        client_id: clientId!,
-        redirect_uri: redirectUri!,
-        response_type: 'code',
-      });
-
-      const authUrl = `${this.kakaoAuthUrl}?${params.toString()}`;
-
-      // Kakao로 redirect
-      res.redirect(authUrl);
-    } catch (error) {
-      const frontendUrl = this.configService.get<string>('FRONTEND_URL', 'http://localhost:3001');
-      res.redirect(`${frontendUrl}/auth/error?message=oauth_init_failed`);
-    }
+  @Post('kakao/token')
+  async exchangeKakaoCode(@Body() dto: OAuthCodeDto): Promise<LoginResponseDto> {
+    return this.authService.loginWithKakao(dto.code);
   }
 
   /**
-   * GET /auth/kakao/callback
-   * Kakao OAuth 콜백 - code를 받아 로그인 처리 후 프론트엔드로 redirect
+   * POST /auth/naver/token
+   * Naver OAuth code를 JWT 토큰으로 교환
+   *
+   * 프론트엔드가 Naver OAuth 콜백으로 받은 code를 전달하면
+   * 백엔드가 code → access_token → user_info 교환 후 JWT 발급
    */
   @Public()
-  @Get('kakao/callback')
-  async kakaoOAuthCallback(
-    @Query('code') code: string,
-    @Query('state') state: string,
-    @Query('error') error: string,
-    @Query('error_description') errorDescription: string,
-    @Res() res: Response,
-  ): Promise<void> {
-    const frontendUrl = this.configService.get<string>('FRONTEND_URL', 'http://localhost:3001');
-
-    try {
-      // 에러 처리
-      if (error) {
-        res.redirect(
-          `${frontendUrl}/auth/error?error=${encodeURIComponent(error)}&description=${encodeURIComponent(errorDescription || '')}`,
-        );
-        return;
-      }
-
-      // State 검증 (state가 있으면 검증, 없으면 통과)
-      // 카카오는 state 없이도 인증 가능하지만, 보안을 위해 state 사용 권장
-      if (state && !(await this.oauthStateUtil.validateState(state))) {
-        res.redirect(`${frontendUrl}/auth/error?error=invalid_state`);
-        return;
-      }
-
-      // Code 검증
-      if (!code) {
-        res.redirect(`${frontendUrl}/auth/error?error=missing_code`);
-        return;
-      }
-
-      // 로그인 처리
-      const loginResult = await this.authService.loginWithKakao(code);
-
-      // 프론트엔드 API Route로 토큰 전달 (크로스 도메인 지원)
-      const callbackUrl = new URL(`${frontendUrl}/api/auth/callback`);
-      callbackUrl.searchParams.set('accessToken', loginResult.accessToken);
-      callbackUrl.searchParams.set('refreshToken', loginResult.refreshToken);
-      res.redirect(callbackUrl.toString());
-    } catch (error) {
-      // 에러 발생 시 프론트엔드로 redirect
-      const errorMessage = error instanceof Error ? error.message : 'unknown_error';
-      res.redirect(`${frontendUrl}/auth/error?error=${encodeURIComponent(errorMessage)}`);
-    }
-  }
-
-  /**
-   * GET /auth/naver
-   * Naver OAuth 시작 - Naver authorize URL로 redirect
-   */
-  @Public()
-  @Get('naver')
-  async startNaverOAuth(@Res() res: Response): Promise<void> {
-    try {
-      // State 생성 (CSRF 방지 - 네이버는 state 필수)
-      const state = await this.oauthStateUtil.generateState();
-
-      // Naver OAuth URL 생성
-      const clientId = this.configService.get<string>('NAVER_CLIENT_ID');
-      const redirectUri = this.configService.get<string>('NAVER_REDIRECT_URI');
-
-      const params = new URLSearchParams({
-        client_id: clientId!,
-        redirect_uri: redirectUri!,
-        response_type: 'code',
-        state,
-      });
-
-      const authUrl = `${this.naverAuthUrl}?${params.toString()}`;
-
-      // Naver로 redirect
-      res.redirect(authUrl);
-    } catch (error) {
-      const frontendUrl = this.configService.get<string>('FRONTEND_URL', 'http://localhost:3001');
-      res.redirect(`${frontendUrl}/auth/error?message=oauth_init_failed`);
-    }
-  }
-
-  /**
-   * GET /auth/naver/callback
-   * Naver OAuth 콜백 - code를 받아 로그인 처리 후 프론트엔드로 redirect
-   */
-  @Public()
-  @Get('naver/callback')
-  async naverOAuthCallback(
-    @Query('code') code: string,
-    @Query('state') state: string,
-    @Query('error') error: string,
-    @Query('error_description') errorDescription: string,
-    @Res() res: Response,
-  ): Promise<void> {
-    const frontendUrl = this.configService.get<string>('FRONTEND_URL', 'http://localhost:3001');
-
-    try {
-      // 에러 처리
-      if (error) {
-        res.redirect(
-          `${frontendUrl}/auth/error?error=${encodeURIComponent(error)}&description=${encodeURIComponent(errorDescription || '')}`,
-        );
-        return;
-      }
-
-      // State 검증 (CSRF 방지 - 네이버는 state 필수)
-      if (!(await this.oauthStateUtil.validateState(state))) {
-        res.redirect(`${frontendUrl}/auth/error?error=invalid_state`);
-        return;
-      }
-
-      // Code 검증
-      if (!code) {
-        res.redirect(`${frontendUrl}/auth/error?error=missing_code`);
-        return;
-      }
-
-      // 로그인 처리
-      const loginResult = await this.authService.loginWithNaver(code);
-
-      // 프론트엔드 API Route로 토큰 전달 (크로스 도메인 지원)
-      const callbackUrl = new URL(`${frontendUrl}/api/auth/callback`);
-      callbackUrl.searchParams.set('accessToken', loginResult.accessToken);
-      callbackUrl.searchParams.set('refreshToken', loginResult.refreshToken);
-      res.redirect(callbackUrl.toString());
-    } catch (error) {
-      // 에러 발생 시 프론트엔드로 redirect
-      const errorMessage = error instanceof Error ? error.message : 'unknown_error';
-      res.redirect(`${frontendUrl}/auth/error?error=${encodeURIComponent(errorMessage)}`);
-    }
+  @Post('naver/token')
+  async exchangeNaverCode(@Body() dto: OAuthCodeDto): Promise<LoginResponseDto> {
+    return this.authService.loginWithNaver(dto.code);
   }
 
   /**
