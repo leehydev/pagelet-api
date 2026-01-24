@@ -102,7 +102,7 @@ export class PostService {
     }
 
     // status 처리
-    const status = dto.status || PostStatus.DRAFT;
+    const status = dto.status || PostStatus.PRIVATE;
     const publishedAt = status === PostStatus.PUBLISHED ? new Date() : null;
 
     // category 처리: 제공되지 않으면 기본 카테고리 할당
@@ -475,8 +475,8 @@ export class PostService {
     const newStatus = dto.status || post.status;
     let publishedAt = post.publishedAt;
 
-    // DRAFT → PUBLISHED로 변경 시 publishedAt 설정
-    if (post.status === PostStatus.DRAFT && newStatus === PostStatus.PUBLISHED) {
+    // PRIVATE → PUBLISHED로 변경 시 publishedAt 설정
+    if (post.status === PostStatus.PRIVATE && newStatus === PostStatus.PUBLISHED) {
       publishedAt = new Date();
     }
 

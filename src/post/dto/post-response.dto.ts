@@ -49,7 +49,7 @@ export class PostResponseDto {
   @ApiPropertyOptional({ description: '검색/미리보기용 텍스트' })
   contentText: string | null;
 
-  @ApiProperty({ description: '상태 (DRAFT, PUBLISHED, PRIVATE)' })
+  @ApiProperty({ description: '상태 (PRIVATE, PUBLISHED)' })
   status: string;
 
   @ApiPropertyOptional({ description: '발행일' })
@@ -145,7 +145,7 @@ export class PostListResponseDto {
   @ApiProperty({ description: 'URL slug' })
   slug: string;
 
-  @ApiProperty({ description: '상태 (DRAFT, PUBLISHED, PRIVATE)' })
+  @ApiProperty({ description: '상태 (PRIVATE, PUBLISHED)' })
   status: string;
 
   @ApiPropertyOptional({ description: '발행일' })
