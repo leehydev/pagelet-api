@@ -4,8 +4,10 @@ import { SiteService } from '../site/site.service';
 import { BrandingPresignDto, BrandingType } from './dto/branding-presign.dto';
 import { BrandingCommitDto } from './dto/branding-commit.dto';
 import { BrandingPresignResponseDto, BrandingCommitResponseDto } from './dto/branding-response.dto';
+import { BrandingDeleteResponseDto } from './dto/branding-delete.dto';
 import { BusinessException } from '../common/exception/business.exception';
 import { ErrorCode } from '../common/exception/error-code';
+import { Site } from '../site/entities/site.entity';
 
 @Injectable()
 export class BrandingAssetService {
@@ -127,6 +129,93 @@ export class BrandingAssetService {
       publicUrl,
       updatedAt: updatedSite.updatedAt.toISOString(),
     };
+  }
+
+  /**
+   * 브랜딩 에셋 삭제 (S3 파일 삭제 + Site 필드 null 처리)
+   */
+  async delete(siteId: string, type: BrandingType): Promise<BrandingDeleteResponseDto> {
+    // 1. Site 조회
+    const site = await this.siteService.findById(siteId);
+    if (!site) {
+      throw BusinessException.withMessage(ErrorCode.SITE_NOT_FOUND, '사이트를 찾을 수 없습니다');
+    }
+
+    // 2. 현재 이미지 URL 확인
+    const currentUrl = this.getCurrentImageUrl(site, type);
+    if (!currentUrl) {
+      throw BusinessException.withMessage(ErrorCode.COMMON_NOT_FOUND, '삭제할 이미지가 없습니다');
+    }
+
+    // 3. URL에서 S3 Key 추출
+    const s3Key = this.extractS3KeyFromUrl(currentUrl);
+
+    // 4. S3에서 파일 삭제
+    try {
+      await this.s3Service.deleteObject(s3Key);
+    } catch (error) {
+      this.logger.warn(`Failed to delete S3 object ${s3Key}: ${error.message}`);
+      // S3 삭제 실패해도 DB 업데이트는 진행 (파일이 이미 삭제되었을 수 있음)
+    }
+
+    // 5. Site 엔티티 업데이트 (해당 필드 null로)
+    const updateData = this.getNullUpdateData(type);
+    const updatedSite = await this.siteService.updateSettings(siteId, updateData);
+
+    this.logger.log(`Deleted branding asset for site ${siteId}, type: ${type}`);
+
+    return {
+      deleted: true,
+      type,
+      updatedAt: updatedSite.updatedAt.toISOString(),
+    };
+  }
+
+  /**
+   * 브랜딩 타입에 따른 현재 이미지 URL 조회
+   */
+  private getCurrentImageUrl(site: Site, type: BrandingType): string | null {
+    switch (type) {
+      case BrandingType.LOGO:
+        return site.logoImageUrl;
+      case BrandingType.FAVICON:
+        return site.faviconUrl;
+      case BrandingType.OG:
+        return site.ogImageUrl;
+      case BrandingType.CTA:
+        return site.ctaImageUrl;
+    }
+  }
+
+  /**
+   * 브랜딩 타입에 따른 null 업데이트 데이터 생성
+   */
+  private getNullUpdateData(type: BrandingType): {
+    logoImageUrl?: null;
+    faviconUrl?: null;
+    ogImageUrl?: null;
+    ctaImageUrl?: null;
+  } {
+    switch (type) {
+      case BrandingType.LOGO:
+        return { logoImageUrl: null };
+      case BrandingType.FAVICON:
+        return { faviconUrl: null };
+      case BrandingType.OG:
+        return { ogImageUrl: null };
+      case BrandingType.CTA:
+        return { ctaImageUrl: null };
+    }
+  }
+
+  /**
+   * CDN URL에서 S3 Key 추출
+   * 예: https://assets.pagelet-dev.kr/uploads/sites/{siteId}/branding/logo.png
+   *   → uploads/sites/{siteId}/branding/logo.png
+   */
+  private extractS3KeyFromUrl(url: string): string {
+    const cdnBaseUrl = this.s3Service.getAssetsCdnBaseUrl();
+    return url.replace(`${cdnBaseUrl}/`, '');
   }
 
   /**
