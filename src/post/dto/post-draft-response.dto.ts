@@ -13,6 +13,9 @@ export class PostDraftResponseDto {
   @ApiProperty({ description: '부제목' })
   subtitle: string;
 
+  @ApiProperty({ description: 'Slug (URL 경로)' })
+  slug: string;
+
   @ApiPropertyOptional({ description: 'Tiptap 에디터 JSON 데이터' })
   contentJson: Record<string, any> | null;
 
