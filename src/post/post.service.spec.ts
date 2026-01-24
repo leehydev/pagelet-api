@@ -232,13 +232,31 @@ describe('PostService', () => {
       const mockPosts = Array.from({ length: 10 }, (_, i) => createMockPost(`post-${i}`, i));
       postRepository.find.mockResolvedValue(mockPosts);
 
-      const result = await service.findAdjacentPosts(siteId, 'post-5', 3);
+      const result = await service.findAdjacentPosts(siteId, 'post-5', { count: 3 });
 
       expect(result.posts).toHaveLength(3);
       expect(result.currentIndex).toBe(1);
       expect(result.posts[0].id).toBe('post-4');
       expect(result.posts[1].id).toBe('post-5'); // current
       expect(result.posts[2].id).toBe('post-6');
+    });
+
+    it('should filter by categoryId when provided', async () => {
+      const categoryId = 'category-1';
+      const mockPosts = Array.from({ length: 5 }, (_, i) => createMockPost(`post-${i}`, i));
+      postRepository.find.mockResolvedValue(mockPosts);
+
+      await service.findAdjacentPosts(siteId, 'post-2', { categoryId });
+
+      expect(postRepository.find).toHaveBeenCalledWith({
+        where: {
+          siteId: siteId,
+          status: PostStatus.PUBLISHED,
+          categoryId: categoryId,
+        },
+        order: { publishedAt: 'DESC' },
+        select: ['id', 'title', 'slug', 'ogImageUrl', 'publishedAt'],
+      });
     });
   });
 });
