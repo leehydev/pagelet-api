@@ -88,6 +88,10 @@ export class Site {
   @Column({ type: 'varchar', length: 20, nullable: true, default: null })
   fontKey: string | null; // 'noto_sans' | 'noto_serif'
 
+  // 검색 엔진 인증
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  naverSearchAdvisorKey: string | null;
+
   // CTA 설정
   @Column({ type: 'boolean', default: false })
   ctaEnabled: boolean;

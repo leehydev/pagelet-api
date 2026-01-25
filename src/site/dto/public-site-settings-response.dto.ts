@@ -38,6 +38,9 @@ export class PublicSiteSettingsResponseDto {
   // 폰트 설정
   fontKey: string | null;
 
+  // 검색 엔진 인증
+  naverSearchAdvisorKey: string | null;
+
   // CTA 설정
   ctaEnabled: boolean;
   ctaType: string | null;
