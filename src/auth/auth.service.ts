@@ -6,7 +6,7 @@ import { ConfigService } from '@nestjs/config';
 import Redis from 'ioredis';
 import ms from 'ms';
 import type { StringValue } from 'ms';
-import { User, AccountStatus } from './entities/user.entity';
+import { User, AccountStatus, OnboardingStep } from './entities/user.entity';
 import { SocialAccount, OAuthProvider } from './entities/social-account.entity';
 import { KakaoOAuthService } from './oauth/services/kakao-oauth.service';
 import { NaverOAuthService } from './oauth/services/naver-oauth.service';
@@ -157,7 +157,7 @@ export class AuthService {
       email,
       name: oauthUserInfo.name,
       accountStatus: AccountStatus.ONBOARDING,
-      onboardingStep: 1,
+      onboardingStep: OnboardingStep.SITE, // 프로필 단계 스킵, 바로 사이트 생성 단계로
     });
 
     const savedUser = await this.userRepository.save(newUser);
