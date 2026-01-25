@@ -90,6 +90,12 @@ export class UpdateSiteSettingsDto {
   })
   fontKey?: 'noto_sans' | 'noto_serif' | null;
 
+  // 검색 엔진 인증
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  naverSearchAdvisorKey?: string | null;
+
   // CTA 설정
   @IsOptional()
   @IsBoolean()

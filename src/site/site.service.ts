@@ -156,6 +156,7 @@ export class SiteService {
       businessName: site.businessName,
       representativeName: site.representativeName,
       fontKey: site.fontKey,
+      naverSearchAdvisorKey: site.naverSearchAdvisorKey,
       ctaEnabled: site.ctaEnabled,
       ctaType: site.ctaType,
       ctaText: site.ctaText,
@@ -190,6 +191,7 @@ export class SiteService {
       businessName: site.businessName,
       representativeName: site.representativeName,
       fontKey: site.fontKey,
+      naverSearchAdvisorKey: site.naverSearchAdvisorKey,
       ctaEnabled: site.ctaEnabled,
       ctaType: site.ctaType,
       ctaText: site.ctaText,
@@ -239,6 +241,8 @@ export class SiteService {
     if (dto.businessName !== undefined) site.businessName = dto.businessName;
     if (dto.representativeName !== undefined) site.representativeName = dto.representativeName;
     if (dto.fontKey !== undefined) site.fontKey = dto.fontKey;
+    if (dto.naverSearchAdvisorKey !== undefined)
+      site.naverSearchAdvisorKey = dto.naverSearchAdvisorKey;
     if (dto.ctaEnabled !== undefined) site.ctaEnabled = dto.ctaEnabled;
     if (dto.ctaType !== undefined) site.ctaType = dto.ctaType;
     if (dto.ctaText !== undefined) site.ctaText = dto.ctaText;
