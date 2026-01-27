@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Inject, forwardRef } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { PostDraft } from './entities/post-draft.entity';
@@ -6,6 +6,7 @@ import { Post, PostStatus } from './entities/post.entity';
 import { SaveDraftDto } from './dto/save-draft.dto';
 import { BusinessException } from '../common/exception/business.exception';
 import { ErrorCode } from '../common/exception/error-code';
+import { PostService } from './post.service';
 
 @Injectable()
 export class PostDraftService {
@@ -16,6 +17,8 @@ export class PostDraftService {
     private readonly postDraftRepository: Repository<PostDraft>,
     @InjectRepository(Post)
     private readonly postRepository: Repository<Post>,
+    @Inject(forwardRef(() => PostService))
+    private readonly postService: PostService,
   ) {}
 
   /**
@@ -79,6 +82,9 @@ export class PostDraftService {
 
     const saved = await this.postDraftRepository.save(draft);
     this.logger.log(`Saved draft for post: ${postId}`);
+
+    // 이미지 동기화: 발행된 글 + 드래프트 양쪽을 고려
+    await this.postService.syncImagesForPostAndDraft(postId, siteId);
 
     return saved;
   }

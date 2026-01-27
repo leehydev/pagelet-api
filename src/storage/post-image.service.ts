@@ -34,7 +34,7 @@ export class PostImageService {
    */
   async findByS3Key(s3Key: string): Promise<PostImage | null> {
     return this.postImageRepository.findOne({
-      where: { s3Key: s3Key, postId: IsNull() },
+      where: { s3Key: s3Key },
     });
   }
 
