@@ -1,13 +1,14 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { S3Service } from './s3.service';
-import { SiteService } from '../site/site.service';
 import { BrandingPresignDto, BrandingType } from './dto/branding-presign.dto';
 import { BrandingCommitDto } from './dto/branding-commit.dto';
 import { BrandingPresignResponseDto, BrandingCommitResponseDto } from './dto/branding-response.dto';
 import { BrandingDeleteResponseDto } from './dto/branding-delete.dto';
 import { BusinessException } from '../common/exception/business.exception';
 import { ErrorCode } from '../common/exception/error-code';
-import { Site } from '../site/entities/site.entity';
+import { SiteBrandingImage, BrandingImageType } from './entities/site-branding-image.entity';
 
 @Injectable()
 export class BrandingAssetService {
@@ -29,13 +30,22 @@ export class BrandingAssetService {
     [BrandingType.CTA]: 5 * 1024 * 1024, // 5MB
   };
 
+  // BrandingType → BrandingImageType 매핑
+  private readonly TYPE_MAP: Record<BrandingType, BrandingImageType> = {
+    [BrandingType.LOGO]: BrandingImageType.LOGO,
+    [BrandingType.FAVICON]: BrandingImageType.FAVICON,
+    [BrandingType.OG]: BrandingImageType.OG,
+    [BrandingType.CTA]: BrandingImageType.CTA,
+  };
+
   constructor(
+    @InjectRepository(SiteBrandingImage)
+    private readonly brandingImageRepository: Repository<SiteBrandingImage>,
     private readonly s3Service: S3Service,
-    private readonly siteService: SiteService,
   ) {}
 
   /**
-   * 브랜딩 에셋 Presigned URL 생성 (tmp 경로)
+   * 브랜딩 에셋 Presigned URL 생성
    */
   async presign(siteId: string, dto: BrandingPresignDto): Promise<BrandingPresignResponseDto> {
     const { type, filename, size, mimeType } = dto;
@@ -61,29 +71,29 @@ export class BrandingAssetService {
     // 확장자 추출
     const ext = this.s3Service.extractExtension(filename);
 
-    // tmp S3 Key 생성
-    const tmpKey = this.s3Service.generateBrandingTmpKey(siteId, type, ext);
+    // S3 Key 생성 (바로 최종 경로로)
+    const s3Key = this.s3Service.generateBrandingFinalKey(siteId, type, ext);
 
     // Presigned URL 생성 (5분 유효)
-    const uploadUrl = await this.s3Service.generatePresignedUrl(tmpKey, mimeType, 300);
-    const tmpPublicUrl = this.s3Service.getPublicUrl(tmpKey);
+    const uploadUrl = await this.s3Service.generatePresignedUrl(s3Key, mimeType, 300);
+    const publicUrl = this.s3Service.getPublicUrl(s3Key);
 
     this.logger.log(`Generated branding presign URL for site ${siteId}, type: ${type}`);
 
     return {
       uploadUrl,
-      tmpPublicUrl,
-      tmpKey,
+      tmpPublicUrl: publicUrl,
+      tmpKey: s3Key,
     };
   }
 
   /**
-   * 브랜딩 에셋 Commit (tmp → 최종 경로 복사 + Site 업데이트)
+   * 브랜딩 에셋 Commit (DB에 저장 + 활성화)
    */
   async commit(siteId: string, dto: BrandingCommitDto): Promise<BrandingCommitResponseDto> {
     const { type, tmpKey } = dto;
 
-    // tmp Key가 해당 사이트의 것인지 검증
+    // S3 Key가 해당 사이트의 것인지 검증
     if (!tmpKey.includes(`/sites/${siteId}/`)) {
       throw BusinessException.withMessage(
         ErrorCode.COMMON_FORBIDDEN,
@@ -91,149 +101,143 @@ export class BrandingAssetService {
       );
     }
 
-    // tmp 파일 존재 확인
+    // S3 파일 존재 확인
     try {
       await this.s3Service.headObject(tmpKey);
     } catch {
       throw BusinessException.withMessage(
         ErrorCode.UPLOAD_NOT_FOUND,
-        '임시 파일을 찾을 수 없습니다. 다시 업로드해주세요',
+        '파일을 찾을 수 없습니다. 다시 업로드해주세요',
       );
     }
 
-    // 확장자 추출 (tmp key에서)
-    const ext = this.s3Service.extractExtension(tmpKey);
+    const imageType = this.TYPE_MAP[type];
 
-    // 최종 S3 Key 생성
-    const finalKey = this.s3Service.generateBrandingFinalKey(siteId, type, ext);
+    // 기존 활성 이미지 비활성화
+    await this.brandingImageRepository.update(
+      { siteId, type: imageType, isActive: true },
+      { isActive: false },
+    );
 
-    // S3 Copy (tmp → final)
-    await this.s3Service.copyObject(tmpKey, finalKey);
+    // 새 브랜딩 이미지 레코드 생성 (활성 상태로)
+    const brandingImage = this.brandingImageRepository.create({
+      siteId,
+      type: imageType,
+      s3Key: tmpKey,
+      isActive: true,
+    });
+    await this.brandingImageRepository.save(brandingImage);
 
-    // tmp 파일 삭제
-    try {
-      await this.s3Service.deleteObject(tmpKey);
-    } catch (error) {
-      this.logger.warn(`Failed to delete tmp file ${tmpKey}: ${error.message}`);
-      // tmp 삭제 실패해도 계속 진행
-    }
-
-    // Site 엔티티 업데이트
-    const publicUrl = this.s3Service.getPublicUrl(finalKey);
-    const updateData = this.getUpdateData(type, publicUrl);
-    const updatedSite = await this.siteService.updateSettings(siteId, updateData);
+    const publicUrl = this.s3Service.getPublicUrl(tmpKey);
 
     this.logger.log(`Committed branding asset for site ${siteId}, type: ${type}`);
 
     return {
       publicUrl,
-      updatedAt: updatedSite.updatedAt.toISOString(),
+      updatedAt: brandingImage.createdAt.toISOString(),
     };
   }
 
   /**
-   * 브랜딩 에셋 삭제 (S3 파일 삭제 + Site 필드 null 처리)
+   * 브랜딩 에셋 삭제 (S3 파일 삭제 + DB 레코드 삭제)
    */
   async delete(siteId: string, type: BrandingType): Promise<BrandingDeleteResponseDto> {
-    // 1. Site 조회
-    const site = await this.siteService.findById(siteId);
-    if (!site) {
-      throw BusinessException.withMessage(ErrorCode.SITE_NOT_FOUND, '사이트를 찾을 수 없습니다');
-    }
+    const imageType = this.TYPE_MAP[type];
 
-    // 2. 현재 이미지 URL 확인
-    const currentUrl = this.getCurrentImageUrl(site, type);
-    if (!currentUrl) {
+    // 활성 이미지 조회
+    const activeImage = await this.brandingImageRepository.findOne({
+      where: { siteId, type: imageType, isActive: true },
+    });
+
+    if (!activeImage) {
       throw BusinessException.withMessage(ErrorCode.COMMON_NOT_FOUND, '삭제할 이미지가 없습니다');
     }
 
-    // 3. URL에서 S3 Key 추출
-    const s3Key = this.extractS3KeyFromUrl(currentUrl);
-
-    // 4. S3에서 파일 삭제
+    // S3에서 파일 삭제
     try {
-      await this.s3Service.deleteObject(s3Key);
+      await this.s3Service.deleteObject(activeImage.s3Key);
     } catch (error) {
-      this.logger.warn(`Failed to delete S3 object ${s3Key}: ${error.message}`);
-      // S3 삭제 실패해도 DB 업데이트는 진행 (파일이 이미 삭제되었을 수 있음)
+      this.logger.warn(`Failed to delete S3 object ${activeImage.s3Key}: ${error.message}`);
     }
 
-    // 5. Site 엔티티 업데이트 (해당 필드 null로)
-    const updateData = this.getNullUpdateData(type);
-    const updatedSite = await this.siteService.updateSettings(siteId, updateData);
+    // DB 레코드 삭제
+    await this.brandingImageRepository.remove(activeImage);
 
     this.logger.log(`Deleted branding asset for site ${siteId}, type: ${type}`);
 
     return {
       deleted: true,
       type,
-      updatedAt: updatedSite.updatedAt.toISOString(),
+      updatedAt: new Date().toISOString(),
     };
   }
 
   /**
-   * 브랜딩 타입에 따른 현재 이미지 URL 조회
+   * 사이트의 활성 브랜딩 이미지 URL 조회
    */
-  private getCurrentImageUrl(site: Site, type: BrandingType): string | null {
-    switch (type) {
-      case BrandingType.LOGO:
-        return site.logoImageUrl;
-      case BrandingType.FAVICON:
-        return site.faviconUrl;
-      case BrandingType.OG:
-        return site.ogImageUrl;
-      case BrandingType.CTA:
-        return site.ctaImageUrl;
+  async getActiveImageUrl(siteId: string, type: BrandingImageType): Promise<string | null> {
+    const image = await this.brandingImageRepository.findOne({
+      where: { siteId, type, isActive: true },
+    });
+
+    if (!image) {
+      return null;
     }
+
+    return this.s3Service.getPublicUrl(image.s3Key);
   }
 
   /**
-   * 브랜딩 타입에 따른 null 업데이트 데이터 생성
+   * 사이트의 모든 활성 브랜딩 이미지 URL 조회
    */
-  private getNullUpdateData(type: BrandingType): {
-    logoImageUrl?: null;
-    faviconUrl?: null;
-    ogImageUrl?: null;
-    ctaImageUrl?: null;
-  } {
-    switch (type) {
-      case BrandingType.LOGO:
-        return { logoImageUrl: null };
-      case BrandingType.FAVICON:
-        return { faviconUrl: null };
-      case BrandingType.OG:
-        return { ogImageUrl: null };
-      case BrandingType.CTA:
-        return { ctaImageUrl: null };
+  async getAllActiveImageUrls(siteId: string): Promise<Record<BrandingImageType, string | null>> {
+    const images = await this.brandingImageRepository.find({
+      where: { siteId, isActive: true },
+    });
+
+    const result: Record<BrandingImageType, string | null> = {
+      [BrandingImageType.LOGO]: null,
+      [BrandingImageType.FAVICON]: null,
+      [BrandingImageType.OG]: null,
+      [BrandingImageType.CTA]: null,
+    };
+
+    for (const image of images) {
+      result[image.type] = this.s3Service.getPublicUrl(image.s3Key);
     }
+
+    return result;
   }
 
   /**
-   * CDN URL에서 S3 Key 추출
-   * 예: https://assets.pagelet-dev.kr/uploads/sites/{siteId}/branding/logo.png
-   *   → uploads/sites/{siteId}/branding/logo.png
+   * 비활성 브랜딩 이미지 정리 (크론잡용)
+   * @param olderThanHours 이 시간보다 오래된 비활성 이미지 삭제
    */
-  private extractS3KeyFromUrl(url: string): string {
-    const cdnBaseUrl = this.s3Service.getAssetsCdnBaseUrl();
-    return url.replace(`${cdnBaseUrl}/`, '');
-  }
+  async cleanupInactiveImages(olderThanHours: number = 24): Promise<number> {
+    const cutoffDate = new Date();
+    cutoffDate.setHours(cutoffDate.getHours() - olderThanHours);
 
-  /**
-   * 브랜딩 타입에 따른 Site 업데이트 데이터 생성
-   */
-  private getUpdateData(
-    type: BrandingType,
-    publicUrl: string,
-  ): { logoImageUrl?: string; faviconUrl?: string; ogImageUrl?: string; ctaImageUrl?: string } {
-    switch (type) {
-      case BrandingType.LOGO:
-        return { logoImageUrl: publicUrl };
-      case BrandingType.FAVICON:
-        return { faviconUrl: publicUrl };
-      case BrandingType.OG:
-        return { ogImageUrl: publicUrl };
-      case BrandingType.CTA:
-        return { ctaImageUrl: publicUrl };
+    const inactiveImages = await this.brandingImageRepository
+      .createQueryBuilder('image')
+      .where('image.isActive = :isActive', { isActive: false })
+      .andWhere('image.createdAt < :cutoffDate', { cutoffDate })
+      .getMany();
+
+    let deletedCount = 0;
+    for (const image of inactiveImages) {
+      try {
+        await this.s3Service.deleteObject(image.s3Key);
+        await this.brandingImageRepository.remove(image);
+        deletedCount++;
+      } catch (error) {
+        this.logger.warn(`Failed to cleanup branding image ${image.id}: ${error.message}`);
+      }
     }
+
+    if (deletedCount > 0) {
+      this.logger.log(`Cleaned up ${deletedCount} inactive branding images`);
+    }
+
+    return deletedCount;
   }
 }

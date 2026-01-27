@@ -1,23 +1,7 @@
 import { IsString, IsBoolean, IsOptional, IsUrl, IsEmail, MaxLength, IsIn } from 'class-validator';
 
 export class UpdateSiteSettingsDto {
-  // 브랜딩
-  @IsOptional()
-  @IsUrl({}, { message: '올바른 URL 형식이어야 합니다' })
-  @MaxLength(500)
-  logoImageUrl?: string | null;
-
-  @IsOptional()
-  @IsUrl({}, { message: '올바른 URL 형식이어야 합니다' })
-  @MaxLength(500)
-  faviconUrl?: string | null;
-
   // SEO
-  @IsOptional()
-  @IsUrl({}, { message: '올바른 URL 형식이어야 합니다' })
-  @MaxLength(500)
-  ogImageUrl?: string | null;
-
   @IsOptional()
   @IsString()
   @MaxLength(120)
@@ -111,11 +95,6 @@ export class UpdateSiteSettingsDto {
   @IsString()
   @MaxLength(100, { message: 'CTA 텍스트는 최대 100자까지 가능합니다' })
   ctaText?: string | null;
-
-  @IsOptional()
-  @IsUrl({}, { message: '올바른 URL 형식이어야 합니다' })
-  @MaxLength(500)
-  ctaImageUrl?: string | null;
 
   @IsOptional()
   @IsUrl({}, { message: '올바른 URL 형식이어야 합니다' })

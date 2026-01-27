@@ -31,16 +31,7 @@ export class Site {
 
   // ===== Site Settings =====
 
-  // 브랜딩
-  @Column({ type: 'varchar', length: 500, nullable: true })
-  logoImageUrl: string | null;
-
-  @Column({ type: 'varchar', length: 500, nullable: true })
-  faviconUrl: string | null;
-
   // SEO
-  @Column({ type: 'varchar', length: 500, nullable: true })
-  ogImageUrl: string | null;
 
   @Column({ type: 'varchar', length: 120, nullable: true })
   seoTitle: string | null;
@@ -101,9 +92,6 @@ export class Site {
 
   @Column({ type: 'varchar', length: 100, nullable: true })
   ctaText: string | null;
-
-  @Column({ type: 'varchar', length: 500, nullable: true })
-  ctaImageUrl: string | null;
 
   @Column({ type: 'varchar', length: 500, nullable: true })
   ctaLink: string | null;

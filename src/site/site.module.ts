@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { PublicSiteController } from './public-site.controller';
 import { AdminSiteController } from './admin-site.controller';
@@ -9,9 +9,10 @@ import { Site } from './entities/site.entity';
 import { SiteGuard } from '../auth/guards/site.guard';
 import { PublicSiteGuard } from '../auth/guards/public-site.guard';
 import { AdminSiteGuard } from '../auth/guards/admin-site.guard';
+import { StorageModule } from '../storage/storage.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Site])],
+  imports: [TypeOrmModule.forFeature([Site]), forwardRef(() => StorageModule)],
   controllers: [
     PublicSiteController,
     AdminSiteController,

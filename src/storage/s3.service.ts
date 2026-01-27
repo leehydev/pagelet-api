@@ -147,14 +147,15 @@ export class S3Service {
 
   /**
    * 브랜딩 최종 S3 Key 생성
-   * 경로: uploads/sites/{siteId}/branding/{type}.{ext}
+   * 경로: uploads/sites/{siteId}/branding/{type}_{timestamp}.{ext}
    * @param siteId 사이트 ID
    * @param type 브랜딩 타입 (logo, favicon, og)
    * @param ext 파일 확장자
    * @returns S3 Key
    */
   generateBrandingFinalKey(siteId: string, type: string, ext: string): string {
-    return `uploads/sites/${siteId}/branding/${type}.${ext}`;
+    const timestamp = Date.now();
+    return `uploads/sites/${siteId}/branding/${type}_${timestamp}.${ext}`;
   }
 
   /**

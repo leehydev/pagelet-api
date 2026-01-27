@@ -16,7 +16,7 @@ export class AdminSiteSettingsController {
    */
   @Get()
   async getSettings(@CurrentSite() site: Site): Promise<SiteSettingsResponseDto> {
-    return this.siteService.toSettingsResponsePublic(site);
+    return this.siteService.toSettingsResponse(site);
   }
 
   /**

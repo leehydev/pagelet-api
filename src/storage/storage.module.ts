@@ -1,7 +1,8 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { PostImage } from './entities/post-image.entity';
 import { SiteStorageUsage } from './entities/storage-usage.entity';
+import { SiteBrandingImage } from './entities/site-branding-image.entity';
 import { S3Service } from './s3.service';
 import { StorageUsageService } from './storage-usage.service';
 import { PostImageService } from './post-image.service';
@@ -13,7 +14,10 @@ import { AdminBrandingAssetController } from './admin-branding-asset.controller'
 import { SiteModule } from '../site/site.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([PostImage, SiteStorageUsage]), SiteModule],
+  imports: [
+    TypeOrmModule.forFeature([PostImage, SiteStorageUsage, SiteBrandingImage]),
+    forwardRef(() => SiteModule),
+  ],
   controllers: [AdminUploadController, AdminBrandingAssetController],
   providers: [
     S3Service,
