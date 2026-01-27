@@ -156,6 +156,14 @@ export const ErrorCode = {
     'Post is not published',
   ),
 
+  // 드래프트 관련 에러
+  DRAFT_NOT_FOUND: new ErrorCodeDefinition('DRAFT_001', HttpStatus.NOT_FOUND, 'Draft not found'),
+  DRAFT_SLUG_ALREADY_EXISTS: new ErrorCodeDefinition(
+    'DRAFT_002',
+    HttpStatus.CONFLICT,
+    'Slug already exists in this site',
+  ),
+
   // Storage 관련 에러
   STORAGE_EXCEEDED: new ErrorCodeDefinition(
     'STORAGE_001',
