@@ -8,6 +8,9 @@ import { WaitlistUserResponseDto } from './dto/waitlist-user-response.dto';
 import { SystemSettingService } from '../config/system-setting.service';
 import { SystemSettingResponseDto } from './dto/system-setting-response.dto';
 import { RegistrationMode, SystemSettingKey } from '../config/constants/registration-mode';
+import { SiteService } from '../site/site.service';
+import { ReservedSlugResponseDto } from './dto/reserved-slug-response.dto';
+import { CreateReservedSlugDto } from './dto/create-reserved-slug.dto';
 
 @Injectable()
 export class SuperAdminService {
@@ -17,6 +20,7 @@ export class SuperAdminService {
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
     private readonly systemSettingService: SystemSettingService,
+    private readonly siteService: SiteService,
   ) {}
 
   /**
@@ -128,5 +132,79 @@ export class SuperAdminService {
       description: updatedSetting!.description,
       updatedAt: updatedSetting!.updatedAt,
     });
+  }
+
+  /**
+   * 예약어 슬러그 목록 조회
+   */
+  async getReservedSlugs(): Promise<ReservedSlugResponseDto[]> {
+    const slugs = await this.siteService.getReservedSlugs();
+    return slugs.map(
+      (slug) =>
+        new ReservedSlugResponseDto({
+          id: slug.id,
+          slug: slug.slug,
+          reason: slug.reason,
+          adminOnly: slug.adminOnly,
+          createdAt: slug.createdAt,
+        }),
+    );
+  }
+
+  /**
+   * 예약어 슬러그 추가
+   */
+  async createReservedSlug(dto: CreateReservedSlugDto): Promise<ReservedSlugResponseDto> {
+    // 중복 체크
+    const exists = await this.siteService.isReservedSlugExists(dto.slug);
+    if (exists) {
+      throw BusinessException.fromErrorCode(ErrorCode.RESERVED_SLUG_ALREADY_EXISTS);
+    }
+
+    const slug = await this.siteService.createReservedSlug(
+      dto.slug,
+      dto.reason ?? null,
+      dto.adminOnly ?? false,
+    );
+
+    this.logger.log(`Reserved slug created: ${slug.slug}`);
+
+    return new ReservedSlugResponseDto({
+      id: slug.id,
+      slug: slug.slug,
+      reason: slug.reason,
+      adminOnly: slug.adminOnly,
+      createdAt: slug.createdAt,
+    });
+  }
+
+  /**
+   * 예약어 슬러그 삭제
+   */
+  async deleteReservedSlug(slugId: string): Promise<void> {
+    const slug = await this.siteService.findReservedSlugById(slugId);
+    if (!slug) {
+      throw BusinessException.fromErrorCode(ErrorCode.RESERVED_SLUG_NOT_FOUND);
+    }
+
+    await this.siteService.deleteReservedSlug(slugId);
+    this.logger.log(`Reserved slug deleted: ${slug.slug}`);
+  }
+
+  /**
+   * 사용자 어드민 권한 설정
+   */
+  async setUserAdmin(userId: string, isAdmin: boolean): Promise<void> {
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw BusinessException.fromErrorCode(ErrorCode.USER_NOT_FOUND);
+    }
+
+    user.isAdmin = isAdmin;
+    await this.userRepository.save(user);
+    this.logger.log(`User ${userId} admin status set to ${isAdmin}`);
   }
 }

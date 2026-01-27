@@ -11,11 +11,7 @@
 ```typescript
 // 에러 코드 정의
 export const ErrorCode = {
-  POST_NOT_FOUND: new ErrorCodeDefinition(
-    'POST_001',
-    HttpStatus.NOT_FOUND,
-    'Post not found',
-  ),
+  POST_NOT_FOUND: new ErrorCodeDefinition('POST_001', HttpStatus.NOT_FOUND, 'Post not found'),
 } as const;
 
 // 예외 발생

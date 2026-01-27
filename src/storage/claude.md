@@ -12,9 +12,9 @@
 ### PostImage 타입
 
 ```typescript
-PostImageType.THUMBNAIL  // 썸네일
-PostImageType.CONTENT    // 본문 이미지
-PostImageType.GALLERY    // 갤러리 이미지
+PostImageType.THUMBNAIL; // 썸네일
+PostImageType.CONTENT; // 본문 이미지
+PostImageType.GALLERY; // 갤러리 이미지
 ```
 
 ## Services

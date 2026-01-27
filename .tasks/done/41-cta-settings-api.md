@@ -1,6 +1,7 @@
 # [BE] CTA 설정 API
 
 ## GitHub 이슈
+
 - **이슈 번호**: #41
 - **이슈 링크**: https://github.com/leehydev/pagelet-api/issues/41
 - **생성일**: 2026-01-23
@@ -15,18 +16,21 @@
 ## 작업 범위
 
 ### 포함
+
 - Site 엔티티에 CTA 관련 필드 추가
 - 마이그레이션 생성
 - 기존 사이트 설정 API에서 CTA 필드 관리
 - Public API에서 CTA 설정 조회
 
 ### 제외
+
 - CTA 클릭 추적 (별도 이슈 #42)
 - 프론트엔드 UI (pagelet-app#46)
 
 ## 기술 명세
 
 ### 영향받는 파일
+
 - `src/site/entities/site.entity.ts`
 - `src/site/dto/update-site-settings.dto.ts`
 - `src/site/dto/site-settings-response.dto.ts`
@@ -79,6 +83,7 @@ ctaLink?: string;
 ```
 
 ## 구현 체크리스트
+
 - [ ] Site 엔티티에 CTA 필드 추가
 - [ ] 마이그레이션 생성 (AddCtaFieldsToSite)
 - [ ] UpdateSiteSettingsDto 업데이트
@@ -86,6 +91,7 @@ ctaLink?: string;
 - [ ] Public API 응답에 CTA 설정 포함
 
 ## 테스트 계획
+
 - [ ] 마이그레이션 실행 확인
 - [ ] Admin API로 CTA 설정 저장/조회
 - [ ] Public API로 CTA 설정 조회

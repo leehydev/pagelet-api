@@ -6,6 +6,7 @@ import { BusinessException } from '../common/exception/business.exception';
 import { ErrorCode } from '../common/exception/error-code';
 import { SystemSettingService } from '../config/system-setting.service';
 import { RegistrationMode, SystemSettingKey } from '../config/constants/registration-mode';
+import { SiteService } from '../site/site.service';
 
 describe('SuperAdminService', () => {
   let service: SuperAdminService;
@@ -20,6 +21,13 @@ describe('SuperAdminService', () => {
     getOrThrow: jest.Mock;
     set: jest.Mock;
     getSettingEntity: jest.Mock;
+  };
+  let siteService: {
+    getReservedSlugs: jest.Mock;
+    isReservedSlugExists: jest.Mock;
+    createReservedSlug: jest.Mock;
+    findReservedSlugById: jest.Mock;
+    deleteReservedSlug: jest.Mock;
   };
 
   beforeEach(async () => {
@@ -37,6 +45,14 @@ describe('SuperAdminService', () => {
       getSettingEntity: jest.fn(),
     };
 
+    siteService = {
+      getReservedSlugs: jest.fn(),
+      isReservedSlugExists: jest.fn(),
+      createReservedSlug: jest.fn(),
+      findReservedSlugById: jest.fn(),
+      deleteReservedSlug: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         SuperAdminService,
@@ -47,6 +63,10 @@ describe('SuperAdminService', () => {
         {
           provide: SystemSettingService,
           useValue: systemSettingService,
+        },
+        {
+          provide: SiteService,
+          useValue: siteService,
         },
       ],
     }).compile();
@@ -264,6 +284,111 @@ describe('SuperAdminService', () => {
         expect((error as BusinessException).errorCode.code).toBe(
           ErrorCode.SETTING_INVALID_VALUE.code,
         );
+      }
+    });
+  });
+
+  describe('getReservedSlugs', () => {
+    it('should return list of reserved slugs', async () => {
+      const mockSlugs = [
+        { id: 'slug-1', slug: 'admin', reason: '관리자', adminOnly: false, createdAt: new Date() },
+        { id: 'slug-2', slug: 'blog', reason: '블로그', adminOnly: true, createdAt: new Date() },
+      ];
+      siteService.getReservedSlugs.mockResolvedValue(mockSlugs);
+
+      const result = await service.getReservedSlugs();
+
+      expect(result).toHaveLength(2);
+      expect(result[0].slug).toBe('admin');
+      expect(result[1].adminOnly).toBe(true);
+    });
+  });
+
+  describe('createReservedSlug', () => {
+    it('should create a new reserved slug', async () => {
+      const mockSlug = {
+        id: 'new-slug-id',
+        slug: 'newslug',
+        reason: '새 예약어',
+        adminOnly: false,
+        createdAt: new Date(),
+      };
+      siteService.isReservedSlugExists.mockResolvedValue(false);
+      siteService.createReservedSlug.mockResolvedValue(mockSlug);
+
+      const result = await service.createReservedSlug({
+        slug: 'newslug',
+        reason: '새 예약어',
+        adminOnly: false,
+      });
+
+      expect(result.slug).toBe('newslug');
+      expect(siteService.createReservedSlug).toHaveBeenCalledWith('newslug', '새 예약어', false);
+    });
+
+    it('should throw RESERVED_SLUG_ALREADY_EXISTS when slug exists', async () => {
+      siteService.isReservedSlugExists.mockResolvedValue(true);
+
+      await expect(service.createReservedSlug({ slug: 'existing' })).rejects.toThrow(
+        BusinessException,
+      );
+
+      try {
+        await service.createReservedSlug({ slug: 'existing' });
+      } catch (error) {
+        expect((error as BusinessException).errorCode.code).toBe(
+          ErrorCode.RESERVED_SLUG_ALREADY_EXISTS.code,
+        );
+      }
+    });
+  });
+
+  describe('deleteReservedSlug', () => {
+    it('should delete a reserved slug', async () => {
+      siteService.findReservedSlugById.mockResolvedValue({ id: 'slug-id', slug: 'test' });
+      siteService.deleteReservedSlug.mockResolvedValue(undefined);
+
+      await service.deleteReservedSlug('slug-id');
+
+      expect(siteService.deleteReservedSlug).toHaveBeenCalledWith('slug-id');
+    });
+
+    it('should throw RESERVED_SLUG_NOT_FOUND when slug does not exist', async () => {
+      siteService.findReservedSlugById.mockResolvedValue(null);
+
+      await expect(service.deleteReservedSlug('non-existent')).rejects.toThrow(BusinessException);
+
+      try {
+        await service.deleteReservedSlug('non-existent');
+      } catch (error) {
+        expect((error as BusinessException).errorCode.code).toBe(
+          ErrorCode.RESERVED_SLUG_NOT_FOUND.code,
+        );
+      }
+    });
+  });
+
+  describe('setUserAdmin', () => {
+    it('should set user admin status to true', async () => {
+      const mockUser = { id: 'user-1', isAdmin: false };
+      userRepository.findOne.mockResolvedValue(mockUser);
+      userRepository.save.mockResolvedValue({ ...mockUser, isAdmin: true });
+
+      await service.setUserAdmin('user-1', true);
+
+      expect(mockUser.isAdmin).toBe(true);
+      expect(userRepository.save).toHaveBeenCalledWith(mockUser);
+    });
+
+    it('should throw USER_NOT_FOUND when user does not exist', async () => {
+      userRepository.findOne.mockResolvedValue(null);
+
+      await expect(service.setUserAdmin('non-existent', true)).rejects.toThrow(BusinessException);
+
+      try {
+        await service.setUserAdmin('non-existent', true);
+      } catch (error) {
+        expect((error as BusinessException).errorCode.code).toBe(ErrorCode.USER_NOT_FOUND.code);
       }
     });
   });

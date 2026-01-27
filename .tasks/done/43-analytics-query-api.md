@@ -1,6 +1,7 @@
 # [BE] 통계 조회 API (대시보드)
 
 ## GitHub 이슈
+
 - **이슈 번호**: #43
 - **이슈 링크**: https://github.com/leehydev/pagelet-api/issues/43
 - **생성일**: 2026-01-23
@@ -19,18 +20,21 @@ PageView, CtaClick 데이터를 집계하여 반환한다.
 ## 작업 범위
 
 ### 포함
+
 - Admin API: 통계 데이터 조회
 - 대시보드 요약 통계 (overview)
 - 게시글별 상세 통계 (posts)
 - 일별 추이 데이터 (daily)
 
 ### 제외
+
 - 통계 추적 (이슈 #42)
 - 프론트엔드 대시보드 UI (pagelet-app#48)
 
 ## 기술 명세
 
 ### 영향받는 파일
+
 - `src/analytics/admin-analytics.controller.ts`
 - `src/analytics/analytics.service.ts`
 - `src/analytics/dto/analytics-overview.dto.ts`
@@ -44,16 +48,16 @@ PageView, CtaClick 데이터를 집계하여 반환한다.
 @UseGuards(AdminSiteGuard)
 export class AdminAnalyticsController {
   @Get('overview')
-  getOverview(@CurrentSite() site: Site): Promise<AnalyticsOverviewDto> { }
+  getOverview(@CurrentSite() site: Site): Promise<AnalyticsOverviewDto> {}
 
   @Get('posts')
-  getPostsAnalytics(@CurrentSite() site: Site): Promise<PostAnalyticsDto[]> { }
+  getPostsAnalytics(@CurrentSite() site: Site): Promise<PostAnalyticsDto[]> {}
 
   @Get('daily')
   getDailyAnalytics(
     @CurrentSite() site: Site,
-    @Query('days') days: number = 7
-  ): Promise<DailyAnalyticsDto[]> { }
+    @Query('days') days: number = 7,
+  ): Promise<DailyAnalyticsDto[]> {}
 }
 ```
 
@@ -112,6 +116,7 @@ GROUP BY p.id;
 ```
 
 ## 구현 체크리스트
+
 - [ ] AnalyticsOverviewDto 생성
 - [ ] PostAnalyticsDto 생성
 - [ ] DailyAnalyticsDto 생성
@@ -120,6 +125,7 @@ GROUP BY p.id;
 - [ ] AdminSiteGuard 적용
 
 ## 테스트 계획
+
 - [ ] overview API 테스트
 - [ ] posts API 테스트
 - [ ] daily API 테스트 (days 파라미터)

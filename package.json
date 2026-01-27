@@ -23,8 +23,6 @@
     "migration:create": "typeorm-ts-node-commonjs migration:create",
     "migration:run": "typeorm-ts-node-commonjs migration:run -d src/database/datasource.cli.ts",
     "migration:run:prod": "dotenv -e .env.prod -- typeorm-ts-node-commonjs migration:run -d src/database/datasource.cli.ts",
-    "migration:revert": "typeorm-ts-node-commonjs migration:revert -d src/database/datasource.cli.ts",
-    "migration:revert:prod": "dotenv -e .env.prod -- typeorm-ts-node-commonjs migration:revert -d src/database/datasource.cli.ts",
     "migration:show": "typeorm-ts-node-commonjs migration:show -d src/database/datasource.cli.ts",
     "migration:show:prod": "dotenv -e .env.prod -- typeorm-ts-node-commonjs migration:show -d src/database/datasource.cli.ts"
   },

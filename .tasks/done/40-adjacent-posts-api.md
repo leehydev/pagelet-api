@@ -1,6 +1,7 @@
 # [BE] 게시글 상세 조회 시 인접 게시글 목록 API 추가
 
 ## GitHub 이슈
+
 - **이슈 번호**: #40
 - **이슈 링크**: https://github.com/leehydev/pagelet-api/issues/40
 - **생성일**: 2026-01-23
@@ -12,23 +13,27 @@
 블로그 게시글 상세 조회 페이지 하단에 현재 게시글 전후로 2개씩(총 5개)의 게시글 목록을 보여주는 기능의 백엔드 API를 구현합니다.
 
 예시:
+
 - 게시글이 10개 있고 5번째 게시글을 보는 경우: 3, 4, **5(현재)**, 6, 7번 게시글
 - 처음/끝 부분에서는 가능한 만큼만 표시 (예: 1번 게시글이면 1, 2, 3, 4, 5)
 
 ## 작업 범위
 
 ### 포함
+
 - Public 게시글 상세 조회 API에 인접 게시글 목록 추가
 - 현재 게시글 기준 앞뒤 2개씩, 총 5개 게시글 반환
 - `publishedAt` 기준 정렬
 
 ### 제외
+
 - 프론트엔드 UI 구현 (별도 태스크)
 - 같은 카테고리 내 인접 게시글 필터링 (추후 고려)
 
 ## 기술 명세
 
 ### 영향받는 파일
+
 - `src/post/public-post.controller.ts` - 응답 DTO 변경
 - `src/post/post.service.ts` - 인접 게시글 조회 메서드 추가
 - `src/post/dto/post-response.dto.ts` - 인접 게시글용 DTO 추가
@@ -36,11 +41,13 @@
 ### API 변경사항
 
 **기존 API:**
+
 ```
 GET /public/posts/:slug?siteSlug=xxx
 ```
 
 **변경 후 응답:**
+
 ```json
 {
   "success": true,
@@ -145,6 +152,7 @@ async findAdjacentPosts(
 ```
 
 **알고리즘:**
+
 1. 해당 사이트의 모든 PUBLISHED 게시글을 `publishedAt DESC` 순으로 조회
 2. 현재 게시글의 인덱스 찾기
 3. 인덱스 기준으로 앞뒤 2개씩 슬라이스 (경계 처리)

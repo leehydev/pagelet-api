@@ -1,299 +1,450 @@
-# Pagelet API
+# CLAUDE.md - Pagelet API
 
-블로그/사이트 빌더 플랫폼 "Pagelet"의 백엔드 API입니다.
+## 1. 프로젝트 개요
 
-## 기술 스택
+NestJS 기반 멀티테넌트 블로그/콘텐츠 플랫폼 백엔드 API (`{slug}.pagelet.kr` 서브도메인 구조)
 
-- **프레임워크**: NestJS 11
-- **언어**: TypeScript 5.7 (ES2023 타겟)
-- **데이터베이스**: PostgreSQL + TypeORM 0.3
-- **캐시/락**: Redis (ioredis)
-- **스토리지**: AWS S3
-- **인증**: JWT + OAuth (Google 등)
-- **문서화**: Swagger
+---
 
-## 프로젝트 구조
+## 2. 기술 스택
+
+| 카테고리   | 기술                  | 버전             |
+| ---------- | --------------------- | ---------------- |
+| Framework  | NestJS                | ^11.0.1          |
+| Language   | TypeScript            | ^5.7.3           |
+| Database   | PostgreSQL (Supabase) | -                |
+| ORM        | TypeORM               | ^0.3.28          |
+| Auth       | JWT, Passport         | ^11.0.2, ^11.0.5 |
+| Storage    | AWS S3 SDK            | ^3.971.0         |
+| Cache      | Redis (ioredis)       | ^5.9.2           |
+| Validation | class-validator, Joi  | ^0.14.1, ^18.0.2 |
+| API Docs   | Swagger               | ^11.2.5          |
+| Test       | Jest                  | ^30.0.0          |
+
+---
+
+## 3. 디렉토리 구조
 
 ```
 src/
-├── auth/           # 인증 (JWT, OAuth, Guards, Decorators)
-├── category/       # 카테고리 도메인
-├── common/         # 공통 유틸리티 (exception, redis, response)
-├── config/         # 환경설정 (DB, JWT, S3 등)
-├── database/       # TypeORM 설정, 마이그레이션
-├── onboarding/     # 온보딩 플로우
-├── post/           # 게시글 도메인
-├── site/           # 사이트 도메인
-└── storage/        # 파일 업로드, 브랜딩 에셋
+├── main.ts                    # 앱 진입점
+├── app.module.ts              # 루트 모듈
+├── config/                    # 설정 (DB, JWT, S3 등)
+├── database/                  # 데이터소스, 마이그레이션
+├── auth/                      # 인증 (JWT, OAuth, Guards)
+│   ├── oauth/                 # Kakao, Naver OAuth
+│   ├── guards/                # JwtAuth, AccountStatus, AdminSite
+│   └── decorators/            # @CurrentUser, @CurrentSite, @Public
+├── site/                      # 사이트 관리 (멀티테넌트)
+├── post/                      # 게시글 CRUD, 드래프트
+├── category/                  # 카테고리 관리
+├── storage/                   # S3 업로드, 스토리지 사용량
+├── banner/                    # 배너 관리
+├── analytics/                 # 분석 데이터
+├── onboarding/                # 온보딩 플로우
+├── superadmin/                # 슈퍼어드민 기능
+└── common/                    # 공통 유틸리티
+    ├── exception/             # ErrorCode, BusinessException
+    ├── response/              # ResponseInterceptor
+    ├── dto/                   # Pagination DTOs
+    └── redis/                 # Redis 서비스
 ```
 
-## 개발 명령어
+---
+
+## 4. 자주 쓰는 명령어
 
 ```bash
-# 로컬 개발 (AWS 프로필 사용)
-npm run local
+# 개발
+npm run local              # AWS 프로필로 로컬 실행 (watch)
+npm run start:dev          # hot reload 개발 서버
 
-# 마이그레이션 생성/실행
-npm run migration:generate -- src/database/migrations/AddNewColumn
-npm run migration:run
+# 빌드
+npm run build              # TypeScript 컴파일
+npm run lint               # ESLint (자동 수정)
+npm run format             # Prettier 포맷팅
 
 # 테스트
-npm run test
-npm run test:e2e
+npm run test               # 단위 테스트
+npm run test:cov           # 커버리지 리포트
+npm run test:e2e           # E2E 테스트
+
+# 마이그레이션
+npm run migration:generate # 스키마 변경으로 마이그레이션 생성
+npm run migration:run      # 마이그레이션 실행
+npm run migration:run:prod # 프로덕션 마이그레이션
+npm run migration:revert   # 마이그레이션 롤백
 ```
 
-## 코드 스타일
+---
 
-- Prettier: 작은따옴표, 세미콜론, 100자, 탭 2칸
-- ESLint: typescript-eslint 권장 설정
+## 5. 코딩 컨벤션
 
-## 핵심 규칙
-
-1. **DB enum 사용 금지** - TypeScript const object + type으로 대체
-2. **UUID 사용** - 모든 Primary Key
-3. **timestamptz 사용** - 날짜 컬럼은 timezone aware
-4. **소스 코드 규칙** - `src/claude.md` 참조
-
-## GitHub 칸반 보드 작업 관리
-
-이 프로젝트는 GitHub 프로젝트의 칸반 보드를 사용하여 작업을 관리합니다.
-
-- 프로젝트 URL: https://github.com/users/leehydev/projects/1/views/1
-
-### 작업 워크플로우 요약
-
-1. **작업 계획 제시 및 승인** → 사용자 검토 및 승인
-2. **GitHub 이슈 생성** → 이슈 번호 확인
-3. **작업 시작** → 브랜치 생성 + 이슈를 프로젝트에 연결 + 스테이터스 "In Progress"로 변경
-4. **작업 진행** → 코드 작성 및 커밋 (커밋 메시지에 이슈 번호 포함)
-5. **작업 완료** → PR 생성 + PR을 프로젝트에 연결 + 스테이터스 "pr"로 변경
-6. **PR 머지 완료** → 스테이터스 "Done"으로 변경
-
-### 작업 워크플로우
-
-#### 1. 작업 시작 전 검토 단계
-
-**에이전트는 다음 작업을 수행하기 전에 반드시 사용자에게 검토를 요청해야 합니다:**
-
-1. **작업 계획 제시**
-   - 작업 목적과 범위를 명확히 설명
-   - 예상 작업 단계를 나열
-   - 영향받는 파일/모듈 목록 제시
-   - 예상 소요 시간 추정
-
-2. **사용자 승인 대기**
-   - 작업 계획을 제시한 후, 사용자의 명시적 승인을 기다립니다
-   - 승인 없이는 코드 변경을 시작하지 않습니다
-   - 사용자가 수정 요청을 하면 계획을 업데이트하고 다시 승인을 요청합니다
-
-3. **승인 후 작업 시작**
-   - 사용자 승인 후에만 실제 코드 작업을 시작합니다
-
-#### 2. GitHub 이슈 생성
-
-**작업을 시작하기 전에 반드시 GitHub 이슈를 생성해야 합니다:**
-
-1. **이슈 생성 요청**
-   - 작업 계획이 승인되면, 사용자에게 GitHub 이슈 생성을 요청합니다
-   - 이슈 제목: 작업 내용을 명확히 표현
-   - 이슈 본문:
-     - 작업 목적
-     - 작업 범위
-     - 예상 단계
-     - 관련 파일/모듈
-     - 완료 기준 (Definition of Done)
-
-2. **이슈 번호 확인**
-   - 이슈가 생성되면 이슈 번호를 확인하고
-   - 작업 중 이슈 번호를 참조합니다 (예: "이슈 #123 작업 중")
-
-#### 3. 작업 시작: 브랜치 생성 및 스테이터스 변경
-
-**작업을 시작할 때 다음 단계를 수행합니다:**
-
-1. **브랜치 생성**
-   - 브랜치명 규칙: `feature/issue-{이슈번호}-{간단한-설명}` 또는 `fix/issue-{이슈번호}-{간단한-설명}`
-   - 예: `feature/issue-26-github-kanban-integration`
-   - `development` 브랜치에서 새 브랜치를 생성하고 체크아웃
-
-2. **이슈를 프로젝트에 연결 (아직 연결되지 않은 경우)**
-   - GitHub GraphQL API를 사용하여 이슈를 프로젝트에 추가
-
-3. **스테이터스를 "In Progress"로 변경**
-   - 프로젝트 ID: `PVT_kwHODhZUJs4BNL9F`
-   - Status 필드 ID: `PVTSSF_lAHODhZUJs4BNL9Fzg8QUyw`
-   - "In Progress" 옵션 ID: `47fc9ee4`
-
-4. **작업 시작 알림**
-   - 사용자에게 브랜치 생성 및 스테이터스 변경 완료를 알림
-
-#### 4. 작업 진행 중
-
-- 주요 마일스톤 달성 시 사용자에게 진행 상황 보고
-- 필요시 중간 검토 요청
-- 커밋 메시지에 이슈 번호 포함 (예: `feat: 이슈 #26 작업 중`)
-
-#### 5. 작업 완료: PR 생성 및 스테이터스 변경
-
-**작업이 완료되면 다음 단계를 수행합니다:**
-
-1. **PR 생성**
-   - PR 제목: `[이슈 #XX] 작업 제목`
-   - PR 본문:
-     - 이슈 번호 참조: `Closes #XX` 또는 `Related to #XX`
-     - 작업 내용 요약
-     - 변경 사항 설명
-     - 테스트 방법 (필요한 경우)
-   - base 브랜치: `development`
-   - head 브랜치: 작업한 브랜치
-
-2. **PR을 프로젝트에 연결**
-   - PR 생성 후 PR의 node ID를 조회
-   - GitHub GraphQL API를 사용하여 PR을 프로젝트에 추가
-   - PR이 자동으로 이슈와 연결됨 (PR 본문에 이슈 번호가 포함된 경우)
-   - PR을 프로젝트에 추가하면 "Linked pull requests" 필드에 자동으로 표시됨
-
-3. **이슈 스테이터스를 "pr"로 변경**
-   - "pr" 옵션 ID: `9ef8707a`
-   - PR이 생성되었음을 나타냄
-
-4. **PR 생성 알림**
-   - 사용자에게 PR 생성 및 스테이터스 변경 완료를 알림
-   - PR URL 제공
-
-#### 6. PR 머지 완료: 최종 스테이터스 변경
-
-**PR이 머지되면 (또는 사용자가 완료를 확인하면):**
-
-1. **이슈 스테이터스를 "Done"으로 변경**
-   - "Done" 옵션 ID: `98236657`
-   - 작업이 완전히 완료되었음을 나타냄
-
-2. **완료 알림**
-   - 사용자에게 작업 완료를 알림
-   - 이슈 번호 포함 (예: "이슈 #26 완료")
-
-#### 7. 작업 중단/보류 시
-
-- 작업이 중단되거나 보류되면 이슈를 "Todo" 상태로 되돌림
-- 중단 사유를 이슈에 코멘트로 기록
-
-### 작업 계획 템플릿
-
-에이전트가 작업 계획을 제시할 때 다음 형식을 사용합니다:
-
-```markdown
-## 작업 계획: [작업 제목]
-
-### 목적
-
-[작업의 목적과 배경]
-
-### 작업 범위
-
-- [ ] 작업 항목 1
-- [ ] 작업 항목 2
-- [ ] 작업 항목 3
-
-### 영향받는 파일/모듈
-
-- `src/path/to/file.ts`
-- `src/another/path.ts`
-
-### 예상 소요 시간
-
-약 X시간
-
-### 완료 기준
-
-- [ ] 기준 1
-- [ ] 기준 2
-
-### GitHub 이슈
-
-- 이슈 번호: #XXX (생성 예정)
-```
-
-### 예외 상황
-
-다음의 경우에는 검토 없이 진행할 수 있습니다:
-
-1. **명확한 요청**
-   - 사용자가 "이 파일을 수정해줘"처럼 명확하고 구체적인 요청을 한 경우
-   - 작업 범위가 매우 작고 단순한 경우 (예: 오타 수정, 간단한 주석 추가)
-
-2. **긴급 수정**
-   - 사용자가 명시적으로 긴급 수정을 요청한 경우
-   - 단, 수정 후 반드시 이슈를 생성하고 보고해야 합니다
-
-### GitHub 프로젝트 정보
-
-- **프로젝트 URL**: https://github.com/users/leehydev/projects/1/views/1
-- **프로젝트 ID**: `PVT_kwHODhZUJs4BNL9F`
-- **Status 필드 ID**: `PVTSSF_lAHODhZUJs4BNL9Fzg8QUyw`
-- **Status 옵션**:
-  - Todo: `f75ad846`
-  - In Progress: `47fc9ee4`
-  - pr: `9ef8707a`
-  - Done: `98236657`
-
-### GitHub API 사용 예시
-
-#### 이슈를 프로젝트에 연결
-
-```bash
-gh api graphql -f query='mutation { addProjectV2ItemById(input: {projectId: "PVT_kwHODhZUJs4BNL9F" contentId: "I_이슈ID"}) { item { id } } }'
-```
-
-#### 이슈 스테이터스 변경
-
-```bash
-gh api graphql -f query='mutation { updateProjectV2ItemFieldValue(input: {projectId: "PVT_kwHODhZUJs4BNL9F" itemId: "PVTI_아이템ID" fieldId: "PVTSSF_lAHODhZUJs4BNL9Fzg8QUyw" value: {singleSelectOptionId: "47fc9ee4"}}) { projectV2Item { id } } }'
-```
-
-#### PR의 node ID 조회
-
-```bash
-gh api graphql -f query='query { repository(owner: "leehydev", name: "pagelet-api") { pullRequest(number: PR번호) { id title } } }'
-```
-
-#### PR을 프로젝트에 연결
-
-```bash
-gh api graphql -f query='mutation { addProjectV2ItemById(input: {projectId: "PVT_kwHODhZUJs4BNL9F" contentId: "PR_노드ID"}) { item { id } } }'
-```
-
-#### 이슈의 프로젝트 아이템 ID 조회 (스테이터스 변경용)
-
-```bash
-gh api graphql -f query='query { node(id: "PVT_kwHODhZUJs4BNL9F") { ... on ProjectV2 { items(first: 100) { nodes { id content { ... on Issue { number title } } } } } } }'
-```
-
-### 참고사항
-
-- 모든 작업은 이슈와 연결되어 추적 가능해야 합니다
-- 작업 계획은 명확하고 구체적이어야 합니다
-- 사용자와의 소통을 최우선으로 합니다
-- 불확실한 부분은 반드시 사용자에게 확인합니다
-- 브랜치명은 이슈 번호를 포함하여 추적 가능하도록 합니다
-- PR은 반드시 이슈와 연결되어야 합니다
-- 스테이터스 변경은 각 단계에서 자동으로 수행됩니다
-
-## 서브 에이전트
-
-에이전트 정의는 `.claude/agents/` 참조:
-
-| 에이전트 | 파일 | 역할 |
-|---------|------|------|
-| Architect | `.claude/agents/architect.md` | 요구사항 분석, 이슈 생성, 태스크 파일 정의 |
-| Developer | `.claude/agents/developer.md` | 태스크 구현, 빌드/테스트, PR 생성 |
-
-### 협업 흐름
+### 5.1 파일 네이밍 (kebab-case)
 
 ```
-사용자 요청 → [Architect] → 이슈 + 태스크(backlog/)
+admin-post.controller.ts     # Admin 전용 컨트롤러
+public-post.controller.ts    # Public 컨트롤러 (인증 불필요)
+post.service.ts              # 서비스
+post.entity.ts               # 엔티티
+create-post.dto.ts           # 요청 DTO
+post-response.dto.ts         # 응답 DTO
+admin-site.guard.ts          # 가드
+current-user.decorator.ts    # 데코레이터
+```
+
+### 5.2 클래스 네이밍 (PascalCase)
+
+```typescript
+// Controllers: {접근레벨}{도메인}Controller
+(AdminPostController, PublicPostController);
+
+// Services: {도메인}Service
+(PostService, PostDraftService);
+
+// Entities: {도메인}
+(Post, PostDraft);
+
+// DTOs: {동작}{도메인}Dto 또는 {도메인}ResponseDto
+(CreatePostDto, UpdatePostDto, PostResponseDto);
+
+// Guards: {기능}Guard
+(AdminSiteGuard, JwtAuthGuard);
+```
+
+### 5.3 Import 순서
+
+```typescript
+// 1. NestJS 코어
+import { Injectable, Logger } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+
+// 2. 서드파티 라이브러리
+import { Repository } from 'typeorm';
+
+// 3. 도메인 모듈 (같은 모듈 내부)
+import { Post } from './entities/post.entity';
+import { CreatePostDto } from './dto/create-post.dto';
+
+// 4. 공통 유틸리티
+import { BusinessException } from '../common/exception/business.exception';
+import { ErrorCode } from '../common/exception/error-code';
+
+// 5. Path alias
+import { DatabaseConfig } from '@/config/database.config';
+```
+
+### 5.4 타입 정의 (DB Enum 사용 금지)
+
+```typescript
+// TypeScript const object 사용
+export const PostStatus = {
+  PRIVATE: 'PRIVATE',
+  PUBLISHED: 'PUBLISHED',
+} as const;
+
+export type PostStatus = (typeof PostStatus)[keyof typeof PostStatus];
+
+// Entity에서는 string으로 선언
+@Column({ type: 'varchar', length: 50, default: PostStatus.PRIVATE })
+status: string;
+```
+
+### 5.5 Entity 컬럼 네이밍
+
+- **TypeScript**: camelCase (`userId`)
+- **Database**: snake_case (`user_id`) - SnakeNamingStrategy 자동 변환
+- **JoinColumn**: 항상 명시적으로 선언
+
+```typescript
+@Column({ type: 'uuid' })
+userId: string;
+
+@ManyToOne(() => User, { onDelete: 'CASCADE' })
+@JoinColumn({ name: 'user_id' })
+user: User;
+```
+
+---
+
+## 6. 아키텍처 패턴
+
+### 6.1 레이어 구조
+
+```
+Controller (요청/응답 처리)
     ↓
-사용자 승인 → [Developer] → 구현 + PR + 태스크(review/)
+Service (비즈니스 로직)
     ↓
-PR 머지 → 태스크(done/)
+Repository (TypeORM)
+    ↓
+PostgreSQL
 ```
+
+### 6.2 컨트롤러 분리 패턴
+
+| 타입       | 접두사         | 인증               | 용도      |
+| ---------- | -------------- | ------------------ | --------- |
+| Admin      | `admin-*`      | 필수 + 소유권 검증 | CRUD 전체 |
+| Public     | `public-*`     | 없음 (@Public)     | 읽기 전용 |
+| Onboarding | `onboarding-*` | 필수 + 온보딩 상태 | 설정 단계 |
+
+```typescript
+// Admin - 사이트 소유자만 접근
+@Controller('admin/sites/:siteId/posts')
+@UseGuards(AdminSiteGuard)
+export class AdminPostController {}
+
+// Public - 누구나 접근
+@Controller('public/posts')
+@Public()
+export class PublicPostController {}
+```
+
+### 6.3 가드 계층
+
+```
+Global Guards (app.module.ts에서 적용)
+├── JwtAuthGuard        # JWT 토큰 검증
+└── AccountStatusGuard  # 계정 상태 체크 (SUSPENDED/WITHDRAWN 차단)
+
+Route Guards
+├── AdminSiteGuard      # :siteId 파라미터로 사이트 소유권 검증
+├── PublicSiteGuard     # 사이트 존재 여부만 검증
+└── SuperAdminGuard     # SUPERADMIN_USER_IDS 체크
+```
+
+### 6.4 에러 처리 패턴
+
+```typescript
+// 1. ErrorCode 정의 (src/common/exception/error-code.ts)
+export const ErrorCode = {
+  POST_NOT_FOUND: new ErrorCodeDefinition(
+    'POST_001',
+    HttpStatus.NOT_FOUND,
+    'Post not found',
+  ),
+};
+
+// 2. BusinessException 발생
+throw BusinessException.fromErrorCode(ErrorCode.POST_NOT_FOUND);
+
+// 커스텀 메시지
+throw BusinessException.fromErrorCode(
+  ErrorCode.COMMON_BAD_REQUEST,
+  '커스텀 에러 메시지',
+);
+
+// 3. 응답 형식 (GlobalExceptionFilter)
+{
+  "success": false,
+  "error": { "code": "POST_001", "message": "Post not found" },
+  "timestamp": "2024-01-01T00:00:00.000Z"
+}
+```
+
+### 6.5 응답 래핑 (ResponseInterceptor)
+
+```typescript
+// 컨트롤러에서 raw 데이터 반환
+@Get(':id')
+async getPost(@Param('id') id: string): Promise<PostResponseDto> {
+  return new PostResponseDto({ ... });
+}
+
+// 자동으로 래핑됨
+{
+  "success": true,
+  "data": { ... },
+  "timestamp": "2024-01-01T00:00:00.000Z"
+}
+```
+
+### 6.6 DTO 패턴
+
+```typescript
+// 요청 DTO - 유효성 검사 포함
+export class CreatePostDto {
+  @IsNotEmpty({ message: '제목은 필수입니다' })
+  @IsString()
+  @MaxLength(500, { message: '제목은 최대 500자까지 가능합니다' })
+  title: string;
+
+  @IsOptional()
+  @IsIn(Object.values(PostStatus))
+  status?: string;
+}
+
+// 응답 DTO - 생성자로 초기화
+export class PostResponseDto {
+  id: string;
+  title: string;
+  // ...
+  constructor(partial: Partial<PostResponseDto>) {
+    Object.assign(this, partial);
+  }
+}
+```
+
+### 6.7 페이지네이션
+
+```typescript
+// 요청
+?page=1&limit=10
+
+// 응답
+{
+  "items": [...],
+  "totalItems": 100,
+  "page": 1,
+  "limit": 10,
+  "totalPages": 10
+}
+```
+
+### 6.8 트랜잭션
+
+```typescript
+import { Transactional } from 'typeorm-transactional';
+
+@Transactional()
+async atomicOperation() {
+  // 모든 DB 작업이 트랜잭션으로 래핑됨
+}
+```
+
+---
+
+## 7. 환경 설정
+
+### 7.1 환경 파일
+
+| 파일         | 용도      | Git     |
+| ------------ | --------- | ------- |
+| `.env.local` | 로컬 개발 | ignored |
+| `.env.prod`  | 프로덕션  | ignored |
+| `.env`       | 폴백      | ignored |
+
+### 7.2 환경 변수 목록
+
+```env
+# Server
+PORT=3000                          # 필수
+NODE_ENV=development               # 필수
+
+# Database (Supabase PostgreSQL)
+DB_HOST=xxx.pooler.supabase.com    # 필수
+DB_PORT=5432                       # 필수
+DB_USERNAME=postgres.xxx           # 필수
+DB_PASSWORD=xxx                    # 필수
+DB_DATABASE=postgres               # 필수
+
+# JWT
+JWT_ACCESS_SECRET=xxx              # 필수
+JWT_ACCESS_EXPIRES_IN=1h           # 필수
+JWT_REFRESH_SECRET=xxx             # 필수
+JWT_REFRESH_EXPIRES_IN=7d          # 필수
+
+# OAuth - Kakao
+KAKAO_CLIENT_ID=xxx                # 필수
+KAKAO_CLIENT_SECRET=xxx            # 필수
+KAKAO_REDIRECT_URI=xxx             # 필수
+
+# OAuth - Naver
+NAVER_CLIENT_ID=xxx                # 필수
+NAVER_CLIENT_SECRET=xxx            # 필수
+NAVER_REDIRECT_URI=xxx             # 필수
+
+# Frontend
+FRONTEND_URL=https://app.pagelet-dev.kr  # 필수
+
+# Cookies
+COOKIE_DOMAIN=.pagelet-dev.kr      # 필수
+COOKIE_SECURE=true                 # 필수
+
+# Tenant
+TENANT_DOMAIN=pagelet-dev.kr       # 필수
+
+# Redis
+REDIS_HOST=xxx                     # 필수
+REDIS_PORT=xxx                     # 필수
+REDIS_PASSWORD=xxx                 # 필수
+
+# AWS S3
+AWS_S3_BUCKET=xxx                  # 필수
+AWS_S3_REGION=ap-northeast-2       # 필수
+ASSETS_CDN_URL=xxx                 # 필수
+
+# Super Admin
+SUPERADMIN_USER_IDS=id1,id2        # 선택
+```
+
+---
+
+## 8. 암묵적 규칙
+
+### DO (해야 할 것)
+
+- Admin 라우트에는 `@UseGuards(AdminSiteGuard)` 필수
+- 에러는 `BusinessException.fromErrorCode()` 사용
+- 응답은 DTO 클래스로 래핑: `new PostResponseDto({ ... })`
+- 인증 불필요 라우트에 `@Public()` 데코레이터 사용
+- 순환 의존성은 `forwardRef()` 사용
+- 중요 작업은 `Logger` 로깅
+
+### DON'T (하지 말 것)
+
+- DB Enum 사용 금지 (TypeScript const object 사용)
+- Entity 직접 반환 금지 (DTO로 변환)
+- 환경 변수 하드코딩 금지 (ConfigService 사용)
+- Admin 라우트에서 사이트 소유권 검증 누락 금지
+- `.env.local`, `.env.prod` 커밋 금지
+
+### 순환 의존성 처리
+
+```typescript
+// Module
+@Module({
+  imports: [forwardRef(() => CategoryModule)],
+})
+export class PostModule {}
+
+// Service
+@Inject(forwardRef(() => CategoryService))
+private readonly categoryService: CategoryService;
+```
+
+---
+
+## 9. 주요 플로우
+
+### 인증 플로우
+
+```
+OAuth (Kakao/Naver) → User 생성/조회 → JWT 발급 (access + refresh)
+→ JwtAuthGuard (토큰 검증) → AccountStatusGuard (상태 체크) → Route Guard
+```
+
+### 드래프트 시스템
+
+```
+포스트 작성 중 → PostDraft 저장 (자동/수동)
+발행 시 → Draft 내용을 Post에 병합 → Draft 삭제
+```
+
+### 파일 업로드 플로우
+
+```
+Presigned URL 요청 → 클라이언트가 S3 직접 업로드 → Commit 요청
+→ 스토리지 사용량 갱신 → 고아 이미지 정리 (스케줄러)
+```
+
+---
+
+## 10. 참고 사항
+
+- **멀티테넌트 ID**: `Site.id` (UUID)
+- **테넌트 URL**: `{Site.slug}.pagelet.kr`
+- **데이터 격리**: 서비스에서 siteId 기반 쿼리
+- **예약된 슬러그**: www, admin, api, app 등
+- **배너 제한**: 사이트당 최대 5개
