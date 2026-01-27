@@ -1,3 +1,4 @@
+import { DatabaseConfig } from '@/config/database.config';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -11,18 +12,19 @@ import { addTransactionalDataSource } from 'typeorm-transactional';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
-        const dbConfig = configService.get('database');
+        const dbConfig = configService.get<DatabaseConfig>('database');
         const IS_PRODUCTION = process.env.NODE_ENV === 'production';
+
+        const { host, port, username, password, database, ssl } = dbConfig!;
 
         return {
           type: 'postgres',
-          host: dbConfig.host,
-          port: dbConfig.port,
-          username: dbConfig.username,
-          password: dbConfig.password,
-          database: dbConfig.database,
-          schema: dbConfig.schema,
-          ssl: dbConfig.ssl,
+          host,
+          port,
+          username,
+          password,
+          database,
+          ssl,
           autoLoadEntities: true,
           synchronize: false,
           migrations: [__dirname + '/migrations/*{.ts,.js}'],
@@ -31,6 +33,7 @@ import { addTransactionalDataSource } from 'typeorm-transactional';
           logging: process.env.NODE_ENV !== 'production', // 운영에서는 false
         };
       },
+      // eslint-disable-next-line @typescript-eslint/require-await
       async dataSourceFactory(options) {
         if (!options) throw new Error('Invalid TypeORM options');
         return addTransactionalDataSource(new DataSource(options));
