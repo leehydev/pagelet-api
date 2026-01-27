@@ -5,6 +5,7 @@ import { Repository } from 'typeorm';
 import { Post, PostStatus } from './entities/post.entity';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
+import { ReplacePostDto } from './dto/replace-post.dto';
 import { BusinessException } from '../common/exception/business.exception';
 import { ErrorCode } from '../common/exception/error-code';
 import { PostImageService } from '../storage/post-image.service';
@@ -589,6 +590,70 @@ export class PostService {
     this.logger.log(`Updated post: ${saved.id}, status: ${saved.status}`);
 
     // 이미지 동기화 (contentHtml + ogImageUrl의 이미지를 postId와 연결, 제거된 이미지는 unlink)
+    await this.syncPostImages(siteId, saved.id, saved.contentHtml, saved.ogImageUrl);
+
+    return saved;
+  }
+
+  /**
+   * 게시글 전체 교체 (PUT)
+   * - 전체 필드를 덮어쓰기
+   * - 저장 시 draft 자동 삭제
+   */
+  async replacePost(postId: string, siteId: string, dto: ReplacePostDto): Promise<Post> {
+    // 게시글 조회
+    const post = await this.postRepository.findOne({ where: { id: postId } });
+    if (!post || post.siteId !== siteId) {
+      throw BusinessException.fromErrorCode(ErrorCode.POST_NOT_FOUND);
+    }
+
+    // slug 처리: null이면 자동 생성, 값이 있으면 중복 체크
+    let slug = dto.slug;
+    if (!slug) {
+      slug = await this.generateUniqueSlug(siteId, dto.title, postId);
+    } else if (slug !== post.slug) {
+      const isAvailable = await this.isSlugAvailable(siteId, slug, postId);
+      if (!isAvailable) {
+        throw BusinessException.fromErrorCode(ErrorCode.POST_SLUG_ALREADY_EXISTS);
+      }
+    }
+
+    // categoryId 변경 시 유효성 체크
+    if (dto.categoryId && dto.categoryId !== post.categoryId) {
+      const category = await this.categoryService.findById(dto.categoryId);
+      if (!category || category.siteId !== siteId) {
+        throw BusinessException.fromErrorCode(ErrorCode.CATEGORY_NOT_FOUND);
+      }
+    }
+
+    // 전체 필드 덮어쓰기
+    post.title = dto.title;
+    post.subtitle = dto.subtitle;
+    post.slug = slug;
+    post.contentJson = dto.contentJson;
+    post.contentHtml = dto.contentHtml ?? null;
+    post.contentText = dto.contentText ?? null;
+    post.status = dto.status;
+    post.categoryId = dto.categoryId ?? null;
+    post.seoTitle = dto.seoTitle ?? null;
+    post.seoDescription = dto.seoDescription ?? null;
+    post.ogImageUrl = dto.ogImageUrl ?? null;
+
+    // publishedAt 처리
+    if (dto.status === PostStatus.PUBLISHED && !post.publishedAt) {
+      post.publishedAt = new Date();
+    } else if (dto.status === PostStatus.PRIVATE) {
+      post.publishedAt = null;
+    }
+
+    // 저장
+    const saved = await this.postRepository.save(post);
+    this.logger.log(`Replaced post: ${saved.id}, status: ${saved.status}`);
+
+    // draft 삭제
+    await this.postDraftService.deleteDraft(postId, siteId);
+
+    // 이미지 동기화
     await this.syncPostImages(siteId, saved.id, saved.contentHtml, saved.ogImageUrl);
 
     return saved;
