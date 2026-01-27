@@ -54,15 +54,16 @@
 전체 데이터로 게시글 교체. 저장 시 draft 삭제.
 
 **Request:**
+
 ```typescript
 interface ReplacePostRequest {
-  title: string;                    // 필수
-  subtitle: string;                 // 필수
-  slug: string | null;              // null이면 자동생성
-  contentJson: object;              // 필수
+  title: string; // 필수
+  subtitle: string; // 필수
+  slug: string | null; // null이면 자동생성
+  contentJson: object; // 필수
   contentHtml: string | null;
   contentText: string | null;
-  status: 'PRIVATE' | 'PUBLISHED';  // 필수
+  status: 'PRIVATE' | 'PUBLISHED'; // 필수
   categoryId: string | null;
   seoTitle: string | null;
   seoDescription: string | null;
@@ -73,6 +74,7 @@ interface ReplacePostRequest {
 **Response:** `Post` 객체
 
 **동작:**
+
 ```typescript
 async replacePost(postId: string, siteId: string, dto: ReplacePostDto): Promise<Post> {
   const post = await this.findPost(postId, siteId);
@@ -115,6 +117,7 @@ async replacePost(postId: string, siteId: string, dto: ReplacePostDto): Promise<
 단순 덮어쓰기로 변경. post 내용으로 채우는 로직 제거.
 
 **Before (복잡):**
+
 ```typescript
 if (!draft) {
   // draft 없으면 post 내용으로 채워서 생성
@@ -126,6 +129,7 @@ if (!draft) {
 ```
 
 **After (단순):**
+
 ```typescript
 // 항상 dto 내용으로만 저장
 let draft = await this.findDraft(postId);
@@ -140,6 +144,7 @@ if (dto.subtitle !== undefined) draft.subtitle = dto.subtitle;
 ```
 
 **Request:**
+
 ```typescript
 interface SaveDraftRequest {
   title?: string;
@@ -157,12 +162,12 @@ interface SaveDraftRequest {
 
 #### 3. Deprecated/삭제 API
 
-| API | 상태 | 대체 방법 |
-|-----|------|-----------|
-| POST /posts/:id/publish | 삭제 | PUT /posts/:id + status: 'PUBLISHED' |
-| POST /posts/:id/republish | 삭제 | PUT /posts/:id + status: 'PUBLISHED' |
-| POST /posts/:id/unpublish | 삭제 | PUT /posts/:id + status: 'PRIVATE' |
-| PATCH /posts/:id | deprecated | PUT /posts/:id |
+| API                       | 상태       | 대체 방법                            |
+| ------------------------- | ---------- | ------------------------------------ |
+| POST /posts/:id/publish   | 삭제       | PUT /posts/:id + status: 'PUBLISHED' |
+| POST /posts/:id/republish | 삭제       | PUT /posts/:id + status: 'PUBLISHED' |
+| POST /posts/:id/unpublish | 삭제       | PUT /posts/:id + status: 'PRIVATE'   |
+| PATCH /posts/:id          | deprecated | PUT /posts/:id                       |
 
 ### DTO 정의
 
@@ -244,7 +249,7 @@ export class SaveDraftDto {
   @IsOptional()
   @IsString()
   @MaxLength(255)
-  slug?: string | null;  // 추가
+  slug?: string | null; // 추가
 
   // ... 나머지 필드 동일
 }
@@ -266,23 +271,28 @@ src/post/
 ## 구현 체크리스트
 
 ### Phase 1: DTO 및 타입
+
 - [x] ReplacePostDto 생성
 - [x] SaveDraftDto에 slug 필드 추가 (이미 존재)
 
 ### Phase 2: Service 로직
+
 - [x] PostService.replacePost() 메서드 추가
 - [x] PostDraftService.saveDraft() 로직 단순화 (post 내용 채우기 제거)
 
 ### Phase 3: Controller
+
 - [x] PUT /admin/sites/:siteId/posts/:id 엔드포인트 추가
 - [x] PUT /admin/v2/posts/:id 엔드포인트 추가
 
 ### Phase 4: Deprecated 처리
+
 - [x] publish/republish/unpublish API에 @Deprecated 데코레이터 추가
 - [x] Swagger 문서에 deprecated 표시
 - [ ] (추후) API 삭제
 
 ### Phase 5: 테스트
+
 - [x] replacePost 유닛 테스트 (기존 테스트 통과)
 - [x] saveDraft 단순화 테스트 (기존 테스트 통과)
 - [ ] E2E 테스트
@@ -293,14 +303,14 @@ src/post/
 
 ```typescript
 // Before
-await updateAdminPost(siteId, postId, { title: 'new' });  // PATCH
-await publishPost(siteId, postId);  // 별도 API
+await updateAdminPost(siteId, postId, { title: 'new' }); // PATCH
+await publishPost(siteId, postId); // 별도 API
 
 // After
 await replaceAdminPost(siteId, postId, {
   title: 'new',
   subtitle: '...',
-  status: 'PUBLISHED',  // 공개 여부 포함
+  status: 'PUBLISHED', // 공개 여부 포함
   // ... 모든 필드
 });
 ```

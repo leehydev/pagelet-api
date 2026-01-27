@@ -56,14 +56,14 @@ git commit -m "feat: 설명 (#이슈번호)"
 
 **커밋 타입:**
 
-| 타입       | 용도           |
-| ---------- | -------------- |
-| `feat`     | 새 기능        |
-| `fix`      | 버그 수정      |
-| `refactor` | 리팩토링       |
-| `docs`     | 문서           |
-| `test`     | 테스트         |
-| `chore`    | 기타 작업      |
+| 타입       | 용도      |
+| ---------- | --------- |
+| `feat`     | 새 기능   |
+| `fix`      | 버그 수정 |
+| `refactor` | 리팩토링  |
+| `docs`     | 문서      |
+| `test`     | 테스트    |
+| `chore`    | 기타 작업 |
 
 ### 4. 푸시 & PR 생성
 
@@ -115,6 +115,7 @@ git checkout development
 
 ```bash
 # 1. 검증
+# 로컬 서버 켜보기
 npx prettier --write .
 npm run lint
 npx tsc --noEmit

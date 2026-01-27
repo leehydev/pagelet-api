@@ -60,8 +60,8 @@ git checkout -b feature/[이슈번호]-[간단한-설명]
 | pr          | `9ef8707a` |
 | Done        | `98236657` |
 
-**Project ID:** `PVT_kwHOBCMlP84A0S2R`
-**Status Field ID:** `PVTSSF_lAHOBCMlP84A0S2RzgfGy-Y`
+**Project ID:** `PVT_kwHODhZUJs4BNL9F`
+**Status Field ID:** `PVTSSF_lAHODhZUJs4BNL9Fzg8QUyw`
 
 ---
 
