@@ -115,6 +115,11 @@ export const ErrorCode = {
     'Slug is not available',
   ),
   SITE_NOT_FOUND: new ErrorCodeDefinition('SITE_002', HttpStatus.NOT_FOUND, 'Site not found'),
+  SITE_HEADER_MISSING: new ErrorCodeDefinition(
+    'SITE_003',
+    HttpStatus.BAD_REQUEST,
+    'X-Site-Id header is required',
+  ),
 
   // 게시글 관련 에러
   POST_NOT_FOUND: new ErrorCodeDefinition('POST_001', HttpStatus.NOT_FOUND, 'Post not found'),
