@@ -22,6 +22,37 @@ export class OnboardingService {
   ) {}
 
   /**
+   * slug 사용 가능 여부 확인 (isAdmin 고려)
+   */
+  async checkSlug(userId: string, slug: string): Promise<{ available: boolean; message?: string }> {
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+
+    if (!user) {
+      throw BusinessException.fromErrorCode(ErrorCode.USER_NOT_FOUND);
+    }
+
+    // 예약어 체크 (adminOnly 정보 포함)
+    const reservedCheck = await this.siteService.checkReservedSlug(slug);
+
+    if (reservedCheck.reserved) {
+      if (!reservedCheck.adminOnly) {
+        // 완전 금지 슬러그
+        return { available: false, message: '사용할 수 없는 슬러그입니다' };
+      }
+
+      if (!user.isAdmin) {
+        // adminOnly 슬러그인데 관리자가 아닌 경우
+        return { available: false, message: '관리자만 사용할 수 있는 슬러그입니다' };
+      }
+    }
+
+    // 중복 및 형식 체크
+    const isAvailable = await this.siteService.isSlugAvailable(slug, user.isAdmin);
+
+    return { available: isAvailable };
+  }
+
+  /**
    * 프로필 업데이트 (Step 1)
    */
   async updateProfile(userId: string, dto: UpdateProfileDto): Promise<void> {
