@@ -1,7 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { PostService } from './post.service';
-import { PostDraftService } from './post-draft.service';
 import { Post, PostStatus } from './entities/post.entity';
 import { PostImageService } from '../storage/post-image.service';
 import { S3Service } from '../storage/s3.service';
@@ -35,15 +34,6 @@ describe('PostService', () => {
     ensureDefaultCategory: jest.fn(),
   };
 
-  const mockPostDraftService = {
-    findByPostId: jest.fn(),
-    hasDraft: jest.fn(),
-    saveDraft: jest.fn(),
-    deleteDraft: jest.fn(),
-    createDraftFromPost: jest.fn(),
-    applyDraftToPost: jest.fn(),
-  };
-
   beforeEach(async () => {
     postRepository = {
       find: jest.fn(),
@@ -73,10 +63,6 @@ describe('PostService', () => {
         {
           provide: CategoryService,
           useValue: mockCategoryService,
-        },
-        {
-          provide: PostDraftService,
-          useValue: mockPostDraftService,
         },
       ],
     }).compile();

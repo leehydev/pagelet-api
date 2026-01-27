@@ -150,23 +150,21 @@ export const RESERVED_SLUGS: Record<string, ReservedSlugDefinition[]> = {
 /**
  * 모든 예약된 슬러그를 평탄화한 배열
  */
-export const ALL_RESERVED_SLUGS: ReservedSlugDefinition[] = Object.values(
-  RESERVED_SLUGS,
-).flat();
+export const ALL_RESERVED_SLUGS: ReservedSlugDefinition[] = Object.values(RESERVED_SLUGS).flat();
 
 /**
  * 일반 사용자가 사용할 수 없는 슬러그 목록 (문자열 배열)
  */
-export const BLOCKED_SLUGS: string[] = ALL_RESERVED_SLUGS.filter(
-  (item) => !item.adminOnly,
-).map((item) => item.slug);
+export const BLOCKED_SLUGS: string[] = ALL_RESERVED_SLUGS.filter((item) => !item.adminOnly).map(
+  (item) => item.slug,
+);
 
 /**
  * 관리자만 사용할 수 있는 슬러그 목록 (문자열 배열)
  */
-export const ADMIN_ONLY_SLUGS: string[] = ALL_RESERVED_SLUGS.filter(
-  (item) => item.adminOnly,
-).map((item) => item.slug);
+export const ADMIN_ONLY_SLUGS: string[] = ALL_RESERVED_SLUGS.filter((item) => item.adminOnly).map(
+  (item) => item.slug,
+);
 
 /**
  * 슬러그가 예약어인지 확인

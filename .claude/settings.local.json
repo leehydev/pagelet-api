@@ -20,7 +20,11 @@
       "Bash(gh issue list:*)",
       "Bash(npx typeorm:*)",
       "Bash(npx prettier:*)",
-      "Bash(npm run lint:*)"
+      "Bash(npm run lint:*)",
+      "Bash(gh project list:*)",
+      "Bash(jq:*)",
+      "Bash(gh project field-list:*)",
+      "Bash(gh project item-edit:*)"
     ]
   }
 }

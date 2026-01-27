@@ -5,13 +5,13 @@ import { Repository } from 'typeorm';
 import { Post, PostStatus } from './entities/post.entity';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
+import { ReplacePostDto } from './dto/replace-post.dto';
 import { BusinessException } from '../common/exception/business.exception';
 import { ErrorCode } from '../common/exception/error-code';
 import { PostImageService } from '../storage/post-image.service';
 import { S3Service } from '../storage/s3.service';
 import { CategoryService } from '../category/category.service';
 import { PaginatedResponseDto } from '../common/dto';
-import { PostDraftService } from './post-draft.service';
 
 @Injectable()
 export class PostService {
@@ -24,8 +24,6 @@ export class PostService {
     private readonly s3Service: S3Service,
     @Inject(forwardRef(() => CategoryService))
     private readonly categoryService: CategoryService,
-    @Inject(forwardRef(() => PostDraftService))
-    private readonly postDraftService: PostDraftService,
   ) {}
 
   /**
@@ -245,65 +243,6 @@ export class PostService {
     } catch (error) {
       // 이미지 동기화 실패해도 게시글 저장은 성공 처리
       this.logger.warn(`Failed to sync images for post ${postId}: ${error.message}`);
-    }
-  }
-
-  /**
-   * 게시글 + 드래프트를 함께 고려한 이미지 동기화
-   * - 발행된 글과 드래프트 양쪽에서 사용 중인 이미지 → postId 연결 유지
-   * - 양쪽 모두에서 사용되지 않는 이미지만 → postId = null (cleanup 대상)
-   */
-  async syncImagesForPostAndDraft(postId: string, siteId: string): Promise<void> {
-    try {
-      // 1. 게시글 조회
-      const post = await this.postRepository.findOne({ where: { id: postId } });
-      if (!post || post.siteId !== siteId) {
-        return;
-      }
-
-      // 2. 드래프트 조회
-      const draft = await this.postDraftService.findByPostId(postId);
-
-      // 3. 발행된 글에서 사용 중인 이미지
-      const postS3Keys = this.extractS3KeysFromPost(post.contentHtml, post.ogImageUrl);
-
-      // 4. 드래프트에서 사용 중인 이미지
-      const draftS3Keys = draft
-        ? this.extractS3KeysFromPost(draft.contentHtml, draft.ogImageUrl)
-        : new Set<string>();
-
-      // 5. 합집합: 어느 쪽이든 사용 중인 이미지
-      const allUsedS3Keys = new Set([...postS3Keys, ...draftS3Keys]);
-
-      // 6. 기존에 이 게시글에 연결된 이미지들 조회
-      const existingImages = await this.postImageService.findByPostId(postId);
-      const existingS3Keys = new Set(existingImages.map((img) => img.s3Key));
-
-      // 7. 새로 연결해야 할 이미지
-      for (const s3Key of allUsedS3Keys) {
-        if (!existingS3Keys.has(s3Key)) {
-          const linked = await this.postImageService.linkToPost(siteId, s3Key, postId);
-          if (linked) {
-            this.logger.log(`Linked s3Key ${s3Key} to post ${postId}`);
-          }
-        }
-      }
-
-      // 8. 연결 해제해야 할 이미지 (양쪽 모두에서 사용 안 함)
-      for (const existingImage of existingImages) {
-        if (!allUsedS3Keys.has(existingImage.s3Key)) {
-          await this.postImageService.unlinkFromPost(existingImage.id);
-          this.logger.log(
-            `Unlinked s3Key ${existingImage.s3Key} from post ${postId} (not used in post or draft)`,
-          );
-        }
-      }
-
-      this.logger.log(
-        `Synced images for post ${postId} with draft: ${allUsedS3Keys.size} images in use`,
-      );
-    } catch (error) {
-      this.logger.warn(`Failed to sync images for post ${postId} with draft: ${error.message}`);
     }
   }
 
@@ -595,9 +534,69 @@ export class PostService {
   }
 
   /**
+   * 게시글 전체 교체 (PUT)
+   * - 전체 필드를 덮어쓰기
+   * - 저장 시 draft 자동 삭제
+   */
+  async replacePost(postId: string, siteId: string, dto: ReplacePostDto): Promise<Post> {
+    // 게시글 조회
+    const post = await this.postRepository.findOne({ where: { id: postId } });
+    if (!post || post.siteId !== siteId) {
+      throw BusinessException.fromErrorCode(ErrorCode.POST_NOT_FOUND);
+    }
+
+    // slug 처리: null이면 자동 생성, 값이 있으면 중복 체크
+    let slug = dto.slug;
+    if (!slug) {
+      slug = await this.generateUniqueSlug(siteId, dto.title, postId);
+    } else if (slug !== post.slug) {
+      const isAvailable = await this.isSlugAvailable(siteId, slug, postId);
+      if (!isAvailable) {
+        throw BusinessException.fromErrorCode(ErrorCode.POST_SLUG_ALREADY_EXISTS);
+      }
+    }
+
+    // categoryId 변경 시 유효성 체크
+    if (dto.categoryId && dto.categoryId !== post.categoryId) {
+      const category = await this.categoryService.findById(dto.categoryId);
+      if (!category || category.siteId !== siteId) {
+        throw BusinessException.fromErrorCode(ErrorCode.CATEGORY_NOT_FOUND);
+      }
+    }
+
+    // 전체 필드 덮어쓰기
+    post.title = dto.title;
+    post.subtitle = dto.subtitle;
+    post.slug = slug;
+    post.contentJson = dto.contentJson;
+    post.contentHtml = dto.contentHtml ?? null;
+    post.contentText = dto.contentText ?? null;
+    post.status = dto.status;
+    post.categoryId = dto.categoryId ?? null;
+    post.seoTitle = dto.seoTitle ?? null;
+    post.seoDescription = dto.seoDescription ?? null;
+    post.ogImageUrl = dto.ogImageUrl ?? null;
+
+    // publishedAt 처리
+    if (dto.status === PostStatus.PUBLISHED && !post.publishedAt) {
+      post.publishedAt = new Date();
+    } else if (dto.status === PostStatus.PRIVATE) {
+      post.publishedAt = null;
+    }
+
+    // 저장
+    const saved = await this.postRepository.save(post);
+    this.logger.log(`Replaced post: ${saved.id}, status: ${saved.status}`);
+
+    // 이미지 동기화
+    await this.syncPostImages(siteId, saved.id, saved.contentHtml, saved.ogImageUrl);
+
+    return saved;
+  }
+
+  /**
    * 게시글 비공개 전환
    * - PUBLISHED 상태의 게시글을 PRIVATE로 변경
-   * - 드래프트가 있는 경우 드래프트 내용을 게시글에 머지 후 드래프트 삭제
    */
   async unpublishPost(postId: string, siteId: string): Promise<Post> {
     // 게시글 조회
@@ -611,36 +610,12 @@ export class PostService {
       throw BusinessException.fromErrorCode(ErrorCode.POST_NOT_PUBLISHED);
     }
 
-    // 드래프트 확인 및 머지
-    const draft = await this.postDraftService.findByPostId(postId);
-    if (draft) {
-      // 드래프트 내용으로 게시글 업데이트
-      post.title = draft.title;
-      post.subtitle = draft.subtitle;
-      post.contentJson = draft.contentJson;
-      post.contentHtml = draft.contentHtml;
-      post.contentText = draft.contentText;
-      post.seoTitle = draft.seoTitle;
-      post.seoDescription = draft.seoDescription;
-      post.ogImageUrl = draft.ogImageUrl;
-      post.categoryId = draft.categoryId;
-
-      // 드래프트 삭제
-      await this.postDraftService.deleteDraft(postId, siteId);
-
-      this.logger.log(`Unpublish with draft merge: ${postId}`);
-    } else {
-      this.logger.log(`Unpublish without draft: ${postId}`);
-    }
-
     // status를 PRIVATE로 변경, publishedAt을 null로
     post.status = PostStatus.PRIVATE;
     post.publishedAt = null;
 
     const saved = await this.postRepository.save(post);
-
-    // 이미지 동기화
-    await this.syncPostImages(siteId, saved.id, saved.contentHtml, saved.ogImageUrl);
+    this.logger.log(`Unpublished post: ${postId}`);
 
     return saved;
   }

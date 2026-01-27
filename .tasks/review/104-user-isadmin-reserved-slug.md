@@ -31,30 +31,30 @@ User 엔티티에 `isAdmin` 필드를 추가하고, 예약어 슬러그를 DB �
 
 ### 영향받는 파일
 
-| 파일 경로 | 변경 유형 | 설명 |
-|-----------|-----------|------|
-| `src/auth/entities/user.entity.ts` | 수정 | isAdmin 필드 추가 |
-| `src/site/entities/reserved-slug.entity.ts` | **신규** | ReservedSlug 엔티티 |
-| `src/site/site.service.ts` | 수정 | 예약어 로직 DB 조회로 변경 |
-| `src/site/site.module.ts` | 수정 | ReservedSlug 엔티티 등록 |
-| `src/onboarding/onboarding.service.ts` | 수정 | isAdmin 사용자 예외 처리 |
-| `src/superadmin/superadmin.service.ts` | 수정 | 예약어 CRUD 메서드 추가 |
-| `src/superadmin/superadmin.controller.ts` | 수정 | 예약어 관리 API 추가 |
-| `src/superadmin/superadmin.module.ts` | 수정 | ReservedSlug 의존성 |
-| `src/superadmin/dto/reserved-slug-response.dto.ts` | **신규** | 응답 DTO |
-| `src/superadmin/dto/create-reserved-slug.dto.ts` | **신규** | 생성 DTO |
-| `src/superadmin/dto/set-user-admin.dto.ts` | **신규** | 어드민 설정 DTO |
-| `src/common/exception/error-code.ts` | 수정 | 새 에러 코드 추가 |
-| `src/database/migrations/XXXX-*.ts` | **신규** | 마이그레이션 |
+| 파일 경로                                          | 변경 유형 | 설명                       |
+| -------------------------------------------------- | --------- | -------------------------- |
+| `src/auth/entities/user.entity.ts`                 | 수정      | isAdmin 필드 추가          |
+| `src/site/entities/reserved-slug.entity.ts`        | **신규**  | ReservedSlug 엔티티        |
+| `src/site/site.service.ts`                         | 수정      | 예약어 로직 DB 조회로 변경 |
+| `src/site/site.module.ts`                          | 수정      | ReservedSlug 엔티티 등록   |
+| `src/onboarding/onboarding.service.ts`             | 수정      | isAdmin 사용자 예외 처리   |
+| `src/superadmin/superadmin.service.ts`             | 수정      | 예약어 CRUD 메서드 추가    |
+| `src/superadmin/superadmin.controller.ts`          | 수정      | 예약어 관리 API 추가       |
+| `src/superadmin/superadmin.module.ts`              | 수정      | ReservedSlug 의존성        |
+| `src/superadmin/dto/reserved-slug-response.dto.ts` | **신규**  | 응답 DTO                   |
+| `src/superadmin/dto/create-reserved-slug.dto.ts`   | **신규**  | 생성 DTO                   |
+| `src/superadmin/dto/set-user-admin.dto.ts`         | **신규**  | 어드민 설정 DTO            |
+| `src/common/exception/error-code.ts`               | 수정      | 새 에러 코드 추가          |
+| `src/database/migrations/XXXX-*.ts`                | **신규**  | 마이그레이션               |
 
 ### 신규 API 엔드포인트
 
-| Method | Endpoint | 설명 |
-|--------|----------|------|
-| GET | `/superadmin/reserved-slugs` | 예약어 슬러그 목록 조회 |
-| POST | `/superadmin/reserved-slugs` | 예약어 슬러그 추가 |
-| DELETE | `/superadmin/reserved-slugs/:slugId` | 예약어 슬러그 삭제 |
-| PUT | `/superadmin/users/:userId/admin` | 사용자 어드민 권한 설정 |
+| Method | Endpoint                             | 설명                    |
+| ------ | ------------------------------------ | ----------------------- |
+| GET    | `/superadmin/reserved-slugs`         | 예약어 슬러그 목록 조회 |
+| POST   | `/superadmin/reserved-slugs`         | 예약어 슬러그 추가      |
+| DELETE | `/superadmin/reserved-slugs/:slugId` | 예약어 슬러그 삭제      |
+| PUT    | `/superadmin/users/:userId/admin`    | 사용자 어드민 권한 설정 |
 
 ### 타입 정의
 
@@ -107,17 +107,20 @@ SITE_SLUG_RESERVED_ADMIN_ONLY: new ErrorCodeDefinition(
 ## 구현 체크리스트
 
 ### Phase 1: 기반 작업
+
 - [x] User 엔티티에 `isAdmin` 필드 추가
 - [x] ReservedSlug 엔티티 생성 (`src/site/entities/reserved-slug.entity.ts`)
 - [x] SiteModule에 ReservedSlug 엔티티 등록
 - [x] 마이그레이션 파일 생성 및 실행
 
 ### Phase 2: 서비스 레이어
+
 - [x] 에러 코드 추가 (`error-code.ts`)
 - [x] SiteService의 예약어 검증 로직 DB 조회로 변경
 - [x] OnboardingService에 isAdmin 예외 처리 추가
 
 ### Phase 3: SuperAdmin 기능
+
 - [x] DTO 생성 (ReservedSlugResponseDto, CreateReservedSlugDto, SetUserAdminDto)
 - [x] SuperAdminModule에 SiteModule 의존성 추가
 - [x] SuperAdminService에 예약어 CRUD 메서드 추가
@@ -125,18 +128,21 @@ SITE_SLUG_RESERVED_ADMIN_ONLY: new ErrorCodeDefinition(
 - [x] SuperAdminController에 API 엔드포인트 추가
 
 ### Phase 4: 테스트
+
 - [x] 단위 테스트 작성
 - [ ] E2E 테스트 작성 (선택)
 
 ## 테스트 계획
 
 ### 단위 테스트
+
 - [ ] SiteService.isSlugAvailable() - 예약어 체크 로직
 - [ ] SiteService.checkReservedSlug() - adminOnly 플래그 확인
 - [ ] OnboardingService.createSite() - isAdmin 예외 처리
 - [ ] SuperAdminService CRUD 메서드
 
 ### 통합 테스트
+
 - [ ] 일반 사용자가 예약어 슬러그로 사이트 생성 시 실패
 - [ ] 어드민 사용자가 adminOnly 슬러그로 사이트 생성 시 성공
 - [ ] SuperAdmin API로 예약어 CRUD 동작 확인

@@ -1,4 +1,4 @@
-import { Controller, Post, Body } from '@nestjs/common';
+import { Controller, Post, Body, Get, Query } from '@nestjs/common';
 import { OnboardingService } from './onboarding.service';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { CreateSiteDto } from './dto/create-site.dto';
@@ -8,6 +8,22 @@ import type { UserPrincipal } from '../auth/types/jwt-payload.interface';
 @Controller('onboarding')
 export class OnboardingController {
   constructor(private readonly onboardingService: OnboardingService) {}
+
+  /**
+   * GET /onboarding/check-slug
+   * slug 사용 가능 여부 확인 (인증된 사용자용, isAdmin 고려)
+   */
+  @Get('check-slug')
+  async checkSlug(
+    @CurrentUser() user: UserPrincipal,
+    @Query('slug') slug: string,
+  ): Promise<{ available: boolean; message?: string }> {
+    if (!slug) {
+      return { available: false, message: 'slug is required' };
+    }
+
+    return this.onboardingService.checkSlug(user.userId, slug);
+  }
 
   /**
    * POST /onboarding/profile

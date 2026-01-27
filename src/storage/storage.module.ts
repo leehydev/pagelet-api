@@ -14,11 +14,13 @@ import { BrandingAssetService } from './branding-asset.service';
 import { AdminBrandingAssetController } from './admin-branding-asset.controller';
 import { AdminBrandingAssetV2Controller } from './admin-branding-asset-v2.controller';
 import { SiteModule } from '../site/site.module';
+import { DraftModule } from '../draft/draft.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([PostImage, SiteStorageUsage, SiteBrandingImage]),
     forwardRef(() => SiteModule),
+    forwardRef(() => DraftModule),
   ],
   controllers: [
     AdminUploadController,
