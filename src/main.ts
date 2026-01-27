@@ -56,7 +56,7 @@ async function bootstrap() {
     },
     credentials: true, // 쿠키 전송 허용
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Site-Id'],
   });
 
   // 글로벌 예외 필터 등록

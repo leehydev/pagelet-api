@@ -33,7 +33,7 @@ import { addTransactionalDataSource } from 'typeorm-transactional';
           logging: process.env.NODE_ENV !== 'production', // 운영에서는 false
         };
       },
-      // eslint-disable-next-line @typescript-eslint/require-await
+
       async dataSourceFactory(options) {
         if (!options) throw new Error('Invalid TypeORM options');
         return addTransactionalDataSource(new DataSource(options));
