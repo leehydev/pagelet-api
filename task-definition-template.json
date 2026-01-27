@@ -50,10 +50,6 @@
           "value": "${DB_SCHEMA}"
         },
         {
-          "name": "DB_RDS_CA_BASE64",
-          "value": "${DB_RDS_CA_BASE64}"
-        },
-        {
           "name": "JWT_ACCESS_SECRET",
           "value": "${JWT_ACCESS_SECRET}"
         },
