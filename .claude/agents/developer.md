@@ -58,8 +58,8 @@ npm run start:dev
 # 5. 빌드
 npm run build
 
-# 6. 테스트
-npm run test
+# 6. 테스트 (--forceExit: 열린 핸들 있어도 완료 시 종료)
+npm run test -- --forceExit
 ```
 
 ### 4. 커밋 & PR

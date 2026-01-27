@@ -1,6 +1,7 @@
 # [BE] Naver Search Advisor 키값 저장 API 구현
 
 ## GitHub 이슈
+
 - **이슈 번호**: #88
 - **이슈 링크**: https://github.com/leehydev/pagelet-api/issues/88
 - **생성일**: 2026-01-25
@@ -14,18 +15,21 @@
 ## 작업 범위
 
 ### 포함
+
 - Site Entity에 `naverSearchAdvisorKey` 필드 추가
 - 마이그레이션 파일 생성
 - Request/Response DTO 업데이트
 - Service 레이어 수정
 
 ### 제외
+
 - 메타태그 렌더링 (프론트엔드 담당)
 - UI 구현 (프론트엔드 담당)
 
 ## 기술 명세
 
 ### 영향받는 파일
+
 - `src/site/entities/site.entity.ts`
 - `src/site/dto/update-site-settings.dto.ts`
 - `src/site/dto/site-settings-response.dto.ts`
@@ -72,11 +76,13 @@ naverSearchAdvisorKey: site.naverSearchAdvisorKey,
 ```
 
 ### API 엔드포인트
+
 - `GET /admin/sites/:siteId/settings` - 키값 조회
 - `PUT /admin/sites/:siteId/settings` - 키값 저장
 - `GET /sites/:slug/settings` - 공개 API (메타태그 렌더링용)
 
 ## 구현 체크리스트
+
 - [ ] Site Entity에 naverSearchAdvisorKey 필드 추가
 - [ ] 마이그레이션 파일 생성 및 실행
 - [ ] UpdateSiteSettingsDto에 필드 추가
@@ -88,6 +94,7 @@ naverSearchAdvisorKey: site.naverSearchAdvisorKey,
 - [ ] API 동작 테스트
 
 ## 테스트 계획
+
 - [ ] 마이그레이션 정상 실행 확인
 - [ ] PUT API로 키값 저장 테스트
 - [ ] GET API로 키값 조회 테스트
@@ -95,5 +102,6 @@ naverSearchAdvisorKey: site.naverSearchAdvisorKey,
 - [ ] null 값 저장/조회 테스트
 
 ## 참고 자료
+
 - 기존 SEO 필드 구현: `src/site/entities/site.entity.ts`
 - 설정 DTO 패턴: `src/site/dto/update-site-settings.dto.ts`

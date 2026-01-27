@@ -13,30 +13,31 @@
 ## 변경된 버전 관리 전략
 
 ### Status 정의
+
 - **PRIVATE**: 비공개 (새 글 또는 비공개 전환)
 - **PUBLISHED**: 공개
 
 ### 상태 판단 로직
 
-| posts.status | post_drafts | 상태 |
-|--------------|-------------|------|
-| PRIVATE | 있음 | 새 글 작성 중 |
-| PRIVATE | 없음 | 비공개 글 |
-| PUBLISHED | 없음 | 발행됨 |
-| PUBLISHED | 있음 | 발행됨 + 편집 중 |
+| posts.status | post_drafts | 상태             |
+| ------------ | ----------- | ---------------- |
+| PRIVATE      | 있음        | 새 글 작성 중    |
+| PRIVATE      | 없음        | 비공개 글        |
+| PUBLISHED    | 없음        | 발행됨           |
+| PUBLISHED    | 있음        | 발행됨 + 편집 중 |
 
 ### 시나리오별 동작
 
-| 상태 | 액션 | 동작 |
-|------|------|------|
-| 새 글 | 작성 시작 | posts에 PRIVATE로 생성 |
-| PRIVATE | 자동저장 | post_drafts UPSERT |
-| PRIVATE | 발행 | drafts -> posts, status -> PUBLISHED, drafts 삭제 |
-| PUBLISHED | 편집 시작 | posts -> post_drafts 복사 (없을 때만) |
-| PUBLISHED | 자동저장 | post_drafts UPSERT |
-| PUBLISHED | 재발행 | drafts -> posts, drafts 삭제 |
-| PUBLISHED | 변경 취소 | drafts 삭제 |
-| PUBLISHED | 비공개 전환 | status -> PRIVATE (drafts 있으면 머지 후 삭제) |
+| 상태      | 액션        | 동작                                              |
+| --------- | ----------- | ------------------------------------------------- |
+| 새 글     | 작성 시작   | posts에 PRIVATE로 생성                            |
+| PRIVATE   | 자동저장    | post_drafts UPSERT                                |
+| PRIVATE   | 발행        | drafts -> posts, status -> PUBLISHED, drafts 삭제 |
+| PUBLISHED | 편집 시작   | posts -> post_drafts 복사 (없을 때만)             |
+| PUBLISHED | 자동저장    | post_drafts UPSERT                                |
+| PUBLISHED | 재발행      | drafts -> posts, drafts 삭제                      |
+| PUBLISHED | 변경 취소   | drafts 삭제                                       |
+| PUBLISHED | 비공개 전환 | status -> PRIVATE (drafts 있으면 머지 후 삭제)    |
 
 ## 요구사항
 
@@ -63,21 +64,21 @@
 
 ### post_drafts 테이블 스키마
 
-| 컬럼 | 타입 | 제약조건 | 설명 |
-|------|------|---------|------|
-| id | UUID | PK | 드래프트 고유 ID |
-| post_id | UUID | FK, UNIQUE, NOT NULL | 연결된 게시글 ID (1:1 관계) |
-| title | VARCHAR(500) | NOT NULL | 제목 |
-| subtitle | VARCHAR(500) | NOT NULL | 부제목 |
-| content_json | JSONB | NULLABLE | Tiptap 에디터 JSON |
-| content_html | TEXT | NULLABLE | 렌더링용 HTML |
-| content_text | TEXT | NULLABLE | 검색/미리보기용 텍스트 |
-| seo_title | VARCHAR(255) | NULLABLE | SEO 제목 |
-| seo_description | VARCHAR(500) | NULLABLE | SEO 설명 |
-| og_image_url | VARCHAR(500) | NULLABLE | OG 이미지 URL |
-| category_id | UUID | FK, NULLABLE | 카테고리 ID |
-| created_at | TIMESTAMPTZ | NOT NULL | 생성일 |
-| updated_at | TIMESTAMPTZ | NOT NULL | 수정일 |
+| 컬럼            | 타입         | 제약조건             | 설명                        |
+| --------------- | ------------ | -------------------- | --------------------------- |
+| id              | UUID         | PK                   | 드래프트 고유 ID            |
+| post_id         | UUID         | FK, UNIQUE, NOT NULL | 연결된 게시글 ID (1:1 관계) |
+| title           | VARCHAR(500) | NOT NULL             | 제목                        |
+| subtitle        | VARCHAR(500) | NOT NULL             | 부제목                      |
+| content_json    | JSONB        | NULLABLE             | Tiptap 에디터 JSON          |
+| content_html    | TEXT         | NULLABLE             | 렌더링용 HTML               |
+| content_text    | TEXT         | NULLABLE             | 검색/미리보기용 텍스트      |
+| seo_title       | VARCHAR(255) | NULLABLE             | SEO 제목                    |
+| seo_description | VARCHAR(500) | NULLABLE             | SEO 설명                    |
+| og_image_url    | VARCHAR(500) | NULLABLE             | OG 이미지 URL               |
+| category_id     | UUID         | FK, NULLABLE         | 카테고리 ID                 |
+| created_at      | TIMESTAMPTZ  | NOT NULL             | 생성일                      |
+| updated_at      | TIMESTAMPTZ  | NOT NULL             | 수정일                      |
 
 ### 엔티티 정의
 
@@ -191,5 +192,6 @@ ON DELETE SET NULL;
 ## 진행 로그
 
 ### 2026-01-24
+
 - 태스크 파일 생성
 - 버전 관리 전략 변경 (DRAFT -> PRIVATE/PUBLISHED)

@@ -13,14 +13,14 @@
 
 ```typescript
 // 계정 상태
-AccountStatus.ONBOARDING  // 온보딩 중
-AccountStatus.ACTIVE      // 활성
-AccountStatus.SUSPENDED   // 정지
-AccountStatus.WITHDRAWN   // 탈퇴
+AccountStatus.ONBOARDING; // 온보딩 중
+AccountStatus.ACTIVE; // 활성
+AccountStatus.SUSPENDED; // 정지
+AccountStatus.WITHDRAWN; // 탈퇴
 
 // 온보딩 단계
-OnboardingStep.PROFILE // 1: 프로필 입력
-OnboardingStep.SITE    // 2: 사이트 생성 -> 온보딩 완료
+OnboardingStep.PROFILE; // 1: 프로필 입력
+OnboardingStep.SITE; // 2: 사이트 생성 -> 온보딩 완료
 ```
 
 ### Guards

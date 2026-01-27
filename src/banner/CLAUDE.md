@@ -11,12 +11,12 @@
 ### 주요 필드
 
 ```typescript
-siteId: string          // 소속 사이트
-postId: string          // 연결된 게시글 (FK → posts.id)
-isActive: boolean       // 활성화 상태
-startAt: Date | null    // 노출 시작 시간
-endAt: Date | null      // 노출 종료 시간
-displayOrder: number    // 표시 순서
+siteId: string; // 소속 사이트
+postId: string; // 연결된 게시글 (FK → posts.id)
+isActive: boolean; // 활성화 상태
+startAt: Date | null; // 노출 시작 시간
+endAt: Date | null; // 노출 종료 시간
+displayOrder: number; // 표시 순서
 ```
 
 ## Controllers
@@ -59,6 +59,7 @@ GET /admin/sites/:siteId/posts/search?q=검색어&limit=10  - 게시글 검색 (
 ## Public API 필터링
 
 활성 배너 조회 시 다음 조건이 적용됩니다:
+
 - `isActive = true`
 - `startAt IS NULL OR startAt <= now()`
 - `endAt IS NULL OR endAt >= now()`
@@ -67,6 +68,7 @@ GET /admin/sites/:siteId/posts/search?q=검색어&limit=10  - 게시글 검색 (
 ## 응답 DTO
 
 ### BannerResponseDto (Admin)
+
 ```typescript
 {
   id: string;
@@ -80,7 +82,7 @@ GET /admin/sites/:siteId/posts/search?q=검색어&limit=10  - 게시글 검색 (
     categoryId: string | null;
     categoryName: string | null;
     publishedAt: Date | null;
-  };
+  }
   isActive: boolean;
   startAt: Date | null;
   endAt: Date | null;
@@ -91,6 +93,7 @@ GET /admin/sites/:siteId/posts/search?q=검색어&limit=10  - 게시글 검색 (
 ```
 
 ### PublicBannerResponseDto (Public)
+
 ```typescript
 {
   id: string;
@@ -101,7 +104,7 @@ GET /admin/sites/:siteId/posts/search?q=검색어&limit=10  - 게시글 검색 (
     ogImageUrl: string | null;
     categoryName: string | null;
     publishedAt: Date | null;
-  };
+  }
   displayOrder: number;
 }
 ```

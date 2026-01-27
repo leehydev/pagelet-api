@@ -8,18 +8,18 @@ NestJS 기반 멀티테넌트 블로그/콘텐츠 플랫폼 백엔드 API (`{slu
 
 ## 2. 기술 스택
 
-| 카테고리 | 기술 | 버전 |
-|---------|------|------|
-| Framework | NestJS | ^11.0.1 |
-| Language | TypeScript | ^5.7.3 |
-| Database | PostgreSQL (Supabase) | - |
-| ORM | TypeORM | ^0.3.28 |
-| Auth | JWT, Passport | ^11.0.2, ^11.0.5 |
-| Storage | AWS S3 SDK | ^3.971.0 |
-| Cache | Redis (ioredis) | ^5.9.2 |
-| Validation | class-validator, Joi | ^0.14.1, ^18.0.2 |
-| API Docs | Swagger | ^11.2.5 |
-| Test | Jest | ^30.0.0 |
+| 카테고리   | 기술                  | 버전             |
+| ---------- | --------------------- | ---------------- |
+| Framework  | NestJS                | ^11.0.1          |
+| Language   | TypeScript            | ^5.7.3           |
+| Database   | PostgreSQL (Supabase) | -                |
+| ORM        | TypeORM               | ^0.3.28          |
+| Auth       | JWT, Passport         | ^11.0.2, ^11.0.5 |
+| Storage    | AWS S3 SDK            | ^3.971.0         |
+| Cache      | Redis (ioredis)       | ^5.9.2           |
+| Validation | class-validator, Joi  | ^0.14.1, ^18.0.2 |
+| API Docs   | Swagger               | ^11.2.5          |
+| Test       | Jest                  | ^30.0.0          |
 
 ---
 
@@ -97,19 +97,19 @@ current-user.decorator.ts    # 데코레이터
 
 ```typescript
 // Controllers: {접근레벨}{도메인}Controller
-AdminPostController, PublicPostController
+(AdminPostController, PublicPostController);
 
 // Services: {도메인}Service
-PostService, PostDraftService
+(PostService, PostDraftService);
 
 // Entities: {도메인}
-Post, PostDraft
+(Post, PostDraft);
 
 // DTOs: {동작}{도메인}Dto 또는 {도메인}ResponseDto
-CreatePostDto, UpdatePostDto, PostResponseDto
+(CreatePostDto, UpdatePostDto, PostResponseDto);
 
 // Guards: {기능}Guard
-AdminSiteGuard, JwtAuthGuard
+(AdminSiteGuard, JwtAuthGuard);
 ```
 
 ### 5.3 Import 순서
@@ -183,22 +183,22 @@ PostgreSQL
 
 ### 6.2 컨트롤러 분리 패턴
 
-| 타입 | 접두사 | 인증 | 용도 |
-|------|--------|------|------|
-| Admin | `admin-*` | 필수 + 소유권 검증 | CRUD 전체 |
-| Public | `public-*` | 없음 (@Public) | 읽기 전용 |
+| 타입       | 접두사         | 인증               | 용도      |
+| ---------- | -------------- | ------------------ | --------- |
+| Admin      | `admin-*`      | 필수 + 소유권 검증 | CRUD 전체 |
+| Public     | `public-*`     | 없음 (@Public)     | 읽기 전용 |
 | Onboarding | `onboarding-*` | 필수 + 온보딩 상태 | 설정 단계 |
 
 ```typescript
 // Admin - 사이트 소유자만 접근
 @Controller('admin/sites/:siteId/posts')
 @UseGuards(AdminSiteGuard)
-export class AdminPostController { }
+export class AdminPostController {}
 
 // Public - 누구나 접근
 @Controller('public/posts')
 @Public()
-export class PublicPostController { }
+export class PublicPostController {}
 ```
 
 ### 6.3 가드 계층
@@ -319,11 +319,11 @@ async atomicOperation() {
 
 ### 7.1 환경 파일
 
-| 파일 | 용도 | Git |
-|------|------|-----|
+| 파일         | 용도      | Git     |
+| ------------ | --------- | ------- |
 | `.env.local` | 로컬 개발 | ignored |
-| `.env.prod` | 프로덕션 | ignored |
-| `.env` | 폴백 | ignored |
+| `.env.prod`  | 프로덕션  | ignored |
+| `.env`       | 폴백      | ignored |
 
 ### 7.2 환경 변수 목록
 

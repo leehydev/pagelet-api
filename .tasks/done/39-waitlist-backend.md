@@ -1,6 +1,7 @@
 # [BE] 베타 버전 가입 대기(Waitlist) 기능 구현
 
 ## GitHub 이슈
+
 - **이슈 번호**: #39
 - **이슈 링크**: https://github.com/leehydev/pagelet-api/issues/39
 - **생성일**: 2026-01-23
@@ -15,6 +16,7 @@
 ## 작업 범위
 
 ### 포함
+
 - `PENDING` 계정 상태 추가 (User 엔티티, AccountStatus)
 - 온보딩 완료 시 `PENDING` 상태로 설정 (기존 `ACTIVE` 대신)
 - `PENDING` 상태 접근 제어 (AccountStatusGuard 수정)
@@ -22,6 +24,7 @@
 - 에러 코드 추가 (`ACCOUNT_PENDING`)
 
 ### 제외
+
 - 승인 시 이메일 알림 (추후 구현)
 - 대기자 거절/삭제 기능 (추후 구현)
 - 기존 사용자 마이그레이션 (이미 `ACTIVE` 상태 유지)

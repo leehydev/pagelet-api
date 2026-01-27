@@ -13,10 +13,12 @@
 ## 변경된 버전 관리 전략
 
 ### Status 정의
+
 - **PRIVATE**: 비공개
 - **PUBLISHED**: 공개
 
 ### 비공개 전환 로직
+
 - 드래프트 있음: drafts -> posts 머지, drafts 삭제, status -> PRIVATE
 - 드래프트 없음: status -> PRIVATE
 
@@ -46,6 +48,7 @@
 ### 비공개 전환 로직
 
 **동작 흐름:**
+
 ```
 // 드래프트가 있는 경우
 PUBLISHED + draft -> draft 내용으로 posts 덮어쓰기 -> draft 삭제 -> PRIVATE
@@ -56,9 +59,9 @@ PUBLISHED -> PRIVATE (기존 내용 유지)
 
 ### API 엔드포인트
 
-| Method | Path | 설명 |
-|--------|------|------|
-| POST | `/admin/sites/:siteId/posts/:postId/unpublish` | 비공개 전환 |
+| Method | Path                                           | 설명        |
+| ------ | ---------------------------------------------- | ----------- |
+| POST   | `/admin/sites/:siteId/posts/:postId/unpublish` | 비공개 전환 |
 
 ### PostService.unpublishPost() 구현
 
@@ -138,6 +141,7 @@ export class PostService {
 ## 테스트 케이스
 
 ### 비공개 전환 - 드래프트 있음
+
 1. PUBLISHED 상태 게시글 생성
 2. 드래프트 저장 (다른 내용으로)
 3. 비공개 전환 요청
@@ -147,6 +151,7 @@ export class PostService {
    - status: PRIVATE, publishedAt: null
 
 ### 비공개 전환 - 드래프트 없음
+
 1. PUBLISHED 상태 게시글 생성
 2. 비공개 전환 요청
 3. 기대 결과:
@@ -170,6 +175,7 @@ export class PostService {
 ## 진행 로그
 
 ### 2026-01-24
+
 - 태스크 파일 생성
 - "발행 취소" -> "비공개 전환"으로 용어 변경
 - DRAFT -> PRIVATE 상태 변경

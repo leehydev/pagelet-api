@@ -13,14 +13,17 @@
 ## 변경된 버전 관리 전략
 
 ### Status 정의
+
 - **PRIVATE**: 비공개 (새 글 또는 비공개 전환)
 - **PUBLISHED**: 공개
 
 ### 자동저장 로직
+
 - **PRIVATE 상태**: post_drafts에 UPSERT
 - **PUBLISHED 상태**: post_drafts에 UPSERT
 
 ### 발행 로직
+
 - drafts 내용 -> posts 복사
 - status -> PUBLISHED
 - drafts 삭제
@@ -53,13 +56,13 @@
 
 ### API 엔드포인트
 
-| Method | Path | 설명 |
-|--------|------|------|
-| GET | `/admin/sites/:siteId/posts/:postId/draft` | 드래프트 조회 |
-| PUT | `/admin/sites/:siteId/posts/:postId/draft` | 드래프트 저장 (upsert) |
-| DELETE | `/admin/sites/:siteId/posts/:postId/draft` | 변경 취소 (드래프트 삭제) |
-| POST | `/admin/sites/:siteId/posts/:postId/publish` | 발행 (PRIVATE -> PUBLISHED) |
-| POST | `/admin/sites/:siteId/posts/:postId/republish` | 재발행 |
+| Method | Path                                           | 설명                        |
+| ------ | ---------------------------------------------- | --------------------------- |
+| GET    | `/admin/sites/:siteId/posts/:postId/draft`     | 드래프트 조회               |
+| PUT    | `/admin/sites/:siteId/posts/:postId/draft`     | 드래프트 저장 (upsert)      |
+| DELETE | `/admin/sites/:siteId/posts/:postId/draft`     | 변경 취소 (드래프트 삭제)   |
+| POST   | `/admin/sites/:siteId/posts/:postId/publish`   | 발행 (PRIVATE -> PUBLISHED) |
+| POST   | `/admin/sites/:siteId/posts/:postId/republish` | 재발행                      |
 
 ### PostDraftService 메서드
 
@@ -67,22 +70,22 @@
 @Injectable()
 export class PostDraftService {
   // 드래프트 조회
-  async findByPostId(postId: string): Promise<PostDraft | null>
+  async findByPostId(postId: string): Promise<PostDraft | null>;
 
   // 드래프트 존재 여부
-  async hasDraft(postId: string): Promise<boolean>
+  async hasDraft(postId: string): Promise<boolean>;
 
   // 드래프트 생성/수정 (upsert)
-  async saveDraft(postId: string, dto: SaveDraftDto): Promise<PostDraft>
+  async saveDraft(postId: string, dto: SaveDraftDto): Promise<PostDraft>;
 
   // 드래프트 삭제
-  async deleteDraft(postId: string): Promise<void>
+  async deleteDraft(postId: string): Promise<void>;
 
   // 발행된 게시글 -> 드래프트 복사 (편집 시작 시)
-  async createDraftFromPost(post: Post): Promise<PostDraft>
+  async createDraftFromPost(post: Post): Promise<PostDraft>;
 
   // 드래프트 -> 게시글 복사 (발행/재발행 시)
-  async applyDraftToPost(postId: string): Promise<Post>
+  async applyDraftToPost(postId: string): Promise<Post>;
 }
 ```
 
@@ -161,7 +164,7 @@ export class PostDraftResponseDto {
 ```typescript
 export class PostResponseDto {
   // ... 기존 필드
-  hasDraft: boolean;  // 추가
+  hasDraft: boolean; // 추가
 }
 ```
 
@@ -173,6 +176,7 @@ export class PostResponseDto {
 ## 구현 체크리스트
 
 ### PostDraftService
+
 - [ ] `findByPostId()` - 드래프트 조회
 - [ ] `hasDraft()` - 존재 여부 확인
 - [ ] `saveDraft()` - Upsert 로직
@@ -181,10 +185,12 @@ export class PostResponseDto {
 - [ ] `applyDraftToPost()` - 드래프트 -> 게시글 적용 (발행/재발행)
 
 ### DTO
+
 - [ ] `SaveDraftDto` - 드래프트 저장 요청
 - [ ] `PostDraftResponseDto` - 드래프트 응답
 
 ### Controller 엔드포인트
+
 - [ ] `GET /admin/sites/:siteId/posts/:postId/draft` - 드래프트 조회
 - [ ] `PUT /admin/sites/:siteId/posts/:postId/draft` - 드래프트 저장
 - [ ] `DELETE /admin/sites/:siteId/posts/:postId/draft` - 변경 취소
@@ -193,10 +199,12 @@ export class PostResponseDto {
 - [ ] Swagger 문서화 (`@ApiOperation`, `@ApiResponse`)
 
 ### PostResponseDto 수정
+
 - [ ] `hasDraft` 필드 추가
 - [ ] `getPostById()` 메서드에서 hasDraft 정보 포함
 
 ### 테스트
+
 - [ ] PostDraftService 단위 테스트
 
 ## 완료 기준 (Definition of Done)
@@ -217,6 +225,7 @@ export class PostResponseDto {
 ## 진행 로그
 
 ### 2026-01-24
+
 - 태스크 파일 생성
 - 버전 관리 전략 변경 (DRAFT -> PRIVATE/PUBLISHED)
 - 발행 API 추가

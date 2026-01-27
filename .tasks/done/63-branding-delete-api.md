@@ -1,6 +1,7 @@
 # [BE] 브랜딩 이미지 삭제 API 구현
 
 ## GitHub 이슈
+
 - **이슈 번호**: #63
 - **이슈 링크**: https://github.com/leehydev/pagelet-api/issues/63
 - **생성일**: 2026-01-24
@@ -16,12 +17,14 @@
 ## 작업 범위
 
 ### 포함
+
 - DELETE `/admin/sites/:siteId/assets/branding/:type` API 엔드포인트 추가
 - BrandingAssetService에 delete 메서드 구현
 - S3에서 브랜딩 파일 삭제
 - Site 엔티티의 해당 이미지 URL 필드를 null로 업데이트
 
 ### 제외
+
 - 프론트엔드 UI 변경 (별도 이슈)
 - 삭제 이력 관리
 - 휴지통/복구 기능
@@ -29,6 +32,7 @@
 ## 기술 명세
 
 ### 영향받는 파일
+
 - `src/storage/admin-branding-asset.controller.ts` - DELETE 엔드포인트 추가
 - `src/storage/branding-asset.service.ts` - delete 메서드 추가
 - `src/storage/dto/branding-delete.dto.ts` - (선택) 요청 DTO
@@ -46,6 +50,7 @@ DELETE /admin/sites/:siteId/assets/branding/:type
 | type | BrandingType | 삭제할 브랜딩 타입 (logo, favicon, og, cta) |
 
 **Response (200 OK):**
+
 ```json
 {
   "success": true,
@@ -58,6 +63,7 @@ DELETE /admin/sites/:siteId/assets/branding/:type
 ```
 
 **Error Cases:**
+
 - 400: 유효하지 않은 type
 - 404: 삭제할 이미지가 없음 (해당 필드가 이미 null)
 
@@ -134,6 +140,7 @@ export class BrandingDeleteResponseDto {
 ```
 
 ## 구현 체크리스트
+
 - [ ] BrandingDeleteResponseDto 생성
 - [ ] BrandingAssetService.delete() 메서드 구현
 - [ ] AdminBrandingAssetController에 DELETE 엔드포인트 추가
@@ -142,11 +149,13 @@ export class BrandingDeleteResponseDto {
 - [ ] 에러 처리 (이미지 없음, 권한 없음 등)
 
 ## 테스트 계획
+
 - [ ] 정상 삭제 테스트 (각 타입별: logo, favicon, og, cta)
 - [ ] 이미지가 없는 경우 404 에러 반환 테스트
 - [ ] 다른 사이트 리소스 삭제 시도 시 403 에러 테스트
 - [ ] S3 파일 삭제 확인
 
 ## 참고 자료
+
 - 기존 commit 로직: `src/storage/branding-asset.service.ts`
 - S3 삭제: `src/storage/s3.service.ts` - `deleteObject` 메서드

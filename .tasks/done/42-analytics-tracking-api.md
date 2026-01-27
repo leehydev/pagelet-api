@@ -1,6 +1,7 @@
 # [BE] 통계 추적 API (PageView, CtaClick)
 
 ## GitHub 이슈
+
 - **이슈 번호**: #42
 - **이슈 링크**: https://github.com/leehydev/pagelet-api/issues/42
 - **생성일**: 2026-01-23
@@ -15,6 +16,7 @@
 ## 작업 범위
 
 ### 포함
+
 - analytics 모듈 생성
 - PageView 엔티티 및 마이그레이션
 - CtaClick 엔티티 및 마이그레이션
@@ -22,12 +24,14 @@
 - 중복 조회 방지 로직
 
 ### 제외
+
 - 통계 조회 API (별도 이슈 #43)
 - 프론트엔드 추적 로직 (pagelet-app#47)
 
 ## 기술 명세
 
 ### 영향받는 파일
+
 - `src/analytics/` (새 모듈)
 - `src/analytics/entities/page-view.entity.ts`
 - `src/analytics/entities/cta-click.entity.ts`
@@ -101,10 +105,10 @@ export class CtaClick {
 @Public()
 export class PublicAnalyticsController {
   @Post('pageview')
-  trackPageview(@Body() dto: TrackPageviewDto) { }
+  trackPageview(@Body() dto: TrackPageviewDto) {}
 
   @Post('cta-click')
-  trackCtaClick(@Body() dto: TrackCtaClickDto) { }
+  trackCtaClick(@Body() dto: TrackCtaClickDto) {}
 }
 ```
 
@@ -144,6 +148,7 @@ export class TrackCtaClickDto {
 Redis 또는 메모리 캐시로 최근 조회 기록 관리.
 
 ## 구현 체크리스트
+
 - [ ] analytics 모듈 생성
 - [ ] PageView 엔티티 생성
 - [ ] CtaClick 엔티티 생성
@@ -155,6 +160,7 @@ Redis 또는 메모리 캐시로 최근 조회 기록 관리.
 - [ ] AppModule에 AnalyticsModule 등록
 
 ## 테스트 계획
+
 - [ ] 마이그레이션 실행 확인
 - [ ] pageview 추적 API 테스트
 - [ ] cta-click 추적 API 테스트

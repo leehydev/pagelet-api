@@ -1,6 +1,7 @@
 # [BE] 사이트 배너 기능 API 구현
 
 ## GitHub 이슈
+
 - **이슈 번호**: #29
 - **이슈 링크**: https://github.com/leehydev/pagelet-api/issues/29
 - **생성일**: 2025-01-23
@@ -15,6 +16,7 @@
 ## 작업 범위
 
 ### 포함
+
 - site_banners 테이블 생성 (마이그레이션)
 - SiteBanner Entity 정의
 - BannerService 구현 (CRUD + 순서 변경)
@@ -23,6 +25,7 @@
 - 파일 업로드를 위한 Presign URL 발급 API
 
 ### 제외
+
 - 프론트엔드 UI (pagelet-app#35에서 진행)
 
 ## 기술 명세
@@ -30,6 +33,7 @@
 ### 영향받는 파일
 
 **신규 생성:**
+
 - `src/banner/` - 배너 모듈 디렉토리
   - `banner.module.ts`
   - `banner.service.ts`
@@ -46,6 +50,7 @@
 - `src/database/migrations/1737600000000-AddSiteBannersTable.ts`
 
 **수정:**
+
 - `src/app.module.ts` - BannerModule import
 - `src/common/exception/error-code.ts` - ErrorCode 추가
 
@@ -76,21 +81,21 @@ CREATE INDEX idx_site_banners_device_type ON site_banners(site_id, device_type);
 
 #### Admin API
 
-| 메서드 | 엔드포인트 | 설명 |
-|--------|-----------|------|
-| POST | `/admin/sites/:siteId/banners/presign` | 업로드 URL 발급 |
-| POST | `/admin/sites/:siteId/banners` | 배너 생성 |
-| GET | `/admin/sites/:siteId/banners` | 배너 목록 (deviceType 쿼리) |
-| GET | `/admin/sites/:siteId/banners/:id` | 배너 상세 |
-| PUT | `/admin/sites/:siteId/banners/:id` | 배너 수정 |
-| DELETE | `/admin/sites/:siteId/banners/:id` | 배너 삭제 |
-| PUT | `/admin/sites/:siteId/banners/order` | 순서 변경 |
+| 메서드 | 엔드포인트                             | 설명                        |
+| ------ | -------------------------------------- | --------------------------- |
+| POST   | `/admin/sites/:siteId/banners/presign` | 업로드 URL 발급             |
+| POST   | `/admin/sites/:siteId/banners`         | 배너 생성                   |
+| GET    | `/admin/sites/:siteId/banners`         | 배너 목록 (deviceType 쿼리) |
+| GET    | `/admin/sites/:siteId/banners/:id`     | 배너 상세                   |
+| PUT    | `/admin/sites/:siteId/banners/:id`     | 배너 수정                   |
+| DELETE | `/admin/sites/:siteId/banners/:id`     | 배너 삭제                   |
+| PUT    | `/admin/sites/:siteId/banners/order`   | 순서 변경                   |
 
 #### Public API
 
-| 메서드 | 엔드포인트 | 설명 |
-|--------|-----------|------|
-| GET | `/public/banners?siteSlug=xxx&deviceType=desktop` | 활성 배너 조회 |
+| 메서드 | 엔드포인트                                        | 설명           |
+| ------ | ------------------------------------------------- | -------------- |
+| GET    | `/public/banners?siteSlug=xxx&deviceType=desktop` | 활성 배너 조회 |
 
 ### 타입 정의
 

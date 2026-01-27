@@ -1,6 +1,7 @@
 # [BE] 게시글 배너 API 리팩토링
 
 ## GitHub 이슈
+
 - **이슈 번호**: #33
 - **이슈 링크**: https://github.com/leehydev/pagelet-api/issues/33
 - **생성일**: 2026-01-23
@@ -12,18 +13,21 @@
 기존 이미지 기반 배너를 게시글 기반 배너로 리팩토링합니다.
 
 ### 변경 사항
+
 - **기존**: 이미지 URL + 링크 URL + deviceType(desktop/mobile) 구분
 - **변경**: 게시글 선택 → 제목 + 소제목 + OG 이미지 + 카테고리/작성일 표시
 
 ## 작업 범위
 
 ### 포함
+
 - 게시글 검색 API (오토컴플리트용)
 - SiteBanner 엔티티 스키마 변경
 - 배너 CRUD API 수정
 - Public 배너 조회 API 수정
 
 ### 제외
+
 - 프론트엔드 구현 (별도 이슈)
 
 ## 기술 명세
@@ -35,6 +39,7 @@ GET /admin/sites/:siteId/posts/search?q=검색어&limit=10
 ```
 
 **응답 DTO:**
+
 ```typescript
 class PostSearchResultDto {
   id: string;
@@ -50,6 +55,7 @@ class PostSearchResultDto {
 ### 2. SiteBanner 엔티티 변경
 
 **제거할 필드:**
+
 - `imageUrl` (varchar 500)
 - `linkUrl` (varchar 500, nullable)
 - `openInNewTab` (boolean)
@@ -57,14 +63,17 @@ class PostSearchResultDto {
 - `deviceType` (varchar 20)
 
 **추가할 필드:**
+
 - `postId` (uuid, FK → posts.id)
 
 **유지할 필드:**
+
 - `id`, `siteId`, `isActive`, `startAt`, `endAt`, `displayOrder`, `createdAt`, `updatedAt`
 
 ### 3. DTO 변경
 
 **CreateBannerDto → CreatePostBannerDto:**
+
 ```typescript
 class CreatePostBannerDto {
   @IsUUID()
@@ -89,10 +98,12 @@ class CreatePostBannerDto {
 ```
 
 **UpdateBannerDto:**
+
 - postId 변경 가능
 - isActive, startAt, endAt 변경 가능
 
 **BannerResponseDto:**
+
 ```typescript
 class BannerResponseDto {
   id: string;
@@ -119,6 +130,7 @@ class BannerResponseDto {
 ### 4. API 변경
 
 **Admin API:**
+
 ```
 POST   /admin/sites/:siteId/banners          - 배너 생성 (postId 필수)
 GET    /admin/sites/:siteId/banners          - 배너 목록 (deviceType 파라미터 제거)
@@ -129,14 +141,17 @@ PUT    /admin/sites/:siteId/banners/order    - 순서 변경 (deviceType 파라�
 ```
 
 **제거할 API:**
+
 - `POST /admin/sites/:siteId/banners/presign` (이미지 업로드 불필요)
 
 **Public API:**
+
 ```
 GET /public/banners?siteSlug=xxx  - 활성 배너 조회 (deviceType 파라미터 제거)
 ```
 
 **Public 응답에 포함할 정보:**
+
 ```typescript
 class PublicBannerResponseDto {
   id: string;

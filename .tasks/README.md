@@ -31,9 +31,9 @@
 
 ## 태스크 상태와 디렉토리 매핑
 
-| 디렉토리 | GitHub 프로젝트 Status | 설명 |
-|---------|----------------------|------|
-| `backlog/` | Todo | 대기 중 |
-| `in-progress/` | In Progress | 진행 중 |
-| `review/` | pr | PR 리뷰 대기 |
-| `done/` | Done | 완료 |
+| 디렉토리       | GitHub 프로젝트 Status | 설명         |
+| -------------- | ---------------------- | ------------ |
+| `backlog/`     | Todo                   | 대기 중      |
+| `in-progress/` | In Progress            | 진행 중      |
+| `review/`      | pr                     | PR 리뷰 대기 |
+| `done/`        | Done                   | 완료         |

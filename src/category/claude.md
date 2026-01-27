@@ -11,11 +11,11 @@
 ### 주요 필드
 
 ```typescript
-siteId: string       // 소속 사이트
-slug: string         // URL 슬러그 (사이트 내 unique)
-name: string         // 카테고리 이름
-description: string  // 설명 (optional)
-sortOrder: number    // 정렬 순서
+siteId: string; // 소속 사이트
+slug: string; // URL 슬러그 (사이트 내 unique)
+name: string; // 카테고리 이름
+description: string; // 설명 (optional)
+sortOrder: number; // 정렬 순서
 ```
 
 ## Controllers

@@ -87,10 +87,12 @@ Site 엔티티의 브랜딩 이미지 컬럼들(logoImageUrl, faviconUrl, ogImag
 ## 파일 변경 목록
 
 ### 신규 생성
+
 - `src/storage/entities/site-branding-image.entity.ts` (완료)
 - `src/database/migrations/1769488024933-CreateSiteBrandingImagesTable.ts` (완료)
 
 ### 수정
+
 - `src/site/entities/site.entity.ts` (완료)
 - `src/storage/branding-asset.service.ts` (완료)
 - `src/storage/storage.module.ts` (완료)
