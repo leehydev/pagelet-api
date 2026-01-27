@@ -7,11 +7,12 @@ export interface DatabaseConfig {
   username: string;
   password: string;
   database: string;
-  schema: string;
-  ssl: boolean | { ca: string };
+  ssl: boolean | { rejectUnauthorized: boolean };
 }
 
 export default registerAs<DatabaseConfig>('database', () => {
+  const sslEnabled = process.env.DB_SSL !== 'false';
+
   return {
     type: 'postgres' as const,
     host: process.env.DB_HOST!,
@@ -19,11 +20,6 @@ export default registerAs<DatabaseConfig>('database', () => {
     username: process.env.DB_USERNAME!,
     password: process.env.DB_PASSWORD!,
     database: process.env.DB_DATABASE!,
-    schema: process.env.DB_SCHEMA!,
-    ssl: process.env.DB_RDS_CA_BASE64
-      ? {
-          ca: Buffer.from(process.env.DB_RDS_CA_BASE64, 'base64').toString('utf-8'),
-        }
-      : false,
+    ssl: sslEnabled ? { rejectUnauthorized: false } : false,
   };
 });
