@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Category } from './entities/category.entity';
 import { CategoryService } from './category.service';
@@ -9,7 +9,7 @@ import { Post } from '../post/entities/post.entity';
 import { SiteModule } from '../site/site.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Category, Post]), SiteModule],
+  imports: [TypeOrmModule.forFeature([Category, Post]), forwardRef(() => SiteModule)],
   controllers: [AdminCategoryController, AdminCategoryV2Controller, PublicCategoryController],
   providers: [CategoryService],
   exports: [CategoryService],

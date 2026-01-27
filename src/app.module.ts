@@ -16,6 +16,7 @@ import { AccountStatusGuard } from './auth/guards/account-status.guard';
 import { User } from './auth/entities/user.entity';
 
 import { PostModule } from './post/post.module';
+import { DraftModule } from './draft/draft.module';
 import { StorageModule } from './storage/storage.module';
 import { CategoryModule } from './category/category.module';
 import { BannerModule } from './banner/banner.module';
@@ -33,6 +34,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     OnboardingModule,
     SiteModule,
     PostModule,
+    DraftModule,
     CategoryModule,
     StorageModule,
     BannerModule,

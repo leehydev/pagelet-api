@@ -4,32 +4,32 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
-  OneToOne,
   ManyToOne,
   JoinColumn,
+  Index,
 } from 'typeorm';
-import { Post } from './post.entity';
 
 @Entity('post_drafts')
-export class PostDraft {
+@Index('IX_post_drafts_site_user', ['siteId', 'userId'])
+@Index('IX_post_drafts_expires_at', ['expiresAt'])
+export class Draft {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ type: 'uuid', unique: true })
-  postId: string;
+  @Column({ type: 'uuid' })
+  siteId: string;
 
-  @OneToOne(() => Post, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'post_id' })
-  post: Post;
+  @Column({ type: 'uuid' })
+  userId: string;
 
-  @Column({ type: 'varchar', length: 500 })
+  @Column({ type: 'varchar', length: 500, default: '' })
   title: string;
 
-  @Column({ type: 'varchar', length: 500 })
+  @Column({ type: 'varchar', length: 500, default: '' })
   subtitle: string;
 
-  @Column({ type: 'varchar', length: 255 })
-  slug: string;
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  slug: string | null;
 
   @Column({ type: 'jsonb', nullable: true })
   contentJson: Record<string, any> | null;
@@ -55,6 +55,9 @@ export class PostDraft {
   @ManyToOne('Category', { onDelete: 'SET NULL' })
   @JoinColumn({ name: 'category_id' })
   category: any;
+
+  @Column({ type: 'timestamptz' })
+  expiresAt: Date;
 
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;

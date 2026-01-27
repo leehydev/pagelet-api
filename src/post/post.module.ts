@@ -5,18 +5,16 @@ import { AdminPostController } from './admin-post.controller';
 import { AdminPostV2Controller } from './admin-post-v2.controller';
 import { PublicPostController } from './public-post.controller';
 import { PostService } from './post.service';
-import { PostDraftService } from './post-draft.service';
 import { Post } from './entities/post.entity';
-import { PostDraft } from './entities/post-draft.entity';
 import { SiteModule } from '../site/site.module';
 import { StorageModule } from '../storage/storage.module';
 import { CategoryModule } from '../category/category.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Post, PostDraft]),
-    SiteModule,
-    StorageModule,
+    TypeOrmModule.forFeature([Post]),
+    forwardRef(() => SiteModule),
+    forwardRef(() => StorageModule),
     forwardRef(() => CategoryModule),
   ],
   controllers: [
@@ -25,7 +23,7 @@ import { CategoryModule } from '../category/category.module';
     AdminPostV2Controller,
     PublicPostController,
   ],
-  providers: [PostService, PostDraftService],
-  exports: [PostService, PostDraftService],
+  providers: [PostService],
+  exports: [PostService],
 })
 export class PostModule {}

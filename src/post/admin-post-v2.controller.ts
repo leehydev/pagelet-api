@@ -1,22 +1,8 @@
-import {
-  Controller,
-  Post,
-  Get,
-  Put,
-  Patch,
-  Delete,
-  Body,
-  Query,
-  Param,
-  UseGuards,
-} from '@nestjs/common';
+import { Controller, Post, Get, Put, Delete, Body, Query, Param, UseGuards } from '@nestjs/common';
 import { ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { PostService } from './post.service';
-import { PostDraftService } from './post-draft.service';
 import { CreatePostDto } from './dto/create-post.dto';
-import { UpdatePostDto } from './dto/update-post.dto';
 import { ReplacePostDto } from './dto/replace-post.dto';
-import { SaveDraftDto } from './dto/save-draft.dto';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { CurrentSite } from '../auth/decorators/current-site.decorator';
 import type { UserPrincipal } from '../auth/types/jwt-payload.interface';
@@ -25,7 +11,6 @@ import { BusinessException } from '../common/exception/business.exception';
 import { ErrorCode } from '../common/exception/error-code';
 import { PaginationQueryDto, PaginatedResponseDto } from '../common/dto';
 import { PostListResponseDto, PostResponseDto } from './dto/post-response.dto';
-import { PostDraftResponseDto } from './dto/post-draft-response.dto';
 import { PostSearchResultDto } from './dto/post-search-result.dto';
 import { Site } from '../site/entities/site.entity';
 
@@ -38,10 +23,7 @@ import { Site } from '../site/entities/site.entity';
 @Controller('admin/v2/posts')
 @UseGuards(AdminSiteHeaderGuard)
 export class AdminPostV2Controller {
-  constructor(
-    private readonly postService: PostService,
-    private readonly postDraftService: PostDraftService,
-  ) {}
+  constructor(private readonly postService: PostService) {}
 
   /**
    * POST /admin/v2/posts
@@ -216,9 +198,6 @@ export class AdminPostV2Controller {
       throw BusinessException.fromErrorCode(ErrorCode.POST_NOT_FOUND);
     }
 
-    // 드래프트 존재 여부 확인
-    const hasDraft = await this.postDraftService.hasDraft(postId);
-
     return new PostResponseDto({
       id: post.id,
       title: post.title,
@@ -236,13 +215,12 @@ export class AdminPostV2Controller {
       categoryId: post.categoryId,
       createdAt: post.createdAt,
       updatedAt: post.updatedAt,
-      hasDraft,
     });
   }
 
   /**
    * PUT /admin/v2/posts/:id
-   * 게시글 전체 교체 (저장 시 draft 자동 삭제)
+   * 게시글 전체 교체
    * Header: X-Site-Id: {siteId}
    */
   @Put(':id')
@@ -255,46 +233,6 @@ export class AdminPostV2Controller {
     @Body() dto: ReplacePostDto,
   ): Promise<PostResponseDto> {
     const post = await this.postService.replacePost(postId, site.id, dto);
-
-    return new PostResponseDto({
-      id: post.id,
-      title: post.title,
-      subtitle: post.subtitle,
-      slug: post.slug,
-      content: post.content,
-      contentJson: post.contentJson,
-      contentHtml: post.contentHtml,
-      contentText: post.contentText,
-      status: post.status,
-      publishedAt: post.publishedAt,
-      seoTitle: post.seoTitle,
-      seoDescription: post.seoDescription,
-      ogImageUrl: post.ogImageUrl,
-      categoryId: post.categoryId,
-      createdAt: post.createdAt,
-      updatedAt: post.updatedAt,
-      hasDraft: false,
-    });
-  }
-
-  /**
-   * PATCH /admin/v2/posts/:id
-   * 게시글 수정 (자동저장/수동저장 모두 지원)
-   * Header: X-Site-Id: {siteId}
-   * @deprecated PUT /admin/v2/posts/:id 사용 권장
-   */
-  @Patch(':id')
-  @ApiOperation({
-    summary: '게시글 수정 (PATCH)',
-    deprecated: true,
-    description: 'Deprecated: PUT /admin/v2/posts/:id 사용 권장',
-  })
-  async updatePost(
-    @CurrentSite() site: Site,
-    @Param('id') postId: string,
-    @Body() dto: UpdatePostDto,
-  ): Promise<PostResponseDto> {
-    const post = await this.postService.updatePost(postId, site.id, dto);
 
     return new PostResponseDto({
       id: post.id,
@@ -330,224 +268,5 @@ export class AdminPostV2Controller {
   ): Promise<{ success: boolean }> {
     await this.postService.deletePost(postId, site.id);
     return { success: true };
-  }
-
-  // ==================== Draft Endpoints ====================
-
-  /**
-   * GET /admin/v2/posts/:id/draft
-   * 드래프트 조회
-   * Header: X-Site-Id: {siteId}
-   */
-  @Get(':id/draft')
-  @ApiOperation({ summary: '게시글 드래프트 조회' })
-  @ApiResponse({ status: 200, description: '드래프트 조회 성공', type: PostDraftResponseDto })
-  @ApiResponse({ status: 404, description: '게시글 또는 드래프트를 찾을 수 없음' })
-  async getDraft(
-    @CurrentSite() site: Site,
-    @Param('id') postId: string,
-  ): Promise<PostDraftResponseDto | null> {
-    // 게시글 존재 및 권한 확인
-    const post = await this.postService.findById(postId);
-    if (!post || post.siteId !== site.id) {
-      throw BusinessException.fromErrorCode(ErrorCode.POST_NOT_FOUND);
-    }
-
-    const draft = await this.postDraftService.findByPostId(postId);
-    if (!draft) {
-      return null;
-    }
-
-    return new PostDraftResponseDto({
-      id: draft.id,
-      postId: draft.postId,
-      title: draft.title,
-      subtitle: draft.subtitle,
-      slug: draft.slug,
-      contentJson: draft.contentJson,
-      contentHtml: draft.contentHtml,
-      contentText: draft.contentText,
-      seoTitle: draft.seoTitle,
-      seoDescription: draft.seoDescription,
-      ogImageUrl: draft.ogImageUrl,
-      categoryId: draft.categoryId,
-      createdAt: draft.createdAt,
-      updatedAt: draft.updatedAt,
-    });
-  }
-
-  /**
-   * PUT /admin/v2/posts/:id/draft
-   * 드래프트 저장 (upsert)
-   * Header: X-Site-Id: {siteId}
-   */
-  @Put(':id/draft')
-  @ApiOperation({ summary: '게시글 드래프트 저장 (자동저장)' })
-  @ApiResponse({ status: 200, description: '드래프트 저장 성공', type: PostDraftResponseDto })
-  @ApiResponse({ status: 404, description: '게시글을 찾을 수 없음' })
-  async saveDraft(
-    @CurrentSite() site: Site,
-    @Param('id') postId: string,
-    @Body() dto: SaveDraftDto,
-  ): Promise<PostDraftResponseDto> {
-    const draft = await this.postDraftService.saveDraft(postId, site.id, dto);
-
-    return new PostDraftResponseDto({
-      id: draft.id,
-      postId: draft.postId,
-      title: draft.title,
-      subtitle: draft.subtitle,
-      slug: draft.slug,
-      contentJson: draft.contentJson,
-      contentHtml: draft.contentHtml,
-      contentText: draft.contentText,
-      seoTitle: draft.seoTitle,
-      seoDescription: draft.seoDescription,
-      ogImageUrl: draft.ogImageUrl,
-      categoryId: draft.categoryId,
-      createdAt: draft.createdAt,
-      updatedAt: draft.updatedAt,
-    });
-  }
-
-  /**
-   * DELETE /admin/v2/posts/:id/draft
-   * 변경 취소 (드래프트 삭제)
-   * Header: X-Site-Id: {siteId}
-   */
-  @Delete(':id/draft')
-  @ApiOperation({ summary: '드래프트 삭제 (변경 취소)' })
-  @ApiResponse({ status: 200, description: '드래프트 삭제 성공' })
-  @ApiResponse({ status: 404, description: '게시글을 찾을 수 없음' })
-  async deleteDraft(
-    @CurrentSite() site: Site,
-    @Param('id') postId: string,
-  ): Promise<{ success: boolean }> {
-    await this.postDraftService.deleteDraft(postId, site.id);
-    return { success: true };
-  }
-
-  /**
-   * POST /admin/v2/posts/:id/publish
-   * 발행 (PRIVATE -> PUBLISHED)
-   * Header: X-Site-Id: {siteId}
-   * @deprecated PUT /admin/v2/posts/:id + status: 'PUBLISHED' 사용 권장
-   */
-  @Post(':id/publish')
-  @ApiOperation({
-    summary: '게시글 발행',
-    deprecated: true,
-    description: "Deprecated: PUT /admin/v2/posts/:id + status: 'PUBLISHED' 사용 권장",
-  })
-  @ApiResponse({ status: 200, description: '발행 성공', type: PostResponseDto })
-  @ApiResponse({ status: 404, description: '게시글을 찾을 수 없음' })
-  async publishPost(
-    @CurrentSite() site: Site,
-    @Param('id') postId: string,
-  ): Promise<PostResponseDto> {
-    const post = await this.postDraftService.applyDraftToPost(postId, site.id);
-
-    return new PostResponseDto({
-      id: post.id,
-      title: post.title,
-      subtitle: post.subtitle,
-      slug: post.slug,
-      content: post.content,
-      contentJson: post.contentJson,
-      contentHtml: post.contentHtml,
-      contentText: post.contentText,
-      status: post.status,
-      publishedAt: post.publishedAt,
-      seoTitle: post.seoTitle,
-      seoDescription: post.seoDescription,
-      ogImageUrl: post.ogImageUrl,
-      categoryId: post.categoryId,
-      createdAt: post.createdAt,
-      updatedAt: post.updatedAt,
-      hasDraft: false,
-    });
-  }
-
-  /**
-   * POST /admin/v2/posts/:id/republish
-   * 재발행 (이미 PUBLISHED 상태인 게시글의 드래프트 적용)
-   * Header: X-Site-Id: {siteId}
-   * @deprecated PUT /admin/v2/posts/:id + status: 'PUBLISHED' 사용 권장
-   */
-  @Post(':id/republish')
-  @ApiOperation({
-    summary: '게시글 재발행 (드래프트 적용)',
-    deprecated: true,
-    description: "Deprecated: PUT /admin/v2/posts/:id + status: 'PUBLISHED' 사용 권장",
-  })
-  @ApiResponse({ status: 200, description: '재발행 성공', type: PostResponseDto })
-  @ApiResponse({ status: 404, description: '게시글을 찾을 수 없음' })
-  async republishPost(
-    @CurrentSite() site: Site,
-    @Param('id') postId: string,
-  ): Promise<PostResponseDto> {
-    const post = await this.postDraftService.applyDraftToPost(postId, site.id);
-
-    return new PostResponseDto({
-      id: post.id,
-      title: post.title,
-      subtitle: post.subtitle,
-      slug: post.slug,
-      content: post.content,
-      contentJson: post.contentJson,
-      contentHtml: post.contentHtml,
-      contentText: post.contentText,
-      status: post.status,
-      publishedAt: post.publishedAt,
-      seoTitle: post.seoTitle,
-      seoDescription: post.seoDescription,
-      ogImageUrl: post.ogImageUrl,
-      categoryId: post.categoryId,
-      createdAt: post.createdAt,
-      updatedAt: post.updatedAt,
-      hasDraft: false,
-    });
-  }
-
-  /**
-   * POST /admin/v2/posts/:id/unpublish
-   * 비공개 전환 (PUBLISHED -> PRIVATE)
-   * Header: X-Site-Id: {siteId}
-   * @deprecated PUT /admin/v2/posts/:id + status: 'PRIVATE' 사용 권장
-   */
-  @Post(':id/unpublish')
-  @ApiOperation({
-    summary: '게시글 비공개 전환',
-    deprecated: true,
-    description: "Deprecated: PUT /admin/v2/posts/:id + status: 'PRIVATE' 사용 권장",
-  })
-  @ApiResponse({ status: 200, description: '비공개 전환 성공', type: PostResponseDto })
-  @ApiResponse({ status: 400, description: '게시글이 발행 상태가 아님' })
-  @ApiResponse({ status: 404, description: '게시글을 찾을 수 없음' })
-  async unpublishPost(
-    @CurrentSite() site: Site,
-    @Param('id') postId: string,
-  ): Promise<PostResponseDto> {
-    const post = await this.postService.unpublishPost(postId, site.id);
-
-    return new PostResponseDto({
-      id: post.id,
-      title: post.title,
-      subtitle: post.subtitle,
-      slug: post.slug,
-      content: post.content,
-      contentJson: post.contentJson,
-      contentHtml: post.contentHtml,
-      contentText: post.contentText,
-      status: post.status,
-      publishedAt: post.publishedAt,
-      seoTitle: post.seoTitle,
-      seoDescription: post.seoDescription,
-      ogImageUrl: post.ogImageUrl,
-      categoryId: post.categoryId,
-      createdAt: post.createdAt,
-      updatedAt: post.updatedAt,
-      hasDraft: false,
-    });
   }
 }
