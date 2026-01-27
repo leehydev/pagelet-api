@@ -15,6 +15,7 @@ import { PostService } from './post.service';
 import { PostDraftService } from './post-draft.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
+import { ReplacePostDto } from './dto/replace-post.dto';
 import { SaveDraftDto } from './dto/save-draft.dto';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { CurrentSite } from '../auth/decorators/current-site.decorator';
@@ -240,11 +241,54 @@ export class AdminPostV2Controller {
   }
 
   /**
+   * PUT /admin/v2/posts/:id
+   * 게시글 전체 교체 (저장 시 draft 자동 삭제)
+   * Header: X-Site-Id: {siteId}
+   */
+  @Put(':id')
+  @ApiOperation({ summary: '게시글 전체 교체 (PUT)' })
+  @ApiResponse({ status: 200, description: '교체 성공', type: PostResponseDto })
+  @ApiResponse({ status: 404, description: '게시글을 찾을 수 없음' })
+  async replacePost(
+    @CurrentSite() site: Site,
+    @Param('id') postId: string,
+    @Body() dto: ReplacePostDto,
+  ): Promise<PostResponseDto> {
+    const post = await this.postService.replacePost(postId, site.id, dto);
+
+    return new PostResponseDto({
+      id: post.id,
+      title: post.title,
+      subtitle: post.subtitle,
+      slug: post.slug,
+      content: post.content,
+      contentJson: post.contentJson,
+      contentHtml: post.contentHtml,
+      contentText: post.contentText,
+      status: post.status,
+      publishedAt: post.publishedAt,
+      seoTitle: post.seoTitle,
+      seoDescription: post.seoDescription,
+      ogImageUrl: post.ogImageUrl,
+      categoryId: post.categoryId,
+      createdAt: post.createdAt,
+      updatedAt: post.updatedAt,
+      hasDraft: false,
+    });
+  }
+
+  /**
    * PATCH /admin/v2/posts/:id
    * 게시글 수정 (자동저장/수동저장 모두 지원)
    * Header: X-Site-Id: {siteId}
+   * @deprecated PUT /admin/v2/posts/:id 사용 권장
    */
   @Patch(':id')
+  @ApiOperation({
+    summary: '게시글 수정 (PATCH)',
+    deprecated: true,
+    description: 'Deprecated: PUT /admin/v2/posts/:id 사용 권장',
+  })
   async updatePost(
     @CurrentSite() site: Site,
     @Param('id') postId: string,
@@ -387,9 +431,14 @@ export class AdminPostV2Controller {
    * POST /admin/v2/posts/:id/publish
    * 발행 (PRIVATE -> PUBLISHED)
    * Header: X-Site-Id: {siteId}
+   * @deprecated PUT /admin/v2/posts/:id + status: 'PUBLISHED' 사용 권장
    */
   @Post(':id/publish')
-  @ApiOperation({ summary: '게시글 발행' })
+  @ApiOperation({
+    summary: '게시글 발행',
+    deprecated: true,
+    description: "Deprecated: PUT /admin/v2/posts/:id + status: 'PUBLISHED' 사용 권장",
+  })
   @ApiResponse({ status: 200, description: '발행 성공', type: PostResponseDto })
   @ApiResponse({ status: 404, description: '게시글을 찾을 수 없음' })
   async publishPost(
@@ -423,9 +472,14 @@ export class AdminPostV2Controller {
    * POST /admin/v2/posts/:id/republish
    * 재발행 (이미 PUBLISHED 상태인 게시글의 드래프트 적용)
    * Header: X-Site-Id: {siteId}
+   * @deprecated PUT /admin/v2/posts/:id + status: 'PUBLISHED' 사용 권장
    */
   @Post(':id/republish')
-  @ApiOperation({ summary: '게시글 재발행 (드래프트 적용)' })
+  @ApiOperation({
+    summary: '게시글 재발행 (드래프트 적용)',
+    deprecated: true,
+    description: "Deprecated: PUT /admin/v2/posts/:id + status: 'PUBLISHED' 사용 권장",
+  })
   @ApiResponse({ status: 200, description: '재발행 성공', type: PostResponseDto })
   @ApiResponse({ status: 404, description: '게시글을 찾을 수 없음' })
   async republishPost(
@@ -459,9 +513,14 @@ export class AdminPostV2Controller {
    * POST /admin/v2/posts/:id/unpublish
    * 비공개 전환 (PUBLISHED -> PRIVATE)
    * Header: X-Site-Id: {siteId}
+   * @deprecated PUT /admin/v2/posts/:id + status: 'PRIVATE' 사용 권장
    */
   @Post(':id/unpublish')
-  @ApiOperation({ summary: '게시글 비공개 전환' })
+  @ApiOperation({
+    summary: '게시글 비공개 전환',
+    deprecated: true,
+    description: "Deprecated: PUT /admin/v2/posts/:id + status: 'PRIVATE' 사용 권장",
+  })
   @ApiResponse({ status: 200, description: '비공개 전환 성공', type: PostResponseDto })
   @ApiResponse({ status: 400, description: '게시글이 발행 상태가 아님' })
   @ApiResponse({ status: 404, description: '게시글을 찾을 수 없음' })

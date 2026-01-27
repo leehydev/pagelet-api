@@ -37,9 +37,9 @@ export class PostDraftService {
   }
 
   /**
-   * 드래프트 저장 (upsert)
-   * - 드래프트가 없으면 게시글 내용을 기반으로 새로 생성
-   * - 드래프트가 있으면 제공된 필드만 업데이트
+   * 드래프트 저장 (upsert) - 단순화된 버전
+   * - 드래프트가 없으면 빈 드래프트 생성
+   * - 제공된 필드만 업데이트 (post 내용으로 채우기 제거)
    */
   async saveDraft(postId: string, siteId: string, dto: SaveDraftDto): Promise<PostDraft> {
     // 게시글 조회
@@ -52,33 +52,21 @@ export class PostDraftService {
     let draft = await this.postDraftRepository.findOne({ where: { postId } });
 
     if (!draft) {
-      // 드래프트가 없으면 게시글 내용을 기반으로 생성
-      draft = this.postDraftRepository.create({
-        postId,
-        title: dto.title ?? post.title,
-        subtitle: dto.subtitle ?? post.subtitle,
-        slug: dto.slug ?? post.slug,
-        contentJson: dto.contentJson ?? post.contentJson,
-        contentHtml: dto.contentHtml ?? post.contentHtml,
-        contentText: dto.contentText ?? post.contentText,
-        seoTitle: dto.seoTitle ?? post.seoTitle,
-        seoDescription: dto.seoDescription ?? post.seoDescription,
-        ogImageUrl: dto.ogImageUrl ?? post.ogImageUrl,
-        categoryId: dto.categoryId ?? post.categoryId,
-      });
-    } else {
-      // 드래프트가 있으면 제공된 필드만 업데이트
-      if (dto.title !== undefined) draft.title = dto.title;
-      if (dto.subtitle !== undefined) draft.subtitle = dto.subtitle;
-      if (dto.slug !== undefined) draft.slug = dto.slug;
-      if (dto.contentJson !== undefined) draft.contentJson = dto.contentJson;
-      if (dto.contentHtml !== undefined) draft.contentHtml = dto.contentHtml;
-      if (dto.contentText !== undefined) draft.contentText = dto.contentText;
-      if (dto.seoTitle !== undefined) draft.seoTitle = dto.seoTitle;
-      if (dto.seoDescription !== undefined) draft.seoDescription = dto.seoDescription;
-      if (dto.ogImageUrl !== undefined) draft.ogImageUrl = dto.ogImageUrl;
-      if (dto.categoryId !== undefined) draft.categoryId = dto.categoryId;
+      // 드래프트가 없으면 새로 생성
+      draft = this.postDraftRepository.create({ postId });
     }
+
+    // 제공된 필드만 업데이트 (기존 draft 값 유지)
+    if (dto.title !== undefined) draft.title = dto.title;
+    if (dto.subtitle !== undefined) draft.subtitle = dto.subtitle;
+    if (dto.slug !== undefined) draft.slug = dto.slug;
+    if (dto.contentJson !== undefined) draft.contentJson = dto.contentJson;
+    if (dto.contentHtml !== undefined) draft.contentHtml = dto.contentHtml;
+    if (dto.contentText !== undefined) draft.contentText = dto.contentText;
+    if (dto.seoTitle !== undefined) draft.seoTitle = dto.seoTitle;
+    if (dto.seoDescription !== undefined) draft.seoDescription = dto.seoDescription;
+    if (dto.ogImageUrl !== undefined) draft.ogImageUrl = dto.ogImageUrl;
+    if (dto.categoryId !== undefined) draft.categoryId = dto.categoryId;
 
     const saved = await this.postDraftRepository.save(draft);
     this.logger.log(`Saved draft for post: ${postId}`);

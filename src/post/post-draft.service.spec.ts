@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { PostDraftService } from './post-draft.service';
+import { PostService } from './post.service';
 import { PostDraft } from './entities/post-draft.entity';
 import { Post, PostStatus } from './entities/post.entity';
 import { SaveDraftDto } from './dto/save-draft.dto';
@@ -18,6 +19,9 @@ describe('PostDraftService', () => {
   let postRepository: {
     findOne: jest.Mock;
     save: jest.Mock;
+  };
+  let postService: {
+    syncImagesForPostAndDraft: jest.Mock;
   };
 
   const mockSiteId = 'site-123';
@@ -73,6 +77,10 @@ describe('PostDraftService', () => {
       save: jest.fn(),
     };
 
+    postService = {
+      syncImagesForPostAndDraft: jest.fn().mockResolvedValue(undefined),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         PostDraftService,
@@ -83,6 +91,10 @@ describe('PostDraftService', () => {
         {
           provide: getRepositoryToken(Post),
           useValue: postRepository,
+        },
+        {
+          provide: PostService,
+          useValue: postService,
         },
       ],
     }).compile();
