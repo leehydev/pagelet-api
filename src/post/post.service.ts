@@ -249,6 +249,65 @@ export class PostService {
   }
 
   /**
+   * 게시글 + 드래프트를 함께 고려한 이미지 동기화
+   * - 발행된 글과 드래프트 양쪽에서 사용 중인 이미지 → postId 연결 유지
+   * - 양쪽 모두에서 사용되지 않는 이미지만 → postId = null (cleanup 대상)
+   */
+  async syncImagesForPostAndDraft(postId: string, siteId: string): Promise<void> {
+    try {
+      // 1. 게시글 조회
+      const post = await this.postRepository.findOne({ where: { id: postId } });
+      if (!post || post.siteId !== siteId) {
+        return;
+      }
+
+      // 2. 드래프트 조회
+      const draft = await this.postDraftService.findByPostId(postId);
+
+      // 3. 발행된 글에서 사용 중인 이미지
+      const postS3Keys = this.extractS3KeysFromPost(post.contentHtml, post.ogImageUrl);
+
+      // 4. 드래프트에서 사용 중인 이미지
+      const draftS3Keys = draft
+        ? this.extractS3KeysFromPost(draft.contentHtml, draft.ogImageUrl)
+        : new Set<string>();
+
+      // 5. 합집합: 어느 쪽이든 사용 중인 이미지
+      const allUsedS3Keys = new Set([...postS3Keys, ...draftS3Keys]);
+
+      // 6. 기존에 이 게시글에 연결된 이미지들 조회
+      const existingImages = await this.postImageService.findByPostId(postId);
+      const existingS3Keys = new Set(existingImages.map((img) => img.s3Key));
+
+      // 7. 새로 연결해야 할 이미지
+      for (const s3Key of allUsedS3Keys) {
+        if (!existingS3Keys.has(s3Key)) {
+          const linked = await this.postImageService.linkToPost(siteId, s3Key, postId);
+          if (linked) {
+            this.logger.log(`Linked s3Key ${s3Key} to post ${postId}`);
+          }
+        }
+      }
+
+      // 8. 연결 해제해야 할 이미지 (양쪽 모두에서 사용 안 함)
+      for (const existingImage of existingImages) {
+        if (!allUsedS3Keys.has(existingImage.s3Key)) {
+          await this.postImageService.unlinkFromPost(existingImage.id);
+          this.logger.log(
+            `Unlinked s3Key ${existingImage.s3Key} from post ${postId} (not used in post or draft)`,
+          );
+        }
+      }
+
+      this.logger.log(
+        `Synced images for post ${postId} with draft: ${allUsedS3Keys.size} images in use`,
+      );
+    } catch (error) {
+      this.logger.warn(`Failed to sync images for post ${postId} with draft: ${error.message}`);
+    }
+  }
+
+  /**
    * 게시글 조회 by ID
    */
   async findById(postId: string): Promise<Post | null> {
