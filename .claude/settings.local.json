@@ -16,7 +16,11 @@
       "Bash(gh issue view:*)",
       "Bash(npx tsc:*)",
       "Bash(timeout 15 npm run start:dev)",
-      "Bash(gh project item-list:*)"
+      "Bash(gh project item-list:*)",
+      "Bash(gh issue list:*)",
+      "Bash(npx typeorm:*)",
+      "Bash(npx prettier:*)",
+      "Bash(npm run lint:*)"
     ]
   }
 }

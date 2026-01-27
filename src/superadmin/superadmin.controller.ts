@@ -1,9 +1,22 @@
-import { Controller, Get, Post, Put, Param, Body, UseGuards, ParseUUIDPipe } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Param,
+  Body,
+  UseGuards,
+  ParseUUIDPipe,
+} from '@nestjs/common';
 import { SuperAdminService } from './superadmin.service';
 import { SuperAdminGuard } from './guards/superadmin.guard';
 import { WaitlistUserResponseDto } from './dto/waitlist-user-response.dto';
 import { SystemSettingResponseDto } from './dto/system-setting-response.dto';
 import { UpdateSystemSettingDto } from './dto/update-system-setting.dto';
+import { ReservedSlugResponseDto } from './dto/reserved-slug-response.dto';
+import { CreateReservedSlugDto } from './dto/create-reserved-slug.dto';
+import { SetUserAdminDto } from './dto/set-user-admin.dto';
 
 /**
  * 슈퍼 관리자 API
@@ -47,5 +60,40 @@ export class SuperAdminController {
     @Body() dto: UpdateSystemSettingDto,
   ): Promise<SystemSettingResponseDto> {
     return this.superAdminService.updateSetting(key, dto.value);
+  }
+
+  /**
+   * 예약어 슬러그 목록 조회
+   */
+  @Get('reserved-slugs')
+  async getReservedSlugs(): Promise<ReservedSlugResponseDto[]> {
+    return this.superAdminService.getReservedSlugs();
+  }
+
+  /**
+   * 예약어 슬러그 추가
+   */
+  @Post('reserved-slugs')
+  async createReservedSlug(@Body() dto: CreateReservedSlugDto): Promise<ReservedSlugResponseDto> {
+    return this.superAdminService.createReservedSlug(dto);
+  }
+
+  /**
+   * 예약어 슬러그 삭제
+   */
+  @Delete('reserved-slugs/:slugId')
+  async deleteReservedSlug(@Param('slugId', ParseUUIDPipe) slugId: string): Promise<void> {
+    return this.superAdminService.deleteReservedSlug(slugId);
+  }
+
+  /**
+   * 사용자 어드민 권한 설정
+   */
+  @Put('users/:userId/admin')
+  async setUserAdmin(
+    @Param('userId', ParseUUIDPipe) userId: string,
+    @Body() dto: SetUserAdminDto,
+  ): Promise<void> {
+    return this.superAdminService.setUserAdmin(userId, dto.isAdmin);
   }
 }

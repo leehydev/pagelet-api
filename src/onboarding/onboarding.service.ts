@@ -69,8 +69,23 @@ export class OnboardingService {
       throw BusinessException.fromErrorCode(ErrorCode.ONBOARDING_INVALID_STEP);
     }
 
-    // slug 사용 가능 여부 확인
-    const isAvailable = await this.siteService.isSlugAvailable(dto.slug);
+    // slug 예약어 체크 (isAdmin 고려)
+    const reservedCheck = await this.siteService.checkReservedSlug(dto.slug);
+
+    if (reservedCheck.reserved) {
+      if (!reservedCheck.adminOnly) {
+        // 완전 금지 슬러그
+        throw BusinessException.fromErrorCode(ErrorCode.SITE_SLUG_NOT_AVAILABLE);
+      }
+
+      if (!user.isAdmin) {
+        // adminOnly 슬러그인데 관리자가 아닌 경우
+        throw BusinessException.fromErrorCode(ErrorCode.SITE_SLUG_RESERVED_ADMIN_ONLY);
+      }
+    }
+
+    // slug 사용 가능 여부 확인 (중복 체크)
+    const isAvailable = await this.siteService.isSlugAvailable(dto.slug, user.isAdmin);
     if (!isAvailable) {
       throw BusinessException.fromErrorCode(ErrorCode.SITE_SLUG_NOT_AVAILABLE);
     }

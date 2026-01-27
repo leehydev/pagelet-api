@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Site } from './entities/site.entity';
+import { ReservedSlug } from './entities/reserved-slug.entity';
 import {
   UpdateSiteSettingsDto,
   SiteSettingsResponseDto,
@@ -11,36 +12,6 @@ import {
 import { BrandingAssetService } from '../storage/branding-asset.service';
 import { BrandingImageType } from '../storage/entities/site-branding-image.entity';
 
-// 예약어 목록
-const RESERVED_SLUGS = new Set([
-  'www',
-  'app',
-  'admin',
-  'api',
-  'auth',
-  'login',
-  'signup',
-  'signin',
-  'signout',
-  'register',
-  'dashboard',
-  'settings',
-  'profile',
-  'help',
-  'support',
-  'blog',
-  'about',
-  'contact',
-  'terms',
-  'privacy',
-  'static',
-  'assets',
-  'public',
-  'cdn',
-  'mail',
-  'email',
-]);
-
 @Injectable()
 export class SiteService {
   private readonly logger = new Logger(SiteService.name);
@@ -48,6 +19,8 @@ export class SiteService {
   constructor(
     @InjectRepository(Site)
     private readonly siteRepository: Repository<Site>,
+    @InjectRepository(ReservedSlug)
+    private readonly reservedSlugRepository: Repository<ReservedSlug>,
     private readonly configService: ConfigService,
     @Inject(forwardRef(() => BrandingAssetService))
     private readonly brandingAssetService: BrandingAssetService,
@@ -63,21 +36,51 @@ export class SiteService {
 
   /**
    * slug 사용 가능 여부 확인
+   * @param slug 확인할 슬러그
+   * @param isAdmin 관리자 여부 (어드민 전용 슬러그 허용을 위해)
    */
-  async isSlugAvailable(slug: string): Promise<boolean> {
-    // 예약어 체크
-    if (RESERVED_SLUGS.has(slug.toLowerCase())) {
+  async isSlugAvailable(slug: string, isAdmin: boolean = false): Promise<boolean> {
+    const normalizedSlug = slug.toLowerCase();
+
+    // slug 형식 체크 (영소문자, 숫자, 하이픈만 허용, 3-50자)
+    if (
+      !/^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/.test(normalizedSlug) ||
+      normalizedSlug.length < 3 ||
+      normalizedSlug.length > 50
+    ) {
       return false;
     }
 
-    // slug 형식 체크 (영소문자, 숫자, 하이픈만 허용, 3-50자)
-    if (!/^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/.test(slug) || slug.length < 3 || slug.length > 50) {
-      return false;
+    // 예약어 체크 (DB 조회)
+    const reservedSlug = await this.reservedSlugRepository.findOne({
+      where: { slug: normalizedSlug },
+    });
+
+    if (reservedSlug) {
+      // adminOnly가 true이고 관리자인 경우만 허용
+      if (!reservedSlug.adminOnly || !isAdmin) {
+        return false;
+      }
     }
 
     // 중복 체크
-    const existing = await this.siteRepository.findOne({ where: { slug } });
+    const existing = await this.siteRepository.findOne({ where: { slug: normalizedSlug } });
     return !existing;
+  }
+
+  /**
+   * 예약어인지 확인 (adminOnly 정보 포함)
+   */
+  async checkReservedSlug(slug: string): Promise<{ reserved: boolean; adminOnly: boolean }> {
+    const reservedSlug = await this.reservedSlugRepository.findOne({
+      where: { slug: slug.toLowerCase() },
+    });
+
+    if (!reservedSlug) {
+      return { reserved: false, adminOnly: false };
+    }
+
+    return { reserved: true, adminOnly: reservedSlug.adminOnly };
   }
 
   /**
@@ -127,10 +130,64 @@ export class SiteService {
   }
 
   /**
-   * 예약어 목록 반환
+   * 예약어 목록 반환 (DB 조회)
    */
-  getReservedSlugs(): string[] {
-    return Array.from(RESERVED_SLUGS);
+  async getReservedSlugs(): Promise<ReservedSlug[]> {
+    return this.reservedSlugRepository.find({
+      order: { slug: 'ASC' },
+    });
+  }
+
+  /**
+   * 예약어 슬러그 추가
+   */
+  async createReservedSlug(
+    slug: string,
+    reason: string | null,
+    adminOnly: boolean,
+  ): Promise<ReservedSlug> {
+    const reservedSlug = this.reservedSlugRepository.create({
+      slug: slug.toLowerCase(),
+      reason,
+      adminOnly,
+    });
+
+    const saved = await this.reservedSlugRepository.save(reservedSlug);
+    this.logger.log(`Created reserved slug: ${saved.slug}`);
+    return saved;
+  }
+
+  /**
+   * 예약어 슬러그 삭제
+   */
+  async deleteReservedSlug(slugId: string): Promise<void> {
+    const slug = await this.reservedSlugRepository.findOne({
+      where: { id: slugId },
+    });
+
+    if (slug) {
+      await this.reservedSlugRepository.remove(slug);
+      this.logger.log(`Deleted reserved slug: ${slug.slug}`);
+    }
+  }
+
+  /**
+   * 예약어 슬러그 ID로 조회
+   */
+  async findReservedSlugById(slugId: string): Promise<ReservedSlug | null> {
+    return this.reservedSlugRepository.findOne({
+      where: { id: slugId },
+    });
+  }
+
+  /**
+   * 예약어 슬러그 중복 확인
+   */
+  async isReservedSlugExists(slug: string): Promise<boolean> {
+    const existing = await this.reservedSlugRepository.findOne({
+      where: { slug: slug.toLowerCase() },
+    });
+    return !!existing;
   }
 
   /**
