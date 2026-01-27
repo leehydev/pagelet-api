@@ -8,9 +8,11 @@ import { StorageUsageService } from './storage-usage.service';
 import { PostImageService } from './post-image.service';
 import { UploadService } from './upload.service';
 import { AdminUploadController } from './admin-upload.controller';
+import { AdminUploadV2Controller } from './admin-upload-v2.controller';
 import { StorageCleanupService } from './storage-cleanup.service';
 import { BrandingAssetService } from './branding-asset.service';
 import { AdminBrandingAssetController } from './admin-branding-asset.controller';
+import { AdminBrandingAssetV2Controller } from './admin-branding-asset-v2.controller';
 import { SiteModule } from '../site/site.module';
 
 @Module({
@@ -18,7 +20,12 @@ import { SiteModule } from '../site/site.module';
     TypeOrmModule.forFeature([PostImage, SiteStorageUsage, SiteBrandingImage]),
     forwardRef(() => SiteModule),
   ],
-  controllers: [AdminUploadController, AdminBrandingAssetController],
+  controllers: [
+    AdminUploadController,
+    AdminUploadV2Controller,
+    AdminBrandingAssetController,
+    AdminBrandingAssetV2Controller,
+  ],
   providers: [
     S3Service,
     StorageUsageService,
