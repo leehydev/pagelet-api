@@ -7,13 +7,14 @@ import { AdminSiteSettingsV2Controller } from './admin-site-settings-v2.controll
 import { PublicSiteSettingsController } from './public-site-settings.controller';
 import { SiteService } from './site.service';
 import { Site } from './entities/site.entity';
+import { ReservedSlug } from './entities/reserved-slug.entity';
 import { SiteGuard } from '../auth/guards/site.guard';
 import { PublicSiteGuard } from '../auth/guards/public-site.guard';
 import { AdminSiteGuard } from '../auth/guards/admin-site.guard';
 import { StorageModule } from '../storage/storage.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Site]), forwardRef(() => StorageModule)],
+  imports: [TypeOrmModule.forFeature([Site, ReservedSlug]), forwardRef(() => StorageModule)],
   controllers: [
     PublicSiteController,
     AdminSiteController,

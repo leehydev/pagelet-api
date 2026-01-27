@@ -5,9 +5,10 @@ import { SuperAdminController } from './superadmin.controller';
 import { SuperAdminService } from './superadmin.service';
 import { SuperAdminGuard } from './guards/superadmin.guard';
 import { SystemSettingModule } from '../config/system-setting.module';
+import { SiteModule } from '../site/site.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User]), SystemSettingModule],
+  imports: [TypeOrmModule.forFeature([User]), SystemSettingModule, SiteModule],
   controllers: [SuperAdminController],
   providers: [SuperAdminService, SuperAdminGuard],
 })

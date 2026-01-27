@@ -120,6 +120,23 @@ export const ErrorCode = {
     HttpStatus.BAD_REQUEST,
     'X-Site-Id header is required',
   ),
+  SITE_SLUG_RESERVED_ADMIN_ONLY: new ErrorCodeDefinition(
+    'SITE_004',
+    HttpStatus.FORBIDDEN,
+    'This slug is reserved for admin users only',
+  ),
+
+  // 예약어 슬러그 관련 에러
+  RESERVED_SLUG_NOT_FOUND: new ErrorCodeDefinition(
+    'RESERVED_SLUG_001',
+    HttpStatus.NOT_FOUND,
+    'Reserved slug not found',
+  ),
+  RESERVED_SLUG_ALREADY_EXISTS: new ErrorCodeDefinition(
+    'RESERVED_SLUG_002',
+    HttpStatus.CONFLICT,
+    'Reserved slug already exists',
+  ),
 
   // 게시글 관련 에러
   POST_NOT_FOUND: new ErrorCodeDefinition('POST_001', HttpStatus.NOT_FOUND, 'Post not found'),

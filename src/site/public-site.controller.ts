@@ -28,8 +28,9 @@ export class PublicSiteController {
    */
   @Public()
   @Get('reserved-slugs')
-  getReservedSlugs(): { slugs: string[] } {
-    return { slugs: this.siteService.getReservedSlugs() };
+  async getReservedSlugs(): Promise<{ slugs: string[] }> {
+    const reservedSlugs = await this.siteService.getReservedSlugs();
+    return { slugs: reservedSlugs.map((r) => r.slug) };
   }
 
   /**

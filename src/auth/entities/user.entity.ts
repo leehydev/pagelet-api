@@ -42,6 +42,9 @@ export class User {
   @Column({ type: 'integer', nullable: true })
   onboardingStep: number | null;
 
+  @Column({ type: 'boolean', default: false })
+  isAdmin: boolean;
+
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;
 
