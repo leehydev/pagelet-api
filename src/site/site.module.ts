@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { PublicSiteController } from './public-site.controller';
 import { AdminSiteController } from './admin-site.controller';
 import { AdminSiteSettingsController } from './admin-site-settings.controller';
+import { AdminSiteSettingsV2Controller } from './admin-site-settings-v2.controller';
 import { PublicSiteSettingsController } from './public-site-settings.controller';
 import { SiteService } from './site.service';
 import { Site } from './entities/site.entity';
@@ -17,6 +18,7 @@ import { StorageModule } from '../storage/storage.module';
     PublicSiteController,
     AdminSiteController,
     AdminSiteSettingsController,
+    AdminSiteSettingsV2Controller,
     PublicSiteSettingsController,
   ],
   providers: [SiteService, SiteGuard, PublicSiteGuard, AdminSiteGuard],

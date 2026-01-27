@@ -2,6 +2,7 @@ import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { OnboardingPostController } from './onboarding-post.controller';
 import { AdminPostController } from './admin-post.controller';
+import { AdminPostV2Controller } from './admin-post-v2.controller';
 import { PublicPostController } from './public-post.controller';
 import { PostService } from './post.service';
 import { PostDraftService } from './post-draft.service';
@@ -18,7 +19,12 @@ import { CategoryModule } from '../category/category.module';
     StorageModule,
     forwardRef(() => CategoryModule),
   ],
-  controllers: [OnboardingPostController, AdminPostController, PublicPostController],
+  controllers: [
+    OnboardingPostController,
+    AdminPostController,
+    AdminPostV2Controller,
+    PublicPostController,
+  ],
   providers: [PostService, PostDraftService],
   exports: [PostService, PostDraftService],
 })
