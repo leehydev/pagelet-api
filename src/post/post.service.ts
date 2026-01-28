@@ -595,6 +595,38 @@ export class PostService {
   }
 
   /**
+   * 게시글 상태만 변경
+   * - status 필드만 업데이트
+   * - PRIVATE → PUBLISHED로 변경 시 publishedAt 설정
+   * - PUBLISHED → PRIVATE로 변경 시 publishedAt을 null로 설정
+   */
+  async updatePostStatus(postId: string, siteId: string, status: string): Promise<Post> {
+    // 게시글 조회
+    const post = await this.postRepository.findOne({ where: { id: postId } });
+    if (!post || post.siteId !== siteId) {
+      throw BusinessException.fromErrorCode(ErrorCode.POST_NOT_FOUND);
+    }
+
+    // 상태 변경 처리
+    const oldStatus = post.status;
+    post.status = status;
+
+    // PRIVATE → PUBLISHED로 변경 시 publishedAt 설정
+    if (oldStatus === PostStatus.PRIVATE && status === PostStatus.PUBLISHED) {
+      post.publishedAt = new Date();
+    }
+    // PUBLISHED → PRIVATE로 변경 시 publishedAt을 null로
+    else if (oldStatus === PostStatus.PUBLISHED && status === PostStatus.PRIVATE) {
+      post.publishedAt = null;
+    }
+
+    const saved = await this.postRepository.save(post);
+    this.logger.log(`Updated post status: ${postId}, ${oldStatus} → ${status}`);
+
+    return saved;
+  }
+
+  /**
    * 게시글 비공개 전환
    * - PUBLISHED 상태의 게시글을 PRIVATE로 변경
    */
