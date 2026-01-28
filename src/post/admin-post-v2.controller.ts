@@ -1,8 +1,20 @@
-import { Controller, Post, Get, Put, Delete, Body, Query, Param, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Put,
+  Patch,
+  Delete,
+  Body,
+  Query,
+  Param,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { PostService } from './post.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { ReplacePostDto } from './dto/replace-post.dto';
+import { UpdatePostStatusDto } from './dto/update-post-status.dto';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { CurrentSite } from '../auth/decorators/current-site.decorator';
 import type { UserPrincipal } from '../auth/types/jwt-payload.interface';
@@ -233,6 +245,42 @@ export class AdminPostV2Controller {
     @Body() dto: ReplacePostDto,
   ): Promise<PostResponseDto> {
     const post = await this.postService.replacePost(postId, site.id, dto);
+
+    return new PostResponseDto({
+      id: post.id,
+      title: post.title,
+      subtitle: post.subtitle,
+      slug: post.slug,
+      content: post.content,
+      contentJson: post.contentJson,
+      contentHtml: post.contentHtml,
+      contentText: post.contentText,
+      status: post.status,
+      publishedAt: post.publishedAt,
+      seoTitle: post.seoTitle,
+      seoDescription: post.seoDescription,
+      ogImageUrl: post.ogImageUrl,
+      categoryId: post.categoryId,
+      createdAt: post.createdAt,
+      updatedAt: post.updatedAt,
+    });
+  }
+
+  /**
+   * PATCH /admin/v2/posts/:id/status
+   * 게시글 공개 상태만 변경
+   * Header: X-Site-Id: {siteId}
+   */
+  @Patch(':id/status')
+  @ApiOperation({ summary: '게시글 공개 상태만 변경' })
+  @ApiResponse({ status: 200, description: '상태 변경 성공', type: PostResponseDto })
+  @ApiResponse({ status: 404, description: '게시글을 찾을 수 없음' })
+  async updatePostStatus(
+    @CurrentSite() site: Site,
+    @Param('id') postId: string,
+    @Body() dto: UpdatePostStatusDto,
+  ): Promise<PostResponseDto> {
+    const post = await this.postService.updatePostStatus(postId, site.id, dto.status);
 
     return new PostResponseDto({
       id: post.id,
