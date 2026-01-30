@@ -236,6 +236,23 @@ export const ErrorCode = {
     HttpStatus.BAD_REQUEST,
     '유효하지 않은 링크 URL입니다',
   ),
+
+  // Indexing 관련 에러
+  INDEXING_NOT_CONFIGURED: new ErrorCodeDefinition(
+    'INDEXING_001',
+    HttpStatus.SERVICE_UNAVAILABLE,
+    'Google Indexing API가 설정되지 않았습니다',
+  ),
+  INDEXING_REQUEST_FAILED: new ErrorCodeDefinition(
+    'INDEXING_002',
+    HttpStatus.BAD_GATEWAY,
+    'Google Indexing API 요청에 실패했습니다',
+  ),
+  INDEXING_QUOTA_EXCEEDED: new ErrorCodeDefinition(
+    'INDEXING_003',
+    HttpStatus.TOO_MANY_REQUESTS,
+    'Google Indexing API 할당량을 초과했습니다',
+  ),
 } as const;
 
 /**

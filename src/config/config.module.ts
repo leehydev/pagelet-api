@@ -65,6 +65,9 @@ import { JoiMsString } from 'src/common/utils/validation/joi-ms-string';
 
         // SuperAdmin
         SUPERADMIN_USER_IDS: Joi.string().optional().default(''),
+
+        // Google Indexing API
+        GOOGLE_SERVICE_ACCOUNT_CREDENTIALS: Joi.string().optional(),
       }),
     }),
   ],
