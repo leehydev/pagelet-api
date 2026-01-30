@@ -3,7 +3,7 @@ import { ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { AnalyticsService } from './analytics.service';
-import { AdminSiteGuard } from '../auth/guards/admin-site.guard';
+import { AdminSiteHeaderGuard } from '../auth/guards/admin-site-header.guard';
 import { CurrentSite } from '../auth/decorators/current-site.decorator';
 import { Site } from '../site/entities/site.entity';
 import { Post } from '../post/entities/post.entity';
@@ -11,9 +11,14 @@ import { AnalyticsOverviewDto } from './dto/analytics-overview.dto';
 import { PostAnalyticsDto } from './dto/post-analytics.dto';
 import { DailyAnalyticsDto } from './dto/daily-analytics.dto';
 
-@ApiTags('Admin Analytics')
-@Controller('admin/sites/:siteId/analytics')
-@UseGuards(AdminSiteGuard)
+/**
+ * AdminAnalyticsController
+ * X-Site-Id 헤더 기반 인증을 사용하는 v2 컨트롤러
+ * URL에서 siteId가 제거되고 헤더로 전달됨
+ */
+@ApiTags('Admin Analytics V2')
+@Controller('admin/analytics')
+@UseGuards(AdminSiteHeaderGuard)
 export class AdminAnalyticsController {
   constructor(
     private readonly analyticsService: AnalyticsService,
@@ -22,8 +27,9 @@ export class AdminAnalyticsController {
   ) {}
 
   /**
-   * GET /admin/sites/:siteId/analytics/overview
+   * GET /admin/analytics/overview
    * 사이트 통계 요약 조회
+   * Header: X-Site-Id: {siteId}
    */
   @Get('overview')
   @ApiOperation({ summary: '사이트 통계 요약 조회' })
@@ -37,8 +43,9 @@ export class AdminAnalyticsController {
   }
 
   /**
-   * GET /admin/sites/:siteId/analytics/posts
+   * GET /admin/analytics/posts
    * 게시글별 통계 조회
+   * Header: X-Site-Id: {siteId}
    */
   @Get('posts')
   @ApiOperation({ summary: '게시글별 통계 조회' })
@@ -52,8 +59,9 @@ export class AdminAnalyticsController {
   }
 
   /**
-   * GET /admin/sites/:siteId/analytics/daily?days=7
+   * GET /admin/analytics/daily?days=7
    * 일별 통계 추이 조회
+   * Header: X-Site-Id: {siteId}
    */
   @Get('daily')
   @ApiOperation({ summary: '일별 통계 추이 조회' })

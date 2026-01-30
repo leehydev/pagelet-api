@@ -2,17 +2,23 @@ import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards } from '@nes
 import { CategoryService } from './category.service';
 import { CreateCategoryDto, UpdateCategoryDto, CategoryResponseDto } from './dto';
 import { CurrentSite } from '../auth/decorators/current-site.decorator';
-import { AdminSiteGuard } from '../auth/guards/admin-site.guard';
+import { AdminSiteHeaderGuard } from '../auth/guards/admin-site-header.guard';
 import { Site } from '../site/entities/site.entity';
 
-@Controller('admin/sites/:siteId/categories')
-@UseGuards(AdminSiteGuard)
+/**
+ * AdminCategoryController
+ * X-Site-Id 헤더 기반 인증을 사용하는 PoC 컨트롤러
+ * URL에서 siteId가 제거되고 헤더로 전달됨
+ */
+@Controller('admin/categories')
+@UseGuards(AdminSiteHeaderGuard)
 export class AdminCategoryController {
   constructor(private readonly categoryService: CategoryService) {}
 
   /**
-   * GET /admin/sites/:siteId/categories
+   * GET /admin/categories
    * 카테고리 목록 조회
+   * Header: X-Site-Id: {siteId}
    */
   @Get()
   async getCategories(@CurrentSite() site: Site): Promise<CategoryResponseDto[]> {
@@ -37,8 +43,9 @@ export class AdminCategoryController {
   }
 
   /**
-   * POST /admin/sites/:siteId/categories
+   * POST /admin/categories
    * 카테고리 생성
+   * Header: X-Site-Id: {siteId}
    */
   @Post()
   async createCategory(
@@ -62,8 +69,9 @@ export class AdminCategoryController {
   }
 
   /**
-   * PUT /admin/sites/:siteId/categories/:id
+   * PUT /admin/categories/:id
    * 카테고리 수정
+   * Header: X-Site-Id: {siteId}
    */
   @Put(':id')
   async updateCategory(
@@ -88,8 +96,9 @@ export class AdminCategoryController {
   }
 
   /**
-   * DELETE /admin/sites/:siteId/categories/:id
+   * DELETE /admin/categories/:id
    * 카테고리 삭제
+   * Header: X-Site-Id: {siteId}
    */
   @Delete(':id')
   async deleteCategory(@CurrentSite() site: Site, @Param('id') categoryId: string): Promise<void> {
