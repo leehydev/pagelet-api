@@ -1,7 +1,7 @@
 // src/main.ts 파일 최상단에 추가
 import { randomUUID } from 'crypto';
 
-// crypto를 글로벌로 만들기
+// crypto 글로벌로 만들기
 if (!global.crypto) {
   (global as any).crypto = {
     randomUUID,
