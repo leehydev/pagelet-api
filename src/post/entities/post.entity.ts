@@ -86,6 +86,9 @@ export class Post {
   @JoinColumn({ name: 'category_id' })
   category: any;
 
+  @Column({ type: 'timestamptz', nullable: true })
+  indexedAt: Date | null;
+
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;
 
