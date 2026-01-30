@@ -15,18 +15,18 @@ import { ErrorCode } from '../common/exception/error-code';
 import { Site } from '../site/entities/site.entity';
 
 /**
- * AdminDraftV2Controller
+ * AdminDraftController
  * 독립적인 Draft(임시저장 글) 관리 API
  * X-Site-Id 헤더 기반 인증
  */
 @ApiTags('Admin Drafts V2')
-@Controller('admin/v2/drafts')
+@Controller('admin/drafts')
 @UseGuards(AdminSiteHeaderGuard)
-export class AdminDraftV2Controller {
+export class AdminDraftController {
   constructor(private readonly draftService: DraftService) {}
 
   /**
-   * GET /admin/v2/drafts
+   * GET /admin/drafts
    * 임시저장 글 목록 조회
    */
   @Get()
@@ -53,7 +53,7 @@ export class AdminDraftV2Controller {
   }
 
   /**
-   * POST /admin/v2/drafts
+   * POST /admin/drafts
    * 새 임시저장 글 생성
    */
   @Post()
@@ -87,7 +87,7 @@ export class AdminDraftV2Controller {
   }
 
   /**
-   * GET /admin/v2/drafts/:id
+   * GET /admin/drafts/:id
    * 임시저장 글 상세 조회
    */
   @Get(':id')
@@ -127,7 +127,7 @@ export class AdminDraftV2Controller {
   }
 
   /**
-   * PUT /admin/v2/drafts/:id
+   * PUT /admin/drafts/:id
    * 임시저장 글 수정
    */
   @Put(':id')
@@ -163,7 +163,7 @@ export class AdminDraftV2Controller {
   }
 
   /**
-   * DELETE /admin/v2/drafts/:id
+   * DELETE /admin/drafts/:id
    * 임시저장 글 삭제
    */
   @Delete(':id')
@@ -180,7 +180,7 @@ export class AdminDraftV2Controller {
   }
 
   /**
-   * POST /admin/v2/drafts/:id/publish
+   * POST /admin/drafts/:id/publish
    * 임시저장 글을 게시글로 등록
    */
   @Post(':id/publish')

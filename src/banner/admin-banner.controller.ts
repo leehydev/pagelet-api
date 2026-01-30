@@ -2,19 +2,25 @@ import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards } from '@nes
 import { BannerService } from './banner.service';
 import { CreateBannerDto, UpdateBannerDto, UpdateBannerOrderDto, BannerResponseDto } from './dto';
 import { CurrentSite } from '../auth/decorators/current-site.decorator';
-import { AdminSiteGuard } from '../auth/guards/admin-site.guard';
+import { AdminSiteHeaderGuard } from '../auth/guards/admin-site-header.guard';
 import { Site } from '../site/entities/site.entity';
 import { BusinessException } from '../common/exception/business.exception';
 import { ErrorCode } from '../common/exception/error-code';
 
-@Controller('admin/sites/:siteId/banners')
-@UseGuards(AdminSiteGuard)
+/**
+ * AdminBannerController
+ * X-Site-Id 헤더 기반 인증을 사용하는 v2 컨트롤러
+ * URL에서 siteId가 제거되고 헤더로 전달됨
+ */
+@Controller('admin/banners')
+@UseGuards(AdminSiteHeaderGuard)
 export class AdminBannerController {
   constructor(private readonly bannerService: BannerService) {}
 
   /**
-   * POST /admin/sites/:siteId/banners
+   * POST /admin/banners
    * 배너 생성 (postId 필수)
+   * Header: X-Site-Id: {siteId}
    */
   @Post()
   async createBanner(
@@ -27,8 +33,9 @@ export class AdminBannerController {
   }
 
   /**
-   * GET /admin/sites/:siteId/banners
+   * GET /admin/banners
    * 배너 목록 조회
+   * Header: X-Site-Id: {siteId}
    */
   @Get()
   async getBanners(@CurrentSite() site: Site): Promise<BannerResponseDto[]> {
@@ -37,8 +44,9 @@ export class AdminBannerController {
   }
 
   /**
-   * PUT /admin/sites/:siteId/banners/order
+   * PUT /admin/banners/order
    * 배너 순서 변경
+   * Header: X-Site-Id: {siteId}
    */
   @Put('order')
   async updateOrder(
@@ -50,8 +58,9 @@ export class AdminBannerController {
   }
 
   /**
-   * GET /admin/sites/:siteId/banners/:id
+   * GET /admin/banners/:id
    * 배너 상세 조회
+   * Header: X-Site-Id: {siteId}
    */
   @Get(':id')
   async getBanner(
@@ -66,8 +75,9 @@ export class AdminBannerController {
   }
 
   /**
-   * PUT /admin/sites/:siteId/banners/:id
+   * PUT /admin/banners/:id
    * 배너 수정
+   * Header: X-Site-Id: {siteId}
    */
   @Put(':id')
   async updateBanner(
@@ -80,8 +90,9 @@ export class AdminBannerController {
   }
 
   /**
-   * DELETE /admin/sites/:siteId/banners/:id
+   * DELETE /admin/banners/:id
    * 배너 삭제
+   * Header: X-Site-Id: {siteId}
    */
   @Delete(':id')
   async deleteBanner(@CurrentSite() site: Site, @Param('id') bannerId: string): Promise<void> {

@@ -8,11 +8,9 @@ import { StorageUsageService } from './storage-usage.service';
 import { PostImageService } from './post-image.service';
 import { UploadService } from './upload.service';
 import { AdminUploadController } from './admin-upload.controller';
-import { AdminUploadV2Controller } from './admin-upload-v2.controller';
 import { StorageCleanupService } from './storage-cleanup.service';
 import { BrandingAssetService } from './branding-asset.service';
 import { AdminBrandingAssetController } from './admin-branding-asset.controller';
-import { AdminBrandingAssetV2Controller } from './admin-branding-asset-v2.controller';
 import { SiteModule } from '../site/site.module';
 import { DraftModule } from '../draft/draft.module';
 
@@ -22,12 +20,7 @@ import { DraftModule } from '../draft/draft.module';
     forwardRef(() => SiteModule),
     forwardRef(() => DraftModule),
   ],
-  controllers: [
-    AdminUploadController,
-    AdminUploadV2Controller,
-    AdminBrandingAssetController,
-    AdminBrandingAssetV2Controller,
-  ],
+  controllers: [AdminUploadController, AdminBrandingAssetController],
   providers: [
     S3Service,
     StorageUsageService,

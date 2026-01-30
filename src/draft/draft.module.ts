@@ -4,7 +4,7 @@ import { Draft } from './entities/draft.entity';
 import { DraftImage } from './entities/draft-image.entity';
 import { DraftService } from './draft.service';
 import { DraftImageService } from './draft-image.service';
-import { AdminDraftV2Controller } from './admin-draft-v2.controller';
+import { AdminDraftController } from './admin-draft.controller';
 import { PostModule } from '../post/post.module';
 import { StorageModule } from '../storage/storage.module';
 import { SiteModule } from '../site/site.module';
@@ -17,7 +17,7 @@ import { PostImage } from '../storage/entities/post-image.entity';
     forwardRef(() => StorageModule),
     forwardRef(() => SiteModule),
   ],
-  controllers: [AdminDraftV2Controller],
+  controllers: [AdminDraftController],
   providers: [DraftService, DraftImageService],
   exports: [DraftService, DraftImageService],
 })

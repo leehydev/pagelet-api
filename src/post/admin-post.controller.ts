@@ -1,12 +1,24 @@
-import { Controller, Post, Get, Put, Delete, Body, Query, Param, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Put,
+  Patch,
+  Delete,
+  Body,
+  Query,
+  Param,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { PostService } from './post.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { ReplacePostDto } from './dto/replace-post.dto';
+import { UpdatePostStatusDto } from './dto/update-post-status.dto';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { CurrentSite } from '../auth/decorators/current-site.decorator';
 import type { UserPrincipal } from '../auth/types/jwt-payload.interface';
-import { AdminSiteGuard } from '../auth/guards/admin-site.guard';
+import { AdminSiteHeaderGuard } from '../auth/guards/admin-site-header.guard';
 import { BusinessException } from '../common/exception/business.exception';
 import { ErrorCode } from '../common/exception/error-code';
 import { PaginationQueryDto, PaginatedResponseDto } from '../common/dto';
@@ -15,19 +27,20 @@ import { PostSearchResultDto } from './dto/post-search-result.dto';
 import { Site } from '../site/entities/site.entity';
 
 /**
- * AdminPostController (v1)
- * URL 기반 siteId 인증
- * @deprecated v2 API (/admin/v2/posts) 사용 권장
+ * AdminPostController
+ * X-Site-Id 헤더 기반 인증을 사용하는 v2 컨트롤러
+ * URL에서 siteId가 제거되고 헤더로 전달됨
  */
-@ApiTags('Admin Posts')
-@Controller('admin/sites/:siteId/posts')
-@UseGuards(AdminSiteGuard)
+@ApiTags('Admin Posts V2')
+@Controller('admin/posts')
+@UseGuards(AdminSiteHeaderGuard)
 export class AdminPostController {
   constructor(private readonly postService: PostService) {}
 
   /**
-   * POST /admin/sites/:siteId/posts
+   * POST /admin/posts
    * 게시글 생성
+   * Header: X-Site-Id: {siteId}
    */
   @Post()
   async createPost(
@@ -58,8 +71,9 @@ export class AdminPostController {
   }
 
   /**
-   * GET /admin/sites/:siteId/posts?page=1&limit=10&categoryId=xxx
+   * GET /admin/posts?page=1&limit=10&categoryId=xxx
    * 내 게시글 목록 조회 (페이징 지원)
+   * Header: X-Site-Id: {siteId}
    */
   @Get()
   @ApiOperation({ summary: '내 게시글 목록 조회 (페이징)' })
@@ -113,8 +127,9 @@ export class AdminPostController {
   }
 
   /**
-   * GET /admin/sites/:siteId/posts/search?q=검색어&limit=10
-   * 게시글 검색 (오토컴플리트용)
+   * GET /admin/posts/search?q=검색어&limit=10
+   * 게시글 검색 (오토컴플리트용, PUBLISHED 상태만)
+   * Header: X-Site-Id: {siteId}
    */
   @Get('search')
   @ApiOperation({ summary: '게시글 검색 (오토컴플리트용)' })
@@ -155,8 +170,9 @@ export class AdminPostController {
   }
 
   /**
-   * GET /admin/sites/:siteId/posts/check-slug?slug=xxx
+   * GET /admin/posts/check-slug?slug=xxx
    * slug 사용 가능 여부 확인
+   * Header: X-Site-Id: {siteId}
    */
   @Get('check-slug')
   async checkSlugAvailability(
@@ -175,8 +191,9 @@ export class AdminPostController {
   }
 
   /**
-   * GET /admin/sites/:siteId/posts/:id
-   * 게시글 단건 조회
+   * GET /admin/posts/:id
+   * 게시글 단건 조회 (편집/상세 보기용)
+   * Header: X-Site-Id: {siteId}
    */
   @Get(':id')
   @ApiOperation({ summary: '게시글 단건 조회' })
@@ -188,6 +205,7 @@ export class AdminPostController {
   ): Promise<PostResponseDto> {
     const post = await this.postService.findById(postId);
 
+    // 게시글이 없거나 다른 사이트의 게시글인 경우 404
     if (!post || post.siteId !== site.id) {
       throw BusinessException.fromErrorCode(ErrorCode.POST_NOT_FOUND);
     }
@@ -213,8 +231,9 @@ export class AdminPostController {
   }
 
   /**
-   * PUT /admin/sites/:siteId/posts/:id
+   * PUT /admin/posts/:id
    * 게시글 전체 교체
+   * Header: X-Site-Id: {siteId}
    */
   @Put(':id')
   @ApiOperation({ summary: '게시글 전체 교체 (PUT)' })
@@ -248,8 +267,45 @@ export class AdminPostController {
   }
 
   /**
-   * DELETE /admin/sites/:siteId/posts/:id
+   * PATCH /admin/posts/:id/status
+   * 게시글 공개 상태만 변경
+   * Header: X-Site-Id: {siteId}
+   */
+  @Patch(':id/status')
+  @ApiOperation({ summary: '게시글 공개 상태만 변경' })
+  @ApiResponse({ status: 200, description: '상태 변경 성공', type: PostResponseDto })
+  @ApiResponse({ status: 404, description: '게시글을 찾을 수 없음' })
+  async updatePostStatus(
+    @CurrentSite() site: Site,
+    @Param('id') postId: string,
+    @Body() dto: UpdatePostStatusDto,
+  ): Promise<PostResponseDto> {
+    const post = await this.postService.updatePostStatus(postId, site.id, dto.status);
+
+    return new PostResponseDto({
+      id: post.id,
+      title: post.title,
+      subtitle: post.subtitle,
+      slug: post.slug,
+      content: post.content,
+      contentJson: post.contentJson,
+      contentHtml: post.contentHtml,
+      contentText: post.contentText,
+      status: post.status,
+      publishedAt: post.publishedAt,
+      seoTitle: post.seoTitle,
+      seoDescription: post.seoDescription,
+      ogImageUrl: post.ogImageUrl,
+      categoryId: post.categoryId,
+      createdAt: post.createdAt,
+      updatedAt: post.updatedAt,
+    });
+  }
+
+  /**
+   * DELETE /admin/posts/:id
    * 게시글 삭제
+   * Header: X-Site-Id: {siteId}
    */
   @Delete(':id')
   @ApiOperation({ summary: '게시글 삭제' })

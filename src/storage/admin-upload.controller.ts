@@ -4,19 +4,25 @@ import { PresignUploadDto } from './dto/presign-upload.dto';
 import { CompleteUploadDto } from './dto/complete-upload.dto';
 import { AbortUploadDto } from './dto/abort-upload.dto';
 import { CurrentSite } from '../auth/decorators/current-site.decorator';
-import { AdminSiteGuard } from '../auth/guards/admin-site.guard';
+import { AdminSiteHeaderGuard } from '../auth/guards/admin-site-header.guard';
 import { Site } from '../site/entities/site.entity';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 
-@ApiTags('Upload')
-@Controller('admin/sites/:siteId/uploads')
-@UseGuards(AdminSiteGuard)
+/**
+ * AdminUploadController
+ * X-Site-Id 헤더 기반 인증을 사용하는 v2 컨트롤러
+ * URL에서 siteId가 제거되고 헤더로 전달됨
+ */
+@ApiTags('Upload V2')
+@Controller('admin/uploads')
+@UseGuards(AdminSiteHeaderGuard)
 export class AdminUploadController {
   constructor(private readonly uploadService: UploadService) {}
 
   /**
-   * POST /admin/sites/:siteId/uploads/presign
+   * POST /admin/uploads/presign
    * Presigned URL 생성 및 용량 예약
+   * Header: X-Site-Id: {siteId}
    */
   @Post('presign')
   @ApiOperation({ summary: 'Presigned URL 생성' })
@@ -27,8 +33,9 @@ export class AdminUploadController {
   }
 
   /**
-   * POST /admin/sites/:siteId/uploads/complete
+   * POST /admin/uploads/complete
    * 업로드 완료 확정
+   * Header: X-Site-Id: {siteId}
    */
   @Post('complete')
   @ApiOperation({ summary: '업로드 완료 확정' })
@@ -39,8 +46,9 @@ export class AdminUploadController {
   }
 
   /**
-   * POST /admin/sites/:siteId/uploads/abort
+   * POST /admin/uploads/abort
    * 업로드 중단
+   * Header: X-Site-Id: {siteId}
    */
   @Post('abort')
   @ApiOperation({ summary: '업로드 중단' })

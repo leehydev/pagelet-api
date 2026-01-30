@@ -5,21 +5,27 @@ import { BrandingCommitDto } from './dto/branding-commit.dto';
 import { BrandingPresignResponseDto, BrandingCommitResponseDto } from './dto/branding-response.dto';
 import { BrandingDeleteResponseDto } from './dto/branding-delete.dto';
 import { CurrentSite } from '../auth/decorators/current-site.decorator';
-import { AdminSiteGuard } from '../auth/guards/admin-site.guard';
+import { AdminSiteHeaderGuard } from '../auth/guards/admin-site-header.guard';
 import { Site } from '../site/entities/site.entity';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
 import { BusinessException } from '../common/exception/business.exception';
 import { ErrorCode } from '../common/exception/error-code';
 
-@ApiTags('Branding Assets')
-@Controller('admin/sites/:siteId/assets/branding')
-@UseGuards(AdminSiteGuard)
+/**
+ * AdminBrandingAssetController
+ * X-Site-Id 헤더 기반 인증을 사용하는 v2 컨트롤러
+ * URL에서 siteId가 제거되고 헤더로 전달됨
+ */
+@ApiTags('Branding Assets V2')
+@Controller('admin/assets/branding')
+@UseGuards(AdminSiteHeaderGuard)
 export class AdminBrandingAssetController {
   constructor(private readonly brandingAssetService: BrandingAssetService) {}
 
   /**
-   * POST /admin/sites/:siteId/assets/branding/presign
+   * POST /admin/assets/branding/presign
    * 브랜딩 에셋 Presigned URL 생성
+   * Header: X-Site-Id: {siteId}
    */
   @Post('presign')
   @ApiOperation({ summary: '브랜딩 에셋 Presigned URL 생성' })
@@ -37,8 +43,9 @@ export class AdminBrandingAssetController {
   }
 
   /**
-   * POST /admin/sites/:siteId/assets/branding/commit
+   * POST /admin/assets/branding/commit
    * 브랜딩 에셋 업로드 확정 (tmp → 최종 경로)
+   * Header: X-Site-Id: {siteId}
    */
   @Post('commit')
   @ApiOperation({ summary: '브랜딩 에셋 업로드 확정' })
@@ -52,8 +59,9 @@ export class AdminBrandingAssetController {
   }
 
   /**
-   * DELETE /admin/sites/:siteId/assets/branding/:type
+   * DELETE /admin/assets/branding/:type
    * 브랜딩 에셋 삭제 (S3 파일 삭제 + Site 필드 null 처리)
+   * Header: X-Site-Id: {siteId}
    */
   @Delete(':type')
   @ApiOperation({ summary: '브랜딩 에셋 삭제' })
