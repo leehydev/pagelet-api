@@ -1,4 +1,4 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { S3Service } from './s3.service';
 import { StorageUsageService } from './storage-usage.service';
 import { PostImageService } from './post-image.service';
