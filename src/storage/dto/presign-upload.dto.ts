@@ -8,7 +8,7 @@ export class PresignUploadDto {
 
   @IsNotEmpty({ message: '파일 크기는 필수입니다' })
   @IsNumber()
-  @Max(5242880, { message: '파일 크기는 최대 5MB까지 가능합니다' }) // 5MB
+  @Max(5242880, { message: '파일 크기는 최대 5MB까지 가능합니다..' }) // 5MB
   size: number;
 
   @IsNotEmpty({ message: 'MIME 타입은 필수입니다' })
