@@ -128,6 +128,10 @@
         {
           "name": "ASSETS_CDN_URL",
           "value": "https://assets.pagelet.kr"
+        },
+        {
+          "name": "SUPERADMIN_USER_IDS",
+          "value": "${SUPERADMIN_USER_IDS}"
         }
       ],
       "secrets": [
