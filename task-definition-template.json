@@ -128,10 +128,12 @@
         {
           "name": "ASSETS_CDN_URL",
           "value": "https://assets.pagelet.kr"
-        },
+        }
+      ],
+      "secrets": [
         {
           "name": "GOOGLE_SERVICE_ACCOUNT_CREDENTIALS",
-          "value": "${GOOGLE_SERVICE_ACCOUNT_CREDENTIALS}"
+          "valueFrom": "${GOOGLE_SERVICE_ACCOUNT_CREDENTIALS}"
         }
       ],
       "logConfiguration": {
