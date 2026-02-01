@@ -11,7 +11,7 @@ import { ErrorCode } from '../common/exception/error-code';
 @Injectable()
 export class UploadService {
   private readonly logger = new Logger(UploadService.name);
-  private readonly MAX_FILE_SIZE = 2097152; // 2MB
+  private readonly MAX_FILE_SIZE = 5242880; // 5MB
 
   constructor(
     private readonly s3Service: S3Service,
