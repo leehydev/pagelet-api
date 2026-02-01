@@ -5,7 +5,6 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import Redis from 'ioredis';
 import ms from 'ms';
-import type { StringValue } from 'ms';
 import { User, AccountStatus, OnboardingStep } from './entities/user.entity';
 import { SocialAccount, OAuthProvider } from './entities/social-account.entity';
 import { KakaoOAuthService } from './oauth/services/kakao-oauth.service';
@@ -18,7 +17,6 @@ import { BusinessException } from '../common/exception/business.exception';
 import { ErrorCode } from '../common/exception/error-code';
 import { JwtConfig } from '../config/jwt.config';
 import { RedisService } from '../common/redis/redis.service';
-import { RedisLock, RedisLockConflictException } from '../common/decorators/redis-lock.decorator';
 
 /**
  * Auth Service
@@ -30,8 +28,10 @@ export class AuthService {
   private readonly redis: Redis;
 
   // Redis 키 prefix
-  private readonly REFRESH_TOKEN_PREFIX = 'auth:refresh:';
-  private readonly REFRESH_RESULT_PREFIX = 'refresh-result:';
+  private readonly REFRESH_TOKEN_PREFIX = 'pagelet:auth:refresh:';
+  private readonly REFRESH_RESULT_PREFIX = 'pagelet:auth:refresh:result:';
+  private readonly REFRESH_LOCK_PREFIX = 'pagelet:auth:refresh:lock:';
+  private readonly LOCK_TTL_SECONDS = 5;
 
   constructor(
     @InjectRepository(User)
@@ -258,60 +258,56 @@ export class AuthService {
     }
 
     const userId = payload.sub;
+    const lockKey = `${this.REFRESH_LOCK_PREFIX}${userId}`;
 
+    // 2. 캐시된 결과 확인 (동시 요청 처리)
+    const cached = await this.redis.get(`${this.REFRESH_RESULT_PREFIX}${userId}`);
+    if (cached) {
+      this.logger.log(`Returning cached access token for user: ${userId}`);
+      return { accessToken: cached, isCached: true };
+    }
+
+    // 3. 분산 락 획득 시도 (NX: 키가 없을 때만, EX: TTL 설정)
+    const lockAcquired = await this.redis.set(lockKey, '1', 'EX', this.LOCK_TTL_SECONDS, 'NX');
+
+    if (!lockAcquired) {
+      // 락 충돌: 다른 요청이 이미 토큰 갱신 중
+      // 잠시 대기 후 캐시된 결과 확인
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      const cachedAfterWait = await this.redis.get(`${this.REFRESH_RESULT_PREFIX}${userId}`);
+      if (cachedAfterWait) {
+        return { accessToken: cachedAfterWait, isCached: true };
+      }
+
+      throw new UnauthorizedException('토큰 갱신 실패');
+    }
+
+    // 4. 락 획득 성공 - 토큰 갱신 수행
     try {
-      // 2. 캐시된 결과 확인 (동시 요청 처리)
-      const cached = await this.redis.get(`${this.REFRESH_RESULT_PREFIX}${userId}`);
-      if (cached) {
-        this.logger.log(`Returning cached access token for user: ${userId}`);
-        return { accessToken: cached, isCached: true };
+      // Redis에 저장된 토큰과 비교
+      const savedToken = await this.redis.get(`${this.REFRESH_TOKEN_PREFIX}${userId}`);
+      if (!savedToken || savedToken !== refreshToken) {
+        throw new UnauthorizedException('유효하지 않은 토큰입니다.');
       }
 
-      // 3. 락 획득 후 새 토큰 발급
-      const newAccessToken = await this.refreshTokenWithLock(userId, refreshToken);
+      // 새 Access Token 발급
+      const newPayload: JwtPayload = { sub: userId };
+      const newAccessToken = await this.jwtService.signAsync(newPayload, {
+        secret: jwtConfig.access.secret,
+        expiresIn: jwtConfig.access.expiresIn,
+      });
+
+      // 결과 캐시 (동시 요청용, 10초)
+      await this.redis.set(`${this.REFRESH_RESULT_PREFIX}${userId}`, newAccessToken, 'EX', 10);
+
+      this.logger.log(`Refreshed access token for user: ${userId}`);
+
       return { accessToken: newAccessToken, isCached: false };
-    } catch (err) {
-      if (err instanceof RedisLockConflictException) {
-        // 락 충돌 시 잠시 대기 후 캐시 확인
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-
-        const cached = await this.redis.get(`${this.REFRESH_RESULT_PREFIX}${userId}`);
-        if (cached) {
-          return { accessToken: cached, isCached: true };
-        }
-
-        throw new UnauthorizedException('토큰 갱신 실패');
-      }
-      throw err;
+    } finally {
+      // 5. 락 해제
+      await this.redis.del(lockKey);
     }
-  }
-
-  /**
-   * 락을 획득하고 토큰 리프레시 수행
-   */
-  @RedisLock((args) => `refresh-lock:${args[0]}`, 5)
-  private async refreshTokenWithLock(userId: string, refreshToken: string): Promise<string> {
-    const jwtConfig = this.configService.get<JwtConfig>('jwt')!;
-
-    // Redis에 저장된 토큰과 비교
-    const savedToken = await this.redis.get(`${this.REFRESH_TOKEN_PREFIX}${userId}`);
-    if (!savedToken || savedToken !== refreshToken) {
-      throw new UnauthorizedException('유효하지 않은 토큰입니다.');
-    }
-
-    // 새 Access Token 발급
-    const payload: JwtPayload = { sub: userId };
-    const newAccessToken = await this.jwtService.signAsync(payload, {
-      secret: jwtConfig.access.secret,
-      expiresIn: jwtConfig.access.expiresIn,
-    });
-
-    // 결과 캐시 (동시 요청용, 10초)
-    await this.redis.set(`${this.REFRESH_RESULT_PREFIX}${userId}`, newAccessToken, 'EX', 10);
-
-    this.logger.log(`Refreshed access token for user: ${userId}`);
-
-    return newAccessToken;
   }
 
   /**
