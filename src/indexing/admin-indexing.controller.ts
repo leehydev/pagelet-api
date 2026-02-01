@@ -22,5 +22,4 @@ export class AdminIndexingController {
   ): Promise<IndexingResponseDto> {
     return this.indexingService.requestIndexing(dto.url);
   }
-
 }

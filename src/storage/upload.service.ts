@@ -31,12 +31,12 @@ export class UploadService {
       );
     }
 
-    // MIME 타입 검증 (이미지만 허용: JPEG, PNG, WebP만)
-    const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    // MIME 타입 검증 (이미지만 허용: JPEG, PNG, WebP, GIF)
+    const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
     if (!allowedMimeTypes.includes(dto.mimeType)) {
       throw BusinessException.withMessage(
         ErrorCode.UPLOAD_INVALID,
-        '지원하지 않는 파일 형식입니다. JPEG, PNG, WebP만 가능합니다',
+        '지원하지 않는 파일 형식입니다. JPEG, PNG, WebP, GIF만 가능합니다',
       );
     }
 
