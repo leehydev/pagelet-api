@@ -33,7 +33,7 @@ export class IndexingService implements OnModuleInit {
       return;
     }
 
-    const credentials = JSON.parse(Buffer.from(credentialsJson, 'base64').toString('utf-8'));
+    const credentials = JSON.parse(credentialsJson);
 
     const auth = new google.auth.GoogleAuth({
       credentials,
