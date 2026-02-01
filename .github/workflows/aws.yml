@@ -104,6 +104,7 @@ jobs:
           REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
           AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
           GOOGLE_SERVICE_ACCOUNT_CREDENTIALS: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_CREDENTIALS }}
+          SUPERADMIN_USER_IDS: ${{ secrets.SUPERADMIN_USER_IDS }}
         run: |
           # Template에서 환경변수 치환
           envsubst < task-definition-template.json > task-definition.json
