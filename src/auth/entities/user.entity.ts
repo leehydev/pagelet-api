@@ -45,6 +45,9 @@ export class User {
   @Column({ type: 'boolean', default: false })
   isAdmin: boolean;
 
+  @Column({ type: 'text', nullable: true })
+  adminNote: string | null;
+
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;
 
