@@ -66,8 +66,9 @@ import { JoiMsString } from 'src/common/utils/validation/joi-ms-string';
         // SuperAdmin
         SUPERADMIN_USER_IDS: Joi.string().optional().default(''),
 
-        // Google Indexing API
+        // Google Indexing API (로컬: 파일 경로, 상용: AWS Secrets Manager JSON)
         GOOGLE_SERVICE_ACCOUNT_CREDENTIALS: Joi.string().optional(),
+        GOOGLE_SERVICE_ACCOUNT_CREDENTIALS_FILE: Joi.string().optional(),
       }),
     }),
   ],
