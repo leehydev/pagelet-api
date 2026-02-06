@@ -1,3 +1,4 @@
+import { readFile } from 'fs/promises';
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -23,17 +24,42 @@ export class IndexingService implements OnModuleInit {
     private readonly postRepository: Repository<Post>,
   ) {}
 
-  onModuleInit() {
-    const credentialsJson = this.configService.get<string>('GOOGLE_SERVICE_ACCOUNT_CREDENTIALS');
+  async onModuleInit(): Promise<void> {
+    const credentialsFilePath = this.configService.get<string>(
+      'GOOGLE_SERVICE_ACCOUNT_CREDENTIALS_FILE',
+    );
+    const credentialsEnv = this.configService.get<string>('GOOGLE_SERVICE_ACCOUNT_CREDENTIALS');
+
+    let credentialsJson: string | null = null;
+
+    if (credentialsFilePath) {
+      try {
+        credentialsJson = await readFile(credentialsFilePath, 'utf-8');
+      } catch (error) {
+        this.logger.warn(
+          `GOOGLE_SERVICE_ACCOUNT_CREDENTIALS_FILE could not be read (${credentialsFilePath}). Indexing API will be unavailable.`,
+          error?.message,
+        );
+        return;
+      }
+    } else if (credentialsEnv?.trim()) {
+      credentialsJson = credentialsEnv.trim();
+    }
 
     if (!credentialsJson) {
       this.logger.warn(
-        'GOOGLE_SERVICE_ACCOUNT_CREDENTIALS is not set. Indexing API will be unavailable.',
+        'Google Indexing credentials not set (GOOGLE_SERVICE_ACCOUNT_CREDENTIALS_FILE or GOOGLE_SERVICE_ACCOUNT_CREDENTIALS). Indexing API will be unavailable.',
       );
       return;
     }
 
-    const credentials = JSON.parse(credentialsJson);
+    let credentials: Record<string, unknown>;
+    try {
+      credentials = JSON.parse(credentialsJson);
+    } catch {
+      this.logger.warn('Google credentials are invalid JSON. Indexing API will be unavailable.');
+      return;
+    }
 
     const auth = new google.auth.GoogleAuth({
       credentials,
@@ -89,9 +115,7 @@ export class IndexingService implements OnModuleInit {
     this.logger.log('[인덱싱] 발행된 포스트 색인 시작...');
 
     if (!this.indexingClient) {
-      this.logger.log(
-        'Skipping scheduled indexing: GOOGLE_SERVICE_ACCOUNT_CREDENTIALS not configured',
-      );
+      this.logger.log('Skipping scheduled indexing: Google Indexing credentials not configured');
       return;
     }
 

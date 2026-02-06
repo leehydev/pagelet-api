@@ -39,6 +39,9 @@ lerna-debug.log*
 .env
 .env.*
 
+# Google 서비스 계정 키 (로컬 인덱싱 API용)
+google-service-account.json
+
 # temp directory
 .temp
 .tmp
