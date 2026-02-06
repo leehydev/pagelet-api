@@ -84,9 +84,14 @@ export class IndexingService implements OnModuleInit {
     }
   }
 
-  @Cron('0 3 * * *')
+  @Cron('0 3 * * *', { timeZone: 'Asia/Seoul' })
   async indexPublishedPosts(): Promise<void> {
+    this.logger.log('[인덱싱] 발행된 포스트 색인 시작...');
+
     if (!this.indexingClient) {
+      this.logger.log(
+        'Skipping scheduled indexing: GOOGLE_SERVICE_ACCOUNT_CREDENTIALS not configured',
+      );
       return;
     }
 

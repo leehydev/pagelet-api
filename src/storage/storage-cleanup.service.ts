@@ -30,9 +30,9 @@ export class StorageCleanupService {
    * 10분마다 실행되는 Cleanup Job
    * post_id가 null이고 7일 이상 된 레코드 정리
    */
-  @Cron(CronExpression.EVERY_10_MINUTES)
+  @Cron(CronExpression.EVERY_10_MINUTES, { timeZone: 'Asia/Seoul' })
   async cleanupOrphanedReservations() {
-    this.logger.log('Starting cleanup of orphaned reservations...');
+    this.logger.log('[스토리지 클린업] 안쓰는 이미지 예약 정리 시작...');
 
     try {
       // post_id가 null이고 7일 이상 된 레코드 찾기 (분 단위로 변환)
@@ -83,9 +83,9 @@ export class StorageCleanupService {
    * - pendingDelete가 true이고 24시간 이상 된 이미지 삭제
    * - 고아 Draft 이미지 삭제
    */
-  @Cron(CronExpression.EVERY_HOUR)
+  @Cron(CronExpression.EVERY_HOUR, { timeZone: 'Asia/Seoul' })
   async cleanupDraftImages() {
-    this.logger.log('Starting cleanup of draft images...');
+    this.logger.log('[스토리지 클린업] 초안 이미지 정리 시작...');
 
     try {
       // pendingDelete 이미지 정리
@@ -109,9 +109,9 @@ export class StorageCleanupService {
   /**
    * 매일 자정 실행: 만료된 Draft 정리
    */
-  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
+  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT, { timeZone: 'Asia/Seoul' })
   async cleanupExpiredDrafts() {
-    this.logger.log('Starting cleanup of expired drafts...');
+    this.logger.log('[스토리지 클린업] 만료된 초안 정리 시작...');
 
     try {
       const count = await this.draftService.cleanupExpiredDrafts();
