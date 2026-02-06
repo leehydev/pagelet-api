@@ -50,9 +50,10 @@ COPY --from=deps --chown=nestjs:nodejs /app/node_modules ./node_modules
 COPY --from=builder --chown=nestjs:nodejs /app/dist ./dist
 COPY --from=builder --chown=nestjs:nodejs /app/package.json ./
 
-# 환경변수
+# 환경변수 (TZ: 로그 타임스탬프를 KST로 표시)
 ENV NODE_ENV=production \
-    PORT=3000
+    PORT=3000 \
+    TZ=Asia/Seoul
 
 # 사용자 전환
 USER nestjs
