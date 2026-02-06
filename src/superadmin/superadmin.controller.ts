@@ -6,8 +6,11 @@ import {
   Delete,
   Param,
   Body,
+  Query,
   UseGuards,
   ParseUUIDPipe,
+  ParseIntPipe,
+  DefaultValuePipe,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 
@@ -36,10 +39,14 @@ export class SuperAdminController {
 
   /**
    * 대기자 목록 조회
+   * @param limit 0이면 전체 조회, 그 외에는 limit 수만큼 조회
    */
   @Get('waitlist')
-  async getWaitlist(): Promise<WaitlistUserResponseDto[]> {
-    return this.superAdminService.getWaitlist();
+  @ApiOperation({ summary: '대기자 목록 조회' })
+  async getWaitlist(
+    @Query('limit', new DefaultValuePipe(0), ParseIntPipe) limit: number,
+  ): Promise<WaitlistUserResponseDto[]> {
+    return this.superAdminService.getWaitlist(limit);
   }
 
   /**

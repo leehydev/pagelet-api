@@ -2,6 +2,9 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { SuperAdminService } from './superadmin.service';
 import { User, AccountStatus } from '../auth/entities/user.entity';
+import { Site } from '../site/entities/site.entity';
+import { Post } from '../post/entities/post.entity';
+import { SiteStorageUsage } from '../storage/entities/storage-usage.entity';
 import { BusinessException } from '../common/exception/business.exception';
 import { ErrorCode } from '../common/exception/error-code';
 import { SystemSettingService } from '../config/system-setting.service';
@@ -14,6 +17,20 @@ describe('SuperAdminService', () => {
     find: jest.Mock;
     findOne: jest.Mock;
     save: jest.Mock;
+    count: jest.Mock;
+    createQueryBuilder: jest.Mock;
+  };
+  let siteRepository: {
+    find: jest.Mock;
+    count: jest.Mock;
+    createQueryBuilder: jest.Mock;
+  };
+  let postRepository: {
+    count: jest.Mock;
+    createQueryBuilder: jest.Mock;
+  };
+  let storageUsageRepository: {
+    createQueryBuilder: jest.Mock;
   };
   let systemSettingService: {
     get: jest.Mock;
@@ -31,10 +48,38 @@ describe('SuperAdminService', () => {
   };
 
   beforeEach(async () => {
+    const mockQueryBuilder = {
+      select: jest.fn().mockReturnThis(),
+      addSelect: jest.fn().mockReturnThis(),
+      where: jest.fn().mockReturnThis(),
+      andWhere: jest.fn().mockReturnThis(),
+      groupBy: jest.fn().mockReturnThis(),
+      orderBy: jest.fn().mockReturnThis(),
+      getRawMany: jest.fn().mockResolvedValue([]),
+      getRawOne: jest.fn().mockResolvedValue({ totalUsedBytes: '0', totalMaxBytes: '0' }),
+    };
+
     userRepository = {
       find: jest.fn(),
       findOne: jest.fn(),
       save: jest.fn(),
+      count: jest.fn().mockResolvedValue(0),
+      createQueryBuilder: jest.fn().mockReturnValue(mockQueryBuilder),
+    };
+
+    siteRepository = {
+      find: jest.fn().mockResolvedValue([]),
+      count: jest.fn().mockResolvedValue(0),
+      createQueryBuilder: jest.fn().mockReturnValue(mockQueryBuilder),
+    };
+
+    postRepository = {
+      count: jest.fn().mockResolvedValue(0),
+      createQueryBuilder: jest.fn().mockReturnValue(mockQueryBuilder),
+    };
+
+    storageUsageRepository = {
+      createQueryBuilder: jest.fn().mockReturnValue(mockQueryBuilder),
     };
 
     systemSettingService = {
@@ -61,6 +106,18 @@ describe('SuperAdminService', () => {
           useValue: userRepository,
         },
         {
+          provide: getRepositoryToken(Site),
+          useValue: siteRepository,
+        },
+        {
+          provide: getRepositoryToken(Post),
+          useValue: postRepository,
+        },
+        {
+          provide: getRepositoryToken(SiteStorageUsage),
+          useValue: storageUsageRepository,
+        },
+        {
           provide: SystemSettingService,
           useValue: systemSettingService,
         },
@@ -82,16 +139,16 @@ describe('SuperAdminService', () => {
     it('should return list of pending users', async () => {
       const mockUsers = [
         {
-          id: 'user-1',
-          email: 'user1@example.com',
-          name: 'User 1',
-          createdAt: new Date('2024-01-01'),
-        },
-        {
           id: 'user-2',
           email: 'user2@example.com',
           name: 'User 2',
           createdAt: new Date('2024-01-02'),
+        },
+        {
+          id: 'user-1',
+          email: 'user1@example.com',
+          name: 'User 1',
+          createdAt: new Date('2024-01-01'),
         },
       ];
       userRepository.find.mockResolvedValue(mockUsers);
@@ -99,12 +156,12 @@ describe('SuperAdminService', () => {
       const result = await service.getWaitlist();
 
       expect(result).toHaveLength(2);
-      expect(result[0].id).toBe('user-1');
-      expect(result[0].email).toBe('user1@example.com');
-      expect(result[1].id).toBe('user-2');
+      expect(result[0].id).toBe('user-2');
+      expect(result[0].email).toBe('user2@example.com');
+      expect(result[1].id).toBe('user-1');
       expect(userRepository.find).toHaveBeenCalledWith({
         where: { accountStatus: AccountStatus.PENDING },
-        order: { createdAt: 'ASC' },
+        order: { createdAt: 'DESC' },
         select: ['id', 'email', 'name', 'createdAt'],
       });
     });
@@ -115,6 +172,28 @@ describe('SuperAdminService', () => {
       const result = await service.getWaitlist();
 
       expect(result).toHaveLength(0);
+    });
+
+    it('should limit results when limit is provided', async () => {
+      const mockUsers = [
+        {
+          id: 'user-1',
+          email: 'user1@example.com',
+          name: 'User 1',
+          createdAt: new Date('2024-01-01'),
+        },
+      ];
+      userRepository.find.mockResolvedValue(mockUsers);
+
+      const result = await service.getWaitlist(5);
+
+      expect(result).toHaveLength(1);
+      expect(userRepository.find).toHaveBeenCalledWith({
+        where: { accountStatus: AccountStatus.PENDING },
+        order: { createdAt: 'DESC' },
+        select: ['id', 'email', 'name', 'createdAt'],
+        take: 5,
+      });
     });
   });
 
