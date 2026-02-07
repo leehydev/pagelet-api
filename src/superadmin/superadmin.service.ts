@@ -1,16 +1,27 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, MoreThanOrEqual } from 'typeorm';
 import { User, AccountStatus } from '../auth/entities/user.entity';
+import { Site } from '../site/entities/site.entity';
+import { Post } from '../post/entities/post.entity';
 import { BusinessException } from '../common/exception/business.exception';
 import { ErrorCode } from '../common/exception/error-code';
 import { WaitlistUserResponseDto } from './dto/waitlist-user-response.dto';
+import { UserResponseDto } from '../auth/dto/user-response.dto';
 import { SystemSettingService } from '../config/system-setting.service';
 import { SystemSettingResponseDto } from './dto/system-setting-response.dto';
 import { RegistrationMode, SystemSettingKey } from '../config/constants/registration-mode';
 import { SiteService } from '../site/site.service';
 import { ReservedSlugResponseDto } from './dto/reserved-slug-response.dto';
 import { CreateReservedSlugDto } from './dto/create-reserved-slug.dto';
+import {
+  DashboardStatsResponseDto,
+  DailyStatsResponseDto,
+  DailyStatDto,
+  RecentSiteDto,
+  RecentSitesResponseDto,
+} from './dto/dashboard-stats-response.dto';
+import { StorageUsageService } from '../storage/storage-usage.service';
 
 @Injectable()
 export class SuperAdminService {
@@ -19,8 +30,13 @@ export class SuperAdminService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    @InjectRepository(Site)
+    private readonly siteRepository: Repository<Site>,
+    @InjectRepository(Post)
+    private readonly postRepository: Repository<Post>,
     private readonly systemSettingService: SystemSettingService,
     private readonly siteService: SiteService,
+    private readonly storageUsageService: StorageUsageService,
   ) {}
 
   /**
@@ -206,5 +222,129 @@ export class SuperAdminService {
     user.isAdmin = isAdmin;
     await this.userRepository.save(user);
     this.logger.log(`User ${userId} admin status set to ${isAdmin}`);
+  }
+
+  /**
+   * 현재 슈퍼어드민 사용자 정보 조회
+   */
+  async getMe(userId: string): Promise<UserResponseDto> {
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw BusinessException.fromErrorCode(ErrorCode.USER_NOT_FOUND);
+    }
+
+    return {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      accountStatus: user.accountStatus,
+      onboardingStep: user.onboardingStep,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    };
+  }
+
+  /**
+   * 대시보드 통계 조회
+   */
+  async getDashboardStats(): Promise<DashboardStatsResponseDto> {
+    const now = new Date();
+    const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+    const [
+      totalUsers,
+      totalSites,
+      totalPosts,
+      pendingUsers,
+      usersThisWeek,
+      sitesThisWeek,
+      postsThisWeek,
+    ] = await Promise.all([
+      this.userRepository.count(),
+      this.siteRepository.count(),
+      this.postRepository.count(),
+      this.userRepository.count({ where: { accountStatus: AccountStatus.PENDING } }),
+      this.userRepository.count({ where: { createdAt: MoreThanOrEqual(weekAgo) } }),
+      this.siteRepository.count({ where: { createdAt: MoreThanOrEqual(weekAgo) } }),
+      this.postRepository.count({ where: { createdAt: MoreThanOrEqual(weekAgo) } }),
+    ]);
+
+    return new DashboardStatsResponseDto({
+      totalUsers,
+      totalSites,
+      totalPosts,
+      pendingUsers,
+      usersThisWeek,
+      sitesThisWeek,
+      postsThisWeek,
+      storageUsedBytes: 0, // TODO: 전체 스토리지 합계 구현
+      storageTotalBytes: 500 * 1024 * 1024 * 1024, // 500GB
+    });
+  }
+
+  /**
+   * 일별 통계 조회 (최근 7일)
+   */
+  async getDailyStats(): Promise<DailyStatsResponseDto> {
+    const days = 7;
+    const result: { users: DailyStatDto[]; posts: DailyStatDto[] } = {
+      users: [],
+      posts: [],
+    };
+
+    for (let i = days - 1; i >= 0; i--) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      date.setHours(0, 0, 0, 0);
+
+      const nextDate = new Date(date);
+      nextDate.setDate(nextDate.getDate() + 1);
+
+      const [userCount, postCount] = await Promise.all([
+        this.userRepository
+          .createQueryBuilder('user')
+          .where('user.createdAt >= :start', { start: date })
+          .andWhere('user.createdAt < :end', { end: nextDate })
+          .getCount(),
+        this.postRepository
+          .createQueryBuilder('post')
+          .where('post.createdAt >= :start', { start: date })
+          .andWhere('post.createdAt < :end', { end: nextDate })
+          .getCount(),
+      ]);
+
+      const dayName = ['일', '월', '화', '수', '목', '금', '토'][date.getDay()];
+
+      result.users.push(new DailyStatDto({ date: dayName, count: userCount }));
+      result.posts.push(new DailyStatDto({ date: dayName, count: postCount }));
+    }
+
+    return new DailyStatsResponseDto(result);
+  }
+
+  /**
+   * 최근 생성된 사이트 목록 조회
+   */
+  async getRecentSites(limit: number = 5): Promise<RecentSitesResponseDto> {
+    const sites = await this.siteRepository.find({
+      order: { createdAt: 'DESC' },
+      take: limit,
+      select: ['id', 'slug', 'userId', 'createdAt'],
+    });
+
+    return new RecentSitesResponseDto({
+      sites: sites.map(
+        (site) =>
+          new RecentSiteDto({
+            id: site.id,
+            slug: site.slug,
+            userId: site.userId,
+            createdAt: site.createdAt,
+          }),
+      ),
+    });
   }
 }

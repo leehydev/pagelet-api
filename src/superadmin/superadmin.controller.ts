@@ -13,6 +13,9 @@ import { ApiTags, ApiOperation } from '@nestjs/swagger';
 
 import { SuperAdminService } from './superadmin.service';
 import { SuperAdminGuard } from './guards/superadmin.guard';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import type { UserPrincipal } from '../auth/types/jwt-payload.interface';
+import type { UserResponseDto } from '../auth/dto/user-response.dto';
 import { IndexingService } from '../indexing/indexing.service';
 import { WaitlistUserResponseDto } from './dto/waitlist-user-response.dto';
 import { SystemSettingResponseDto } from './dto/system-setting-response.dto';
@@ -20,6 +23,11 @@ import { UpdateSystemSettingDto } from './dto/update-system-setting.dto';
 import { ReservedSlugResponseDto } from './dto/reserved-slug-response.dto';
 import { CreateReservedSlugDto } from './dto/create-reserved-slug.dto';
 import { SetUserAdminDto } from './dto/set-user-admin.dto';
+import {
+  DashboardStatsResponseDto,
+  DailyStatsResponseDto,
+  RecentSitesResponseDto,
+} from './dto/dashboard-stats-response.dto';
 
 /**
  * 슈퍼 관리자 API
@@ -33,6 +41,42 @@ export class SuperAdminController {
     private readonly superAdminService: SuperAdminService,
     private readonly indexingService: IndexingService,
   ) {}
+
+  /**
+   * 현재 슈퍼어드민 사용자 정보 조회
+   */
+  @Get('me')
+  @ApiOperation({ summary: '현재 슈퍼어드민 사용자 정보 조회' })
+  async getMe(@CurrentUser() user: UserPrincipal): Promise<UserResponseDto> {
+    return this.superAdminService.getMe(user.userId);
+  }
+
+  /**
+   * 대시보드 통계 조회
+   */
+  @Get('dashboard/stats')
+  @ApiOperation({ summary: '대시보드 통계 조회' })
+  async getDashboardStats(): Promise<DashboardStatsResponseDto> {
+    return this.superAdminService.getDashboardStats();
+  }
+
+  /**
+   * 일별 통계 조회 (최근 7일)
+   */
+  @Get('dashboard/daily-stats')
+  @ApiOperation({ summary: '일별 통계 조회' })
+  async getDailyStats(): Promise<DailyStatsResponseDto> {
+    return this.superAdminService.getDailyStats();
+  }
+
+  /**
+   * 최근 생성된 사이트 목록
+   */
+  @Get('dashboard/recent-sites')
+  @ApiOperation({ summary: '최근 생성된 사이트 목록' })
+  async getRecentSites(): Promise<RecentSitesResponseDto> {
+    return this.superAdminService.getRecentSites(5);
+  }
 
   /**
    * 대기자 목록 조회

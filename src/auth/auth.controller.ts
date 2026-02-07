@@ -47,7 +47,7 @@ export class AuthController {
   @Public()
   @Post('kakao/token')
   async exchangeKakaoCode(@Body() dto: OAuthCodeDto): Promise<LoginResponseDto> {
-    return this.authService.loginWithKakao(dto.code);
+    return this.authService.loginWithKakao(dto.code, dto.redirectUri);
   }
 
   /**
@@ -60,7 +60,7 @@ export class AuthController {
   @Public()
   @Post('naver/token')
   async exchangeNaverCode(@Body() dto: OAuthCodeDto): Promise<LoginResponseDto> {
-    return this.authService.loginWithNaver(dto.code);
+    return this.authService.loginWithNaver(dto.code, dto.redirectUri);
   }
 
   /**

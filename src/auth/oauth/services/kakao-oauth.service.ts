@@ -17,14 +17,15 @@ export class KakaoOAuthService {
   /**
    * Authorization Code를 사용하여 사용자 정보 조회
    * @param code Authorization Code
+   * @param redirectUri 프론트엔드에서 사용한 redirect URI (선택)
    * @returns 사용자 정보
    */
-  async authenticate(code: string): Promise<OAuthUserInfo> {
+  async authenticate(code: string, redirectUri?: string): Promise<OAuthUserInfo> {
     try {
       this.logger.log(`Starting Kakao OAuth authentication with code: ${code.substring(0, 10)}...`);
 
       // 1. Authorization Code를 Access Token으로 교환
-      const tokenResponse = await this.kakaoOAuthClient.exchangeCodeForToken(code);
+      const tokenResponse = await this.kakaoOAuthClient.exchangeCodeForToken(code, redirectUri);
       this.logger.debug('Token exchange successful');
 
       // 2. Access Token으로 사용자 정보 조회

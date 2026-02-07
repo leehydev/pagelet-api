@@ -50,12 +50,13 @@ export class AuthService {
   /**
    * Kakao OAuth 로그인 처리
    * @param code Authorization Code
+   * @param redirectUri 프론트엔드에서 사용한 redirect URI (선택)
    * @returns 로그인 응답 (JWT 토큰 포함)
    */
-  async loginWithKakao(code: string): Promise<LoginResponseDto> {
+  async loginWithKakao(code: string, redirectUri?: string): Promise<LoginResponseDto> {
     try {
       // 1. Kakao OAuth 인증 (code -> userInfo)
-      const oauthUserInfo = await this.kakaoOAuthService.authenticate(code);
+      const oauthUserInfo = await this.kakaoOAuthService.authenticate(code, redirectUri);
       this.logger.log(`Kakao OAuth authentication successful for user ID: ${oauthUserInfo.id}`);
 
       // 2. 사용자 조회 또는 생성
@@ -84,12 +85,13 @@ export class AuthService {
   /**
    * Naver OAuth 로그인 처리
    * @param code Authorization Code
+   * @param redirectUri 프론트엔드에서 사용한 redirect URI (선택)
    * @returns 로그인 응답 (JWT 토큰 포함)
    */
-  async loginWithNaver(code: string): Promise<LoginResponseDto> {
+  async loginWithNaver(code: string, redirectUri?: string): Promise<LoginResponseDto> {
     try {
       // 1. Naver OAuth 인증 (code -> userInfo)
-      const oauthUserInfo = await this.naverOAuthService.authenticate(code);
+      const oauthUserInfo = await this.naverOAuthService.authenticate(code, redirectUri);
       this.logger.log(`Naver OAuth authentication successful for user ID: ${oauthUserInfo.id}`);
 
       // 2. 사용자 조회 또는 생성
