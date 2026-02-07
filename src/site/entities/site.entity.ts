@@ -96,6 +96,16 @@ export class Site {
   @Column({ type: 'varchar', length: 500, nullable: true })
   ctaLink: string | null;
 
+  // 광고 설정
+  @Column({ type: 'varchar', length: 20, nullable: true })
+  adProvider: string | null; // 'adsense' | 'adfit'
+
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  adMobileHeader: string | null; // 모바일 헤더 아래 광고 단위 ID
+
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  adPcSidebar: string | null; // PC 사이드바 160x600 광고 단위 ID
+
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;
 

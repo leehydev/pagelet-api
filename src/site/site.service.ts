@@ -225,6 +225,9 @@ export class SiteService {
       ctaText: site.ctaText,
       ctaImageUrl: brandingImages[BrandingImageType.CTA],
       ctaLink: site.ctaLink,
+      adProvider: site.adProvider,
+      adMobileHeader: site.adMobileHeader,
+      adPcSidebar: site.adPcSidebar,
     };
   }
 
@@ -262,6 +265,9 @@ export class SiteService {
       ctaText: site.ctaText,
       ctaImageUrl: brandingImages[BrandingImageType.CTA],
       ctaLink: site.ctaLink,
+      adProvider: site.adProvider,
+      adMobileHeader: site.adMobileHeader,
+      adPcSidebar: site.adPcSidebar,
     };
   }
 
@@ -310,6 +316,9 @@ export class SiteService {
     if (dto.ctaType !== undefined) site.ctaType = dto.ctaType;
     if (dto.ctaText !== undefined) site.ctaText = dto.ctaText;
     if (dto.ctaLink !== undefined) site.ctaLink = dto.ctaLink;
+    if (dto.adProvider !== undefined) site.adProvider = dto.adProvider;
+    if (dto.adMobileHeader !== undefined) site.adMobileHeader = dto.adMobileHeader;
+    if (dto.adPcSidebar !== undefined) site.adPcSidebar = dto.adPcSidebar;
 
     const updated = await this.siteRepository.save(site);
     this.logger.log(`Updated site settings: ${updated.id}`);
