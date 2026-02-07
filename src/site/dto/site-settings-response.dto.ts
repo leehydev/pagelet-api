@@ -44,4 +44,9 @@ export class SiteSettingsResponseDto {
   ctaText: string | null;
   ctaImageUrl: string | null;
   ctaLink: string | null;
+
+  // 광고 설정
+  adProvider: string | null;
+  adMobileHeader: string | null;
+  adPcSidebar: string | null;
 }

@@ -100,4 +100,21 @@ export class UpdateSiteSettingsDto {
   @IsUrl({}, { message: '올바른 URL 형식이어야 합니다' })
   @MaxLength(500)
   ctaLink?: string | null;
+
+  // 광고 설정
+  @IsOptional()
+  @IsIn(['adsense', 'adfit', null], {
+    message: 'adProvider는 adsense, adfit 또는 null이어야 합니다',
+  })
+  adProvider?: 'adsense' | 'adfit' | null;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(100, { message: '광고 단위 ID는 최대 100자까지 가능합니다' })
+  adMobileHeader?: string | null;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(100, { message: '광고 단위 ID는 최대 100자까지 가능합니다' })
+  adPcSidebar?: string | null;
 }
