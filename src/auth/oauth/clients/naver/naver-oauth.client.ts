@@ -28,11 +28,16 @@ export class NaverOAuthClient implements OAuthProviderClient {
 
   /**
    * Authorization Code를 Access Token으로 교환
+   * @param code Authorization Code
+   * @param customRedirectUri 프론트엔드에서 사용한 redirect URI (선택, 없으면 환경변수 사용)
    */
-  async exchangeCodeForToken(code: string): Promise<OAuthTokenResponse> {
+  async exchangeCodeForToken(
+    code: string,
+    customRedirectUri?: string,
+  ): Promise<OAuthTokenResponse> {
     const clientId = this.configService.get<string>('NAVER_CLIENT_ID');
     const clientSecret = this.configService.get<string>('NAVER_CLIENT_SECRET');
-    const redirectUri = this.configService.get<string>('NAVER_REDIRECT_URI');
+    const redirectUri = customRedirectUri || this.configService.get<string>('NAVER_REDIRECT_URI');
 
     const params = new URLSearchParams();
     params.append('grant_type', 'authorization_code');

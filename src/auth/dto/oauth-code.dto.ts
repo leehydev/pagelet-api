@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 /**
  * OAuth Authorization Code 교환 요청 DTO
@@ -8,4 +8,8 @@ export class OAuthCodeDto {
   @IsNotEmpty({ message: 'Authorization code는 필수입니다' })
   @IsString()
   code: string;
+
+  @IsOptional()
+  @IsString()
+  redirectUri?: string;
 }
