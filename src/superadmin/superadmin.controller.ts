@@ -6,8 +6,11 @@ import {
   Delete,
   Param,
   Body,
+  Query,
   UseGuards,
   ParseUUIDPipe,
+  ParseIntPipe,
+  DefaultValuePipe,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 
@@ -23,11 +26,6 @@ import { UpdateSystemSettingDto } from './dto/update-system-setting.dto';
 import { ReservedSlugResponseDto } from './dto/reserved-slug-response.dto';
 import { CreateReservedSlugDto } from './dto/create-reserved-slug.dto';
 import { SetUserAdminDto } from './dto/set-user-admin.dto';
-import {
-  DashboardStatsResponseDto,
-  DailyStatsResponseDto,
-  RecentSitesResponseDto,
-} from './dto/dashboard-stats-response.dto';
 
 /**
  * 슈퍼 관리자 API
@@ -52,38 +50,15 @@ export class SuperAdminController {
   }
 
   /**
-   * 대시보드 통계 조회
-   */
-  @Get('dashboard/stats')
-  @ApiOperation({ summary: '대시보드 통계 조회' })
-  async getDashboardStats(): Promise<DashboardStatsResponseDto> {
-    return this.superAdminService.getDashboardStats();
-  }
-
-  /**
-   * 일별 통계 조회 (최근 7일)
-   */
-  @Get('dashboard/daily-stats')
-  @ApiOperation({ summary: '일별 통계 조회' })
-  async getDailyStats(): Promise<DailyStatsResponseDto> {
-    return this.superAdminService.getDailyStats();
-  }
-
-  /**
-   * 최근 생성된 사이트 목록
-   */
-  @Get('dashboard/recent-sites')
-  @ApiOperation({ summary: '최근 생성된 사이트 목록' })
-  async getRecentSites(): Promise<RecentSitesResponseDto> {
-    return this.superAdminService.getRecentSites(5);
-  }
-
-  /**
    * 대기자 목록 조회
+   * @param limit 0이면 전체 조회, 그 외에는 limit 수만큼 조회
    */
   @Get('waitlist')
-  async getWaitlist(): Promise<WaitlistUserResponseDto[]> {
-    return this.superAdminService.getWaitlist();
+  @ApiOperation({ summary: '대기자 목록 조회' })
+  async getWaitlist(
+    @Query('limit', new DefaultValuePipe(0), ParseIntPipe) limit: number,
+  ): Promise<WaitlistUserResponseDto[]> {
+    return this.superAdminService.getWaitlist(limit);
   }
 
   /**
