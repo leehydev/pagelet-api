@@ -1,9 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, MoreThanOrEqual } from 'typeorm';
+
 import { User, AccountStatus } from '../auth/entities/user.entity';
 import { Site } from '../site/entities/site.entity';
-import { Post } from '../post/entities/post.entity';
+import { Post, PostStatus } from '../post/entities/post.entity';
+import { SiteStorageUsage } from '../storage/entities/storage-usage.entity';
 import { BusinessException } from '../common/exception/business.exception';
 import { ErrorCode } from '../common/exception/error-code';
 import { WaitlistUserResponseDto } from './dto/waitlist-user-response.dto';
@@ -14,14 +16,11 @@ import { RegistrationMode, SystemSettingKey } from '../config/constants/registra
 import { SiteService } from '../site/site.service';
 import { ReservedSlugResponseDto } from './dto/reserved-slug-response.dto';
 import { CreateReservedSlugDto } from './dto/create-reserved-slug.dto';
-import {
-  DashboardStatsResponseDto,
-  DailyStatsResponseDto,
-  DailyStatDto,
-  RecentSiteDto,
-  RecentSitesResponseDto,
-} from './dto/dashboard-stats-response.dto';
-import { StorageUsageService } from '../storage/storage-usage.service';
+import { DashboardResponseDto } from './dto/dashboard-response.dto';
+import { DashboardSummaryDto } from './dto/dashboard-summary.dto';
+import { DailyStatsDto } from './dto/daily-stats.dto';
+import { RecentSiteResponseDto } from './dto/recent-site-response.dto';
+import { StorageSummaryResponseDto } from './dto/storage-summary-response.dto';
 
 @Injectable()
 export class SuperAdminService {
@@ -34,19 +33,22 @@ export class SuperAdminService {
     private readonly siteRepository: Repository<Site>,
     @InjectRepository(Post)
     private readonly postRepository: Repository<Post>,
+    @InjectRepository(SiteStorageUsage)
+    private readonly storageUsageRepository: Repository<SiteStorageUsage>,
     private readonly systemSettingService: SystemSettingService,
     private readonly siteService: SiteService,
-    private readonly storageUsageService: StorageUsageService,
   ) {}
 
   /**
    * 대기자 목록 조회 (PENDING 상태 사용자)
+   * @param limit 0이면 전체 조회, 그 외에는 limit 수만큼 조회
    */
-  async getWaitlist(): Promise<WaitlistUserResponseDto[]> {
+  async getWaitlist(limit: number = 0): Promise<WaitlistUserResponseDto[]> {
     const users = await this.userRepository.find({
       where: { accountStatus: AccountStatus.PENDING },
-      order: { createdAt: 'ASC' },
+      order: { createdAt: 'DESC' },
       select: ['id', 'email', 'name', 'createdAt'],
+      ...(limit > 0 && { take: limit }),
     });
 
     return users.map(
@@ -248,103 +250,210 @@ export class SuperAdminService {
   }
 
   /**
-   * 대시보드 통계 조회
+   * 대시보드 통합 데이터 조회
    */
-  async getDashboardStats(): Promise<DashboardStatsResponseDto> {
-    const now = new Date();
-    const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-
-    const [
-      totalUsers,
-      totalSites,
-      totalPosts,
-      pendingUsers,
-      usersThisWeek,
-      sitesThisWeek,
-      postsThisWeek,
-    ] = await Promise.all([
-      this.userRepository.count(),
-      this.siteRepository.count(),
-      this.postRepository.count(),
-      this.userRepository.count({ where: { accountStatus: AccountStatus.PENDING } }),
-      this.userRepository.count({ where: { createdAt: MoreThanOrEqual(weekAgo) } }),
-      this.siteRepository.count({ where: { createdAt: MoreThanOrEqual(weekAgo) } }),
-      this.postRepository.count({ where: { createdAt: MoreThanOrEqual(weekAgo) } }),
+  async getDashboard(): Promise<DashboardResponseDto> {
+    const [summary, dailySignups, dailyPosts] = await Promise.all([
+      this.getDashboardSummary(),
+      this.getDailySignups(7),
+      this.getDailyPosts(7),
     ]);
 
-    return new DashboardStatsResponseDto({
-      totalUsers,
-      totalSites,
-      totalPosts,
-      pendingUsers,
-      usersThisWeek,
-      sitesThisWeek,
-      postsThisWeek,
-      storageUsedBytes: 0, // TODO: 전체 스토리지 합계 구현
-      storageTotalBytes: 500 * 1024 * 1024 * 1024, // 500GB
+    return new DashboardResponseDto({
+      summary,
+      dailySignups,
+      dailyPosts,
     });
   }
 
   /**
-   * 일별 통계 조회 (최근 7일)
+   * 대시보드 요약 통계 조회
    */
-  async getDailyStats(): Promise<DailyStatsResponseDto> {
-    const days = 7;
-    const result: { users: DailyStatDto[]; posts: DailyStatDto[] } = {
-      users: [],
-      posts: [],
-    };
+  async getDashboardSummary(): Promise<DashboardSummaryDto> {
+    const weekStart = this.getWeekStart();
 
-    for (let i = days - 1; i >= 0; i--) {
-      const date = new Date();
-      date.setDate(date.getDate() - i);
-      date.setHours(0, 0, 0, 0);
+    const [
+      totalUsers,
+      weeklyNewUsers,
+      totalSites,
+      weeklyNewSites,
+      totalPosts,
+      weeklyNewPosts,
+      pendingUsers,
+    ] = await Promise.all([
+      this.userRepository.count({
+        where: { accountStatus: AccountStatus.ACTIVE },
+      }),
+      this.userRepository.count({
+        where: {
+          accountStatus: AccountStatus.ACTIVE,
+          createdAt: MoreThanOrEqual(weekStart),
+        },
+      }),
+      this.siteRepository.count(),
+      this.siteRepository.count({
+        where: { createdAt: MoreThanOrEqual(weekStart) },
+      }),
+      this.postRepository.count({
+        where: { status: PostStatus.PUBLISHED },
+      }),
+      this.postRepository.count({
+        where: {
+          status: PostStatus.PUBLISHED,
+          publishedAt: MoreThanOrEqual(weekStart),
+        },
+      }),
+      this.userRepository.count({
+        where: { accountStatus: AccountStatus.PENDING },
+      }),
+    ]);
 
-      const nextDate = new Date(date);
-      nextDate.setDate(nextDate.getDate() + 1);
+    return new DashboardSummaryDto({
+      totalUsers,
+      weeklyNewUsers,
+      totalSites,
+      weeklyNewSites,
+      totalPosts,
+      weeklyNewPosts,
+      pendingUsers,
+    });
+  }
 
-      const [userCount, postCount] = await Promise.all([
-        this.userRepository
-          .createQueryBuilder('user')
-          .where('user.createdAt >= :start', { start: date })
-          .andWhere('user.createdAt < :end', { end: nextDate })
-          .getCount(),
-        this.postRepository
-          .createQueryBuilder('post')
-          .where('post.createdAt >= :start', { start: date })
-          .andWhere('post.createdAt < :end', { end: nextDate })
-          .getCount(),
-      ]);
+  /**
+   * 일별 가입자 추이 조회
+   */
+  async getDailySignups(days: number): Promise<DailyStatsDto[]> {
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - (days - 1));
+    startDate.setHours(0, 0, 0, 0);
 
-      const dayName = ['일', '월', '화', '수', '목', '금', '토'][date.getDay()];
+    const result = await this.userRepository
+      .createQueryBuilder('user')
+      .select('DATE(user.createdAt)', 'date')
+      .addSelect('COUNT(*)', 'count')
+      .where('user.createdAt >= :startDate', { startDate })
+      .groupBy('DATE(user.createdAt)')
+      .orderBy('date', 'ASC')
+      .getRawMany();
 
-      result.users.push(new DailyStatDto({ date: dayName, count: userCount }));
-      result.posts.push(new DailyStatDto({ date: dayName, count: postCount }));
-    }
+    return this.fillMissingDates(result, days);
+  }
 
-    return new DailyStatsResponseDto(result);
+  /**
+   * 일별 포스트 발행 추이 조회
+   */
+  async getDailyPosts(days: number): Promise<DailyStatsDto[]> {
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - (days - 1));
+    startDate.setHours(0, 0, 0, 0);
+
+    const result = await this.postRepository
+      .createQueryBuilder('post')
+      .select('DATE(post.publishedAt)', 'date')
+      .addSelect('COUNT(*)', 'count')
+      .where('post.status = :status', { status: PostStatus.PUBLISHED })
+      .andWhere('post.publishedAt >= :startDate', { startDate })
+      .groupBy('DATE(post.publishedAt)')
+      .orderBy('date', 'ASC')
+      .getRawMany();
+
+    return this.fillMissingDates(result, days);
   }
 
   /**
    * 최근 생성된 사이트 목록 조회
    */
-  async getRecentSites(limit: number = 5): Promise<RecentSitesResponseDto> {
+  async getRecentSites(limit: number): Promise<RecentSiteResponseDto[]> {
     const sites = await this.siteRepository.find({
+      relations: ['user'],
       order: { createdAt: 'DESC' },
       take: limit,
-      select: ['id', 'slug', 'userId', 'createdAt'],
     });
 
-    return new RecentSitesResponseDto({
-      sites: sites.map(
-        (site) =>
-          new RecentSiteDto({
-            id: site.id,
-            slug: site.slug,
-            userId: site.userId,
-            createdAt: site.createdAt,
-          }),
-      ),
+    return sites.map(
+      (site) =>
+        new RecentSiteResponseDto({
+          id: site.id,
+          slug: site.slug,
+          name: site.name,
+          userId: site.userId,
+          userName: site.user?.name ?? null,
+          createdAt: site.createdAt,
+        }),
+    );
+  }
+
+  /**
+   * 스토리지 요약 조회
+   */
+  async getStorageSummary(): Promise<StorageSummaryResponseDto> {
+    const result = await this.storageUsageRepository
+      .createQueryBuilder('storage')
+      .select('COALESCE(SUM(storage.usedBytes), 0)', 'totalUsedBytes')
+      .addSelect('COALESCE(SUM(storage.maxBytes), 0)', 'totalMaxBytes')
+      .getRawOne();
+
+    const totalUsedBytes = Number(result.totalUsedBytes) || 0;
+    const totalMaxBytes = Number(result.totalMaxBytes) || 0;
+    const usagePercentage =
+      totalMaxBytes > 0 ? Math.round((totalUsedBytes / totalMaxBytes) * 100) : 0;
+
+    return new StorageSummaryResponseDto({
+      totalUsedBytes,
+      totalMaxBytes,
+      usagePercentage,
+      totalUsedDisplay: this.formatBytes(totalUsedBytes),
+      totalMaxDisplay: this.formatBytes(totalMaxBytes),
     });
+  }
+
+  /**
+   * 이번주 시작일 (월요일 00:00:00) 계산
+   */
+  private getWeekStart(): Date {
+    const now = new Date();
+    const dayOfWeek = now.getDay();
+    const diff = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // 월요일 기준
+    const weekStart = new Date(now);
+    weekStart.setDate(now.getDate() - diff);
+    weekStart.setHours(0, 0, 0, 0);
+    return weekStart;
+  }
+
+  /**
+   * 빈 날짜 채우기 (데이터 없는 날은 count: 0)
+   */
+  private fillMissingDates(data: { date: string; count: string }[], days: number): DailyStatsDto[] {
+    const result: DailyStatsDto[] = [];
+    const dataMap = new Map(data.map((d) => [d.date, Number(d.count)]));
+
+    for (let i = days - 1; i >= 0; i--) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      const dateStr = date.toISOString().split('T')[0];
+
+      result.push(
+        new DailyStatsDto({
+          date: dateStr,
+          count: dataMap.get(dateStr) ?? 0,
+        }),
+      );
+    }
+
+    return result;
+  }
+
+  /**
+   * 바이트를 읽기 쉬운 형식으로 변환
+   */
+  private formatBytes(bytes: number): string {
+    if (bytes === 0) return '0B';
+
+    const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+    const k = 1024;
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    const value = bytes / Math.pow(k, i);
+
+    return `${Math.round(value * 10) / 10}${units[i]}`;
   }
 }
